@@ -12,11 +12,11 @@ src = ROOT / "skill" / "ecom-slide"
 dst = Path(a.study) / ".claude" / "skills" / "ecom-slide"
 if dst.exists():
     shutil.rmtree(dst)
-shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+shutil.copytree(src, dst, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".omc"))
 print("복사", dst)
 if a.zip:
     with zipfile.ZipFile(a.zip, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(src.rglob("*")):
-            if f.is_file() and "__pycache__" not in f.parts:
+            if f.is_file() and not ({"__pycache__", ".omc"} & set(f.parts)):
                 z.write(f, Path("ecom-slide") / f.relative_to(src))
     print("zip", a.zip)
