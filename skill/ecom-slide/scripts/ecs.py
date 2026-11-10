@@ -14,7 +14,8 @@ import argparse, base64, html, json, os, re, shutil, subprocess, sys, zipfile
 from pathlib import Path
 
 LIB_URL = "https://github.com/0101-commits/ecom-slide"
-KINDS = {"cover", "part", "end", "statement", "number", "chart", "diagram", "compare", "question", "table"}
+KINDS = {"cover", "part", "end", "statement", "number", "chart", "diagram", "compare", "question", "table", "kpi", "headline", "drivers", "term"}
+CHARTS = {"bar", "line", "cumline", "hbar", "race", "zoom", "wipe", "slope", "rank", "morph", "split", "bridge", "waffle", "combo", "minis", "donut"}
 LAYOUTS = {"columns", "flow", "cycle", "hub", "tree", "pyramid", "matrix", "timeline", "venn", "skeleton"}
 
 
@@ -158,20 +159,122 @@ def cmd_read(a):
          "hint": "스캔 PDF(글자 0)는 그림으로 읽어 주세요" if any(r.get("chars") == 0 for r in rows) else ""})
 
 
-# ───────── series ─────────
+# ───────── series · fetch (열쇠 없이 작성하는 날 최신 값) ─────────
 def cmd_series(a):
-    ser = load(lib_dir() / "data" / "series.json", {"series": {}})
-    s = ser.get("series", {})
-    if a.id:
-        if a.id not in s:
-            say({"error": f"계열 없음 : {a.id}"}, 1)
-        d = s[a.id]
-        data = [x for x in d["data"] if not a.since or x[0] >= a.since]
-        say({"id": a.id, "name": d["name"], "unit": d["unit"], "source": d.get("source", ""), "updated": ser.get("updated"), "data": data})
+    """계열 번호 사전(data/series_ids.json)에서 찾기 — 값은 fetch 로 받음"""
+    cfg = load(lib_dir() / "data" / "series_ids.json", {"series": []})
     q = (a.q or "").lower()
-    hits = [{"id": k, "name": v["name"], "unit": v["unit"], "last": v["data"][-1] if v["data"] else None}
-            for k, v in s.items() if not q or q in v["name"].lower() or q in k.lower()]
-    say({"updated": ser.get("updated"), "count": len(hits), "series": hits, "failed": list(ser.get("failed", {}).keys())})
+    hits = [s for s in cfg.get("series", []) if not q or q in s["name"].lower() or q in s["id"].lower()]
+    say({"count": len(hits), "series": hits, "hint": "값 받기 : ecs.py fetch <회차> <id> --since 2021.01"})
+
+
+def http_get(url, tries=3):
+    # FRED 는 파이썬 기본 이름표를 막음 → curl 과 같은 이름표 · 잠깐 끊김은 다시
+    import time, urllib.request
+    last = None
+    for k in range(tries):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "curl/8.4.0", "Accept": "*/*"})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return r.read().decode("utf-8", "ignore")
+        except Exception as e:
+            last = e
+            time.sleep(2 * (k + 1))
+    raise last
+
+
+def periods(cyc, since, until):
+    out = []
+    if cyc == "M":
+        y, m = int(since[:4]), int(since[5:7] or 1)
+        while (y, m) <= until:
+            out.append(f"{y}{m:02d}"); m += 1
+            if m > 12: y, m = y + 1, 1
+    elif cyc == "Q":
+        y, q = int(since[:4]), (int(since[5:7] or 1) - 1) // 3 + 1
+        while (y, q * 3) <= until:
+            out.append(f"{y}Q{q}"); q += 1
+            if q > 4: y, q = y + 1, 1
+    else:
+        out = [str(y) for y in range(int(since[:4]), until[0] + 1)]
+    return out
+
+
+def fetch_ecos(sid, since):
+    from datetime import date
+    _, stat, item, cyc = sid.split(":")
+    t = date.today()
+    ps = periods(cyc, since, (t.year, t.month))
+    rows, unit, name, calls = [], "", "", 0
+    for i in range(0, len(ps), 10):  # 공개 시험 열쇠 sample 은 한 번에 10건까지
+        w = ps[i:i + 10]
+        calls += 1
+        if calls > 30:
+            break
+        j = json.loads(http_get(f"https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/1/10/{stat}/{cyc}/{w[0]}/{w[-1]}/{item}"))
+        for r in (j.get("StatisticSearch") or {}).get("row") or []:
+            unit, name = r.get("UNIT_NAME", unit), r.get("ITEM_NAME1", name)
+            tm = r["TIME"]
+            p = f"{tm[:4]}.{tm[4:6]}" if cyc == "M" else (f"{tm[:4]}.Q{tm[-1]}" if cyc == "Q" else tm[:4])
+            try:
+                rows.append([p, float(r["DATA_VALUE"])])
+            except (TypeError, ValueError):
+                pass
+    return {"name": name, "unit": unit, "source": f"한국은행 ECOS {stat}({item}) · 공개 시험 열쇠", "data": rows, "calls": calls}
+
+
+def fetch_fred(sid, since):
+    code = sid.split(":")[1]
+    text = http_get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={code}&cosd={since[:4]}-{(since[5:7] or '01')}-01")
+    acc = {}
+    for line in text.splitlines()[1:]:
+        d, _, v = line.partition(",")
+        if not v or v.strip() in (".", ""):
+            continue
+        acc.setdefault(f"{d[:4]}.{d[5:7]}", []).append(float(v))
+    data = [[k, round(sum(v) / len(v), 4)] for k, v in sorted(acc.items())]  # 날마다 나오는 계열은 월평균
+    return {"name": code, "unit": "", "source": f"FRED {code}(세인트루이스 연준) · 열쇠 없는 내려받기", "data": data, "calls": 1}
+
+
+def cmd_fetch(a):
+    from datetime import datetime
+    p = sess(a.name)
+    try:
+        r = fetch_ecos(a.id, a.since) if a.id.startswith("ecos:") else fetch_fred(a.id, a.since)
+    except Exception as e:
+        say({"error": f"숫자를 못 받았어요({type(e).__name__}). 웹 Code 탭이면 환경 네트워크에 ecos.bok.or.kr · fred.stlouisfed.org 를 허용하거나, 자료 폴더 · 웹 검색으로 받아 주세요."}, 1)
+    cfg = {s["id"]: s for s in load(lib_dir() / "data" / "series_ids.json", {"series": []}).get("series", [])}
+    if a.id in cfg:
+        r["name"] = cfg[a.id]["name"]; r["unit"] = r["unit"] or cfg[a.id].get("unit", "")
+    r.update({"id": a.id, "got": datetime.now().strftime("%Y.%m.%d %H:%M")})
+    d = p / "work" / "series"; d.mkdir(parents=True, exist_ok=True)
+    f = d / (re.sub(r"[^A-Za-z0-9_.-]+", "_", a.id) + ".json")
+    json.dump(r, open(f, "w", encoding="utf-8"), ensure_ascii=False)
+    if not r["data"]:
+        say({"error": f"받은 값이 없어요 : {a.id} — 번호를 확인해 주세요"}, 1)
+    say({"ok": True, "id": a.id, "name": r["name"], "unit": r["unit"], "n": len(r["data"]), "first": r["data"][0], "last": r["data"][-3:],
+         "got": r["got"], "calls": r["calls"], "file": str(f)})
+
+
+# ───────── mockup (목업 300) ─────────
+def cmd_mockup(a):
+    m = load(lib_dir() / "library" / "mockups" / "mockups.json")
+    if not m:
+        say({"error": "목업 목록이 없어요 — setup 먼저"}, 1)
+    items = m if isinstance(m, list) else m.get("items", [])
+    if a.id:
+        hit = next((x for x in items if x["id"] == a.id), None)
+        if not hit:
+            say({"error": f"목업 없음 : {a.id}"}, 1)
+        say({"id": hit["id"], "family": hit.get("family"), "slide": hit["slide"]})
+    q = (a.q or "").lower()
+    hits = [x for x in items if (not a.family or x.get("family") == a.family)
+            and (not q or q in json.dumps([x.get("title"), x.get("tags"), x.get("variant")], ensure_ascii=False).lower())]
+    fams = {}
+    for x in items:
+        fams[x.get("family")] = fams.get(x.get("family"), 0) + 1
+    say({"count": len(hits), "items": [{"id": x["id"], "family": x.get("family"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
+         "families": fams if not (a.family or q) else None})
 
 
 # ───────── find ─────────
@@ -259,6 +362,63 @@ def ends_nominal(t):
 TOPIC_ONLY = re.compile(r"(의\s*정의|의\s*구성|개요|현황|소개)$")
 
 
+ACCENTS = ("green", "blue", "violet", "coral", "amber", "mono")
+CENTER_OK = {"term", "statement", "question", "headline"}
+
+
+def grammar_lint(s, i, add):
+    """rules/design_grammar.md 점검 — 제목 강조 낱말 · 결론 띠 · 카드 글 길이 · 알약 줄."""
+    kind = s.get("kind")
+    if kind in ("cover", "part", "end"):
+        return
+    title = re.sub(r"\*\*|\^\^", "", s.get("title") or s.get("text") or "")
+    keys = s.get("key")
+    if keys and kind != "headline":
+        keys = [keys] if isinstance(keys, str) else list(keys)
+        if len(keys) > 2:
+            add(i, "제목 강조", f"강조 낱말 {len(keys)}개 — 2개까지")
+        for k in keys:
+            if k not in title:
+                add(i, "제목 강조", f"key 「{k}」 가 제목에 없음")
+    if s.get("align") == "center" and kind not in CENTER_OK:
+        add(i, "가운데 정렬", f"{kind} 장은 왼쪽 정렬 — 가운데는 정의 · 문장 · 질문 · 결론 문장 장만", "확인할 것")
+    if s.get("dark") or (s.get("bg") or "").startswith("#1"):
+        add(i, "본문 바탕", "본문 장은 진한 바탕 금지(표지 · 간지 · 끝만)")
+    if len(s.get("eyebrow") or "") > 16:
+        add(i, "머리말", f"eyebrow {len(s['eyebrow'])}자 — 16자 안")
+    if len(s.get("sub") or "") > 40:
+        add(i, "부제", f"sub {len(s['sub'])}자 — 40자 안")
+    c = s.get("concl")
+    if c:
+        t = c.get("text", "") if isinstance(c, dict) else str(c)
+        if len(t) > 40:
+            add(i, "결론 띠", f"{len(t)}자 — 40자 안")
+        if t and title and re.sub(r"\s", "", t) == re.sub(r"\s", "", title):
+            add(i, "결론 띠", "제목과 같은 문장 — 「그래서」를 쓸 것")
+        if isinstance(c, dict) and c.get("tone", "dark") not in ("dark", "acc"):
+            add(i, "결론 띠", f"tone {c.get('tone')} — dark · acc")
+        if isinstance(c, dict) and c.get("style", "pill") not in ("pill", "band", "top"):
+            add(i, "결론 띠", f"style {c.get('style')} — pill · band · top")
+    if kind == "diagram" and (s.get("style") == "card" or s.get("layout") == "modules"):
+        for it in s.get("items") or []:
+            if len(it.get("head", "")) > 14:
+                add(i, "카드 글", f"머리 「{it['head'][:10]}…」 {len(it['head'])}자 — 14자 안")
+            if len(it.get("body", "")) > 40:
+                add(i, "카드 글", f"설명 {len(it['body'])}자 — 40자 안")
+    if kind == "compare" and s.get("style") == "rows":
+        rows = s.get("rows") or []
+        if not 3 <= len(rows) <= 6:
+            add(i, "알약 줄 비교", f"줄 {len(rows)}개 — 3~6줄")
+        if len(s.get("heads") or []) != 2:
+            add(i, "알약 줄 비교", "heads 는 둘")
+        for r in rows:
+            for cell in r[:2]:
+                if len(str(cell)) > 18:
+                    add(i, "알약 줄 비교", f"「{str(cell)[:10]}…」 {len(str(cell))}자 — 18자 안")
+        if s.get("notes") and len(s["notes"]) != len(rows):
+            add(i, "알약 줄 비교", "notes 줄 수 = rows 줄 수")
+
+
 def lint(deck, lib):
     iss = []
     gl = load(lib / "terms" / "glossary.json", {"same": [], "words": {}})
@@ -328,6 +488,42 @@ def lint(deck, lib):
                     add(i, "용어 사전", f"「{w}」 → 「{grp[0]}」", "확인할 것")
         for q in re.findall(r"[「\"“]([^」\"”]{120,})[」\"”]", blob):
             add(i, "긴 인용", f"인용 {len(q)}자", "확인할 것")
+    apx = {s.get("appendix") for s in slides if s.get("appendix")}
+    for i, s in enumerate(slides, 1):
+        for l in s.get("links", []) or []:
+            if l.get("to") not in apx:
+                add(i, "부록 고리", f"없는 부록 {l.get('to')}")
+        if s.get("kind") == "chart" and (s.get("chart") or {}).get("type") not in CHARTS:
+            add(i, "화면 종류", f"모르는 차트 {(s.get('chart') or {}).get('type')}")
+        if s.get("kind") == "kpi":
+            cs = s.get("cards") or []
+            if not 1 <= len(cs) <= 4:
+                add(i, "지표 카드", "카드는 1~4장")
+            for c in cs:
+                if not (c.get("asof") and c.get("source")):
+                    add(i, "지표 카드 4칸", f"「{c.get('label')}」 기준 · 출처 빠짐")
+        if s.get("kind") == "headline" and not 2 <= len(s.get("evidence") or []) <= 4:
+            add(i, "결론 문장 장", "근거 카드는 2~4장")
+        if s.get("carry"):
+            nb = [slides[j].get("carry") for j in (i - 2, i) if 0 <= j < len(slides)]
+            if s["carry"] not in nb:
+                add(i, "이어 넘기기", f"carry 「{s['carry']}」 짝이 앞뒤 장에 없음", "확인할 것")
+        grammar_lint(s, i, add)
+    body = [s for s in slides if s.get("kind") not in ("cover", "part", "end") and not s.get("appendix")]
+    if len(body) >= 8:
+        r = sum(1 for s in body if s.get("concl")) / len(body)
+        if r > 0.4 or r < 0.15:
+            add(0, "결론 띠 비율", f"본문 {len(body)}장 중 {r:.0%} — 핵심 장에만 20~30%", "확인할 것")
+    run, prev = 0, None
+    for i, s in enumerate(slides, 1):
+        sig = (s.get("kind"), s.get("layout") or (s.get("chart") or {}).get("type"), s.get("style"))
+        run = run + 1 if sig == prev else 1
+        prev = sig
+        if run == 3:
+            add(i, "같은 짜임 잇기", f"{sig[0]}/{sig[1] or ''} 짜임이 3장 이어짐 — 번갈아 쓸 것", "확인할 것")
+    th = (deck.get("theme") or {}).get("accent")
+    if th and th not in ACCENTS:
+        add(0, "강조색", f"모르는 강조색 {th} — {'/'.join(ACCENTS)} 중 하나")
     for key, f in facts.items():
         if not f.get("period") or not f.get("source"):
             add(0, "출처 · 기준월", f"facts.{key} 에 period · source 없음")
@@ -459,7 +655,14 @@ def cmd_check(a):
                     iss.append({"slide": i, "item": "넘침", "sev": "고칠 것", "msg": f"넘침 {len(s['overflow'])}곳 : {str(s['overflow'])[:120]}"})
                 if s.get("overlap"):
                     iss.append({"slide": i, "item": "겹침", "sev": "고칠 것", "msg": f"겹침 {len(s['overlap'])}곳"})
-                if s.get("minFont") and s["minFont"] < 14:
+                for key, nm in (("textOverlap", "글끼리 겹침"), ("textOnMark", "글이 막대 · 점 위"), ("outside", "밖으로 나감")):
+                    if s.get(key):
+                        iss.append({"slide": i, "item": nm, "sev": "고칠 것", "msg": f"{len(s[key])}곳 : {str(s[key])[:100]}"})
+                if (s.get("accentRoles") or 0) > 3:
+                    iss.append({"slide": i, "item": "강조 역할 수", "sev": "고칠 것", "msg": f"강조색 역할 {s['accentRoles']}가지 — 3가지까지"})
+                if (s.get("accentCount") or 0) > 8:
+                    iss.append({"slide": i, "item": "강조색 요소 수", "sev": "확인할 것", "msg": f"강조색 칠한 요소 {s['accentCount']}개 — 8개까지"})
+                if s.get("minFont") and s["minFont"] < 16:
                     iss.append({"slide": i, "item": "글자 크기", "sev": "고칠 것", "msg": f"가장 작은 글 {s['minFont']}px"})
         if a.shots:
             sd = p / "work" / "shots"
@@ -486,7 +689,9 @@ def main():
     sp.add_parser("setup")
     x = sp.add_parser("new"); x.add_argument("name"); x.add_argument("--title", default=""); x.add_argument("--date", default=""); x.add_argument("--series")
     x = sp.add_parser("read"); x.add_argument("name")
-    x = sp.add_parser("series"); x.add_argument("--q"); x.add_argument("--id"); x.add_argument("--since", default="")
+    x = sp.add_parser("series"); x.add_argument("--q")
+    x = sp.add_parser("fetch"); x.add_argument("name"); x.add_argument("id"); x.add_argument("--since", default="2021.01")
+    x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20)
     x = sp.add_parser("find")
     for k in ("layout", "kind", "struct"):
         x.add_argument("--" + k)

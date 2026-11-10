@@ -1,28 +1,139 @@
 {
-  "note": "매일 GitHub 작업(series.yml)이 받는 공개 계열. FRED 는 정부 기관 계열(재배포 제한 없는 것)만 둔다. 받기에 실패한 계열은 series.json 의 failed 에 적힌다.",
-  "start": "2015-01",
-  "series": [
-    {"id": "ecos:301Y013:000000:M", "name": "한국 경상수지", "unit": "백만 달러"},
-    {"id": "ecos:722Y001:0101000:M", "name": "한국 기준금리", "unit": "%"},
-    {"id": "ecos:901Y009:0:M", "name": "한국 소비자물가지수(2020=100)", "unit": "지수"},
-    {"id": "ecos:404Y014:*AA:M", "name": "한국 생산자물가지수", "unit": "지수"},
-    {"id": "ecos:901Y118:T002:M", "name": "한국 수출액(통관)", "unit": ""},
-    {"id": "ecos:403Y001:*AA:M", "name": "한국 수출금액지수(통관)", "unit": "지수"},
-    {"id": "ecos:732Y001:99:M", "name": "한국 외환보유액", "unit": ""},
-    {"id": "ecos:200Y102:10111:Q", "name": "한국 실질 GDP 성장률(전기비)", "unit": "%"},
-    {"id": "fred:FEDFUNDS", "name": "미국 연방기금금리(실효)", "unit": "%"},
-    {"id": "fred:DGS10", "name": "미국 국채 10년 금리", "unit": "%", "monthly": true},
-    {"id": "fred:DGS2", "name": "미국 국채 2년 금리", "unit": "%", "monthly": true},
-    {"id": "fred:CPIAUCSL", "name": "미국 소비자물가지수", "unit": "지수"},
-    {"id": "fred:CPILFESL", "name": "미국 근원 소비자물가지수", "unit": "지수"},
-    {"id": "fred:PCEPI", "name": "미국 PCE 물가지수", "unit": "지수"},
-    {"id": "fred:PCEPILFE", "name": "미국 근원 PCE 물가지수", "unit": "지수"},
-    {"id": "fred:UNRATE", "name": "미국 실업률", "unit": "%"},
-    {"id": "fred:PAYEMS", "name": "미국 비농업 고용", "unit": "천 명"},
-    {"id": "fred:INDPRO", "name": "미국 산업생산지수", "unit": "지수"},
-    {"id": "fred:RSAFS", "name": "미국 소매판매", "unit": "백만 달러"},
-    {"id": "fred:M2SL", "name": "미국 M2 통화량", "unit": "십억 달러"},
-    {"id": "fred:A191RL1Q225SBEA", "name": "미국 실질 GDP 성장률(연율)", "unit": "%"},
-    {"id": "fred:DEXKOUS", "name": "원/달러 환율", "unit": "원", "monthly": true}
-  ]
+ "note": "계열 번호 사전 — 값은 발표를 만드는 날 ecs.py fetch 로 열쇠 없이 받음(ECOS 공개 시험 열쇠 sample 10건씩 · FRED 내려받기 주소). 받은 값 · 받은 시각은 회차 사실표에.",
+ "start": "2015-01",
+ "series": [
+  {
+   "id": "ecos:301Y013:000000:M",
+   "name": "한국 경상수지",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "ecos:301Y013:400000:M",
+   "name": "한국 이전소득수지",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "ecos:301Y013:300000:M",
+   "name": "한국 본원소득수지",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "ecos:301Y013:200000:M",
+   "name": "한국 서비스수지",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "ecos:301Y013:100000:M",
+   "name": "한국 상품수지",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "ecos:722Y001:0101000:M",
+   "name": "한국 기준금리",
+   "unit": "%"
+  },
+  {
+   "id": "ecos:901Y009:0:M",
+   "name": "한국 소비자물가지수(2020=100)",
+   "unit": "지수"
+  },
+  {
+   "id": "ecos:404Y014:*AA:M",
+   "name": "한국 생산자물가지수",
+   "unit": "지수"
+  },
+  {
+   "id": "ecos:901Y118:T002:M",
+   "name": "한국 수출액(통관)",
+   "unit": ""
+  },
+  {
+   "id": "ecos:403Y001:*AA:M",
+   "name": "한국 수출금액지수(통관)",
+   "unit": "지수"
+  },
+  {
+   "id": "ecos:732Y001:99:M",
+   "name": "한국 외환보유액",
+   "unit": ""
+  },
+  {
+   "id": "ecos:200Y102:10111:Q",
+   "name": "한국 실질 GDP 성장률(전기비)",
+   "unit": "%"
+  },
+  {
+   "id": "fred:FEDFUNDS",
+   "name": "미국 연방기금금리(실효)",
+   "unit": "%"
+  },
+  {
+   "id": "fred:DGS10",
+   "name": "미국 국채 10년 금리",
+   "unit": "%",
+   "monthly": true
+  },
+  {
+   "id": "fred:DGS2",
+   "name": "미국 국채 2년 금리",
+   "unit": "%",
+   "monthly": true
+  },
+  {
+   "id": "fred:CPIAUCSL",
+   "name": "미국 소비자물가지수",
+   "unit": "지수"
+  },
+  {
+   "id": "fred:CPILFESL",
+   "name": "미국 근원 소비자물가지수",
+   "unit": "지수"
+  },
+  {
+   "id": "fred:PCEPI",
+   "name": "미국 PCE 물가지수",
+   "unit": "지수"
+  },
+  {
+   "id": "fred:PCEPILFE",
+   "name": "미국 근원 PCE 물가지수",
+   "unit": "지수"
+  },
+  {
+   "id": "fred:UNRATE",
+   "name": "미국 실업률",
+   "unit": "%"
+  },
+  {
+   "id": "fred:PAYEMS",
+   "name": "미국 비농업 고용",
+   "unit": "천 명"
+  },
+  {
+   "id": "fred:INDPRO",
+   "name": "미국 산업생산지수",
+   "unit": "지수"
+  },
+  {
+   "id": "fred:RSAFS",
+   "name": "미국 소매판매",
+   "unit": "백만 달러"
+  },
+  {
+   "id": "fred:M2SL",
+   "name": "미국 M2 통화량",
+   "unit": "십억 달러"
+  },
+  {
+   "id": "fred:A191RL1Q225SBEA",
+   "name": "미국 실질 GDP 성장률(연율)",
+   "unit": "%"
+  },
+  {
+   "id": "fred:DEXKOUS",
+   "name": "원/달러 환율",
+   "unit": "원",
+   "monthly": true
+  }
+ ]
 }
