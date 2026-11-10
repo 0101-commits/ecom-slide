@@ -1,0 +1,15 @@
+name: public-check
+# push · PR 마다 공개 검사(고객 흔적 · 정해지지 않은 칸 · 올리면 안 되는 파일). 걸리면 실패.
+on:
+  push:
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q lxml
+      - run: python tools/check_public.py

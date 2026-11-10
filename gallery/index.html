@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECOM 레퍼런스 갤러리</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7f5;--card:#fff;--ink:#17241e;--mute:#6b7a72;--line:#d6ded9;--acc:#00744f;--dark:#28302c;--mid:#96a59e;--light:#e2e8e5;--pic:#d9d9d9;
+  --f:'Pretendard','Noto Sans KR','Malgun Gothic',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:14px;word-break:keep-all}
+header{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-left,0px))}
+h1{font-size:19px;margin:0 0 8px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,input,button{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:7px;padding:5px 9px;background:#fff;color:var(--ink)}
+.n{color:var(--mute);font-size:13px}
+main{padding:14px max(16px,env(safe-area-inset-left,0px));display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.c{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px;cursor:pointer;min-width:0}
+.c:hover,.c:focus-visible{border-color:var(--acc);outline:none}
+.c svg{display:block;width:100%;height:auto;background:#fff}
+.c .m{display:flex;justify-content:space-between;gap:6px;margin-top:6px;font-size:12px;color:var(--mute)}
+.c .m b{color:var(--ink);font-variant-numeric:tabular-nums}
+#more{grid-column:1/-1;justify-self:center}
+dialog{border:1px solid var(--line);border-radius:10px;padding:14px;max-width:min(960px,94vw);width:100%}
+dialog svg{width:100%;height:auto;border:1px solid var(--line)}
+dialog pre{font-size:12px;background:var(--bg);padding:8px;border-radius:6px;overflow:auto;max-height:180px}
+</style>
+</head>
+<body>
+<header>
+  <h1>ECOM 레퍼런스 갤러리 <span class="n">— HCG 장표 골격(글 · 그림 없음)</span></h1>
+  <div class="bar">
+    <select id="fs" aria-label="구조"><option value="">구조 전부</option></select>
+    <select id="fl" aria-label="배치"><option value="">배치 전부</option></select>
+    <label class="n">칸 수 <input id="fc" type="number" min="0" max="12" style="width:64px"></label>
+    <label class="n">단계 <input id="ft" type="number" min="0" max="12" style="width:64px"></label>
+    <input id="fq" type="search" placeholder="r00012" aria-label="번호로 찾기" style="width:110px">
+    <span class="n" id="cnt"></span>
+  </div>
+</header>
+<main id="grid"></main>
+<dialog id="dlg"><div id="big"></div><pre id="info"></pre><button type="button" id="cp">번호 복사</button> <button type="button" id="cl">닫기</button></dialog>
+<script>
+(async function(){
+  var CAT, SK = {}, shown = 0, list = [], cur = null;
+  var base = (window.ECOM_LIB || '../library/');
+  try { CAT = window.ECOM_CAT || await (await fetch(base + 'catalog.json')).json(); }
+  catch (e) { document.getElementById('grid').textContent = '목록을 못 읽음 — GitHub Pages 나 로컬 서버(python -m http.server)로 여세요.'; return; }
+  var names = {}; CAT.structs.forEach(function(s){ names[s.code] = s.name; var o = document.createElement('option'); o.value = s.code; o.textContent = s.name + ' (' + s.n + ')'; fs.appendChild(o); });
+  Array.from(new Set(CAT.items.map(function(x){ return x.layout || x.kind; }))).sort().forEach(function(l){ var o = document.createElement('option'); o.value = l; o.textContent = l; fl.appendChild(o); });
+  var FILL = {acc:'var(--acc)', dark:'var(--dark)', mid:'var(--mid)', light:'var(--light)', none:'none'};
+  async function bundle(code){ if (window.ECOM_SK) return window.ECOM_SK[code]; if (!SK[code]) SK[code] = await (await fetch(base + 'skeletons/' + code + '.json')).json(); return SK[code]; }
+  function svg(sk){
+    var p = ['<svg viewBox="0 0 1280 720" role="img"><rect width="1280" height="720" fill="#fff"/>'];
+    var b = sk.body; p.push('<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+b[3]+'" fill="none" stroke="#eef1ef" stroke-width="2"/>');
+    sk.boxes.forEach(function(x){
+      var f = x.pic ? 'var(--pic)' : (FILL[x.fill] || 'none'), st = (x.line || f === 'none') ? 'stroke="#8a978f" stroke-width="2"' : '';
+      var tr = x.rot ? ' transform="rotate('+x.rot+' '+(x.x+x.w/2)+' '+(x.y+x.h/2)+')"' : '';
+      var x0=x.x, y0=x.y, x1=x.x+x.w, y1=x.y+x.h, cy=(y0+y1)/2, m=Math.min(x.w*0.3, x.h*0.5);
+      if (x.k === 'ellipse') p.push('<ellipse cx="'+(x0+x1)/2+'" cy="'+cy+'" rx="'+x.w/2+'" ry="'+x.h/2+'" fill="'+f+'" '+st+tr+'/>');
+      else if (x.k === 'chevron' || x.k === 'pentagon' || x.k === 'arrowR') p.push('<polygon points="'+[x0,y0,x1-m,y0,x1,cy,x1-m,y1,x0,y1].concat(x.k==='chevron'?[x0+m,cy]:[]).join(',')+'" fill="'+f+'" '+st+tr+'/>');
+      else if (x.k === 'diamond') p.push('<polygon points="'+[(x0+x1)/2,y0,x1,cy,(x0+x1)/2,y1,x0,cy].join(',')+'" fill="'+f+'" '+st+tr+'/>');
+      else if (x.k === 'triangle') p.push('<polygon points="'+[(x0+x1)/2,y0,x1,y1,x0,y1].join(',')+'" fill="'+f+'" '+st+tr+'/>');
+      else if (x.k === 'table') { p.push('<rect x="'+x0+'" y="'+y0+'" width="'+x.w+'" height="'+x.h+'" fill="none" stroke="#8a978f" stroke-width="2"/>'); for (var i=1;i<(x.rows||1);i++) p.push('<line x1="'+x0+'" x2="'+x1+'" y1="'+(y0+x.h*i/x.rows)+'" y2="'+(y0+x.h*i/x.rows)+'" stroke="#d6ded9"/>'); for (var j=1;j<(x.cols||1);j++) p.push('<line y1="'+y0+'" y2="'+y1+'" x1="'+(x0+x.w*j/x.cols)+'" x2="'+(x0+x.w*j/x.cols)+'" stroke="#d6ded9"/>'); }
+      else if (x.k === 'chart') { p.push('<rect x="'+x0+'" y="'+y0+'" width="'+x.w+'" height="'+x.h+'" fill="none" stroke="var(--acc)" stroke-width="2"/>'); for (var k=0;k<5;k++){ var hh=x.h*(0.3+0.13*k); p.push('<rect x="'+(x0+x.w*(0.12+k*0.17))+'" y="'+(y1-hh)+'" width="'+(x.w*0.1)+'" height="'+hh+'" fill="#c3ccc8"/>'); } }
+      else p.push('<rect x="'+x0+'" y="'+y0+'" width="'+x.w+'" height="'+x.h+'" rx="'+(x.k==='round'?12:0)+'" fill="'+f+'" '+st+tr+'/>');
+      if (x.chars && x.w > 20) { var n = Math.max(1, Math.min(x.paras||1, Math.floor((x.h-8)/16))); for (var q=0;q<n;q++) p.push('<rect x="'+(x0+8)+'" y="'+(y0+8+q*16)+'" width="'+Math.max(4,(x.w-16)*0.7)+'" height="5" rx="2" fill="'+((x.fill==='acc'||x.fill==='dark')?'#fff':'#9aa7a0')+'"/>'); }
+    });
+    sk.lines.forEach(function(l){ p.push('<line x1="'+l.x1+'" y1="'+l.y1+'" x2="'+l.x2+'" y2="'+l.y2+'" stroke="#6b7a72" stroke-width="2"/>'); });
+    p.push('</svg>'); return p.join('');
+  }
+  function filter(){
+    var s = fs.value, l = fl.value, c = +fc.value || 0, t = +ft.value || 0, q = fq.value.trim();
+    list = CAT.items.filter(function(x){ return (!s || x.s === s) && (!l || (x.layout || x.kind) === l) && (!c || x.cols === c) && (!t || x.steps === t) && (!q || x.id.indexOf(q) >= 0); });
+    shown = 0; grid.innerHTML = ''; cnt.textContent = list.length.toLocaleString('ko-KR') + '장'; more();
+  }
+  async function more(){
+    var old = document.getElementById('more'); if (old) old.remove();
+    var part = list.slice(shown, shown + 120); shown += part.length;
+    for (const x of part) {
+      var sk = (await bundle(x.s))[x.id]; if (!sk) continue;
+      var d = document.createElement('div'); d.className = 'c'; d.tabIndex = 0;
+      d.innerHTML = svg(sk) + '<div class="m"><b>'+x.id+'</b><span>'+(names[x.s]||'')+' · 칸 '+x.ns+'</span></div>';
+      d.onclick = d.onkeydown = (function(x, sk){ return function(e){ if (e.type === 'keydown' && e.key !== 'Enter') return; open(x, sk); }; })(x, sk);
+      grid.appendChild(d);
+    }
+    if (shown < list.length) { var b = document.createElement('button'); b.id = 'more'; b.type = 'button'; b.textContent = '더 보기 (' + (list.length - shown) + ')'; b.onclick = more; grid.appendChild(b); }
+  }
+  function open(x, sk){ cur = x; big.innerHTML = svg(sk); info.textContent = JSON.stringify({id:x.id, 구조:names[x.s], 배치:x.layout||x.kind, HCG유형:x.tn, 칸:x.ns, 열:x.cols, 줄:x.rows, 단계:x.steps, 도형:x.nb}, null, 1); dlg.showModal(); }
+  cp.onclick = function(){ if (cur) navigator.clipboard.writeText(cur.id).catch(function(){}); };
+  cl.onclick = function(){ dlg.close(); };
+  [fs, fl, fc, ft, fq].forEach(function(e){ e.addEventListener('input', filter); });
+  filter();
+})();
+</script>
+</body>
+</html>

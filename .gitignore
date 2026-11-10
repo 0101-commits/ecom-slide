@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+style/preview.html
+.ecom-slide/
+.omc/
