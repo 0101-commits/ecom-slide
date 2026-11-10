@@ -13,3 +13,5 @@ jobs:
           python-version: "3.12"
       - run: pip install -q lxml
       - run: python tools/check_public.py
+        env:
+          ECOM_HASH_KEY: ${{ secrets.ECOM_HASH_KEY }}

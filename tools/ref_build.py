@@ -571,14 +571,22 @@ def norm(s):
 HANGUL = re.compile(r"[가-힣]")
 
 
-def _h(x):
-    return hashlib.sha256(x.encode()).hexdigest()[:16]
+def hash_key():
+    """고객명 해시 열쇠 — 환경 변수 ECOM_HASH_KEY(GitHub 비밀값 · 관리자 PC). 열쇠 없이는 이름을 대어 봐도 맞춰 볼 수 없음"""
+    return os.environ.get("ECOM_HASH_KEY", "").strip()
+
+
+def _h(x, key=None):
+    import hmac
+    k = (key if key is not None else hash_key()).encode()
+    if not k:
+        raise RuntimeError("ECOM_HASH_KEY 없음")
+    return hmac.new(k, x.encode(), hashlib.sha256).hexdigest()[:20]
 
 
 def hit(s, hashes):
-    """한글이 든 이름은 글 속 아무 자리 조각으로, 영문 · 숫자 이름은 낱말 단위(1~3낱말 이어 붙임)로 대조"""
+    """한글이 든 이름은 글 속 아무 자리 조각으로, 영문 · 숫자 이름은 낱말 단위(1~3낱말 이어 붙임)로 대조. 긴 글도 끝까지 봄"""
     import unicodedata
-    s = s[:400]
     ns = norm(s)
     for i in range(len(ns)):
         for j in range(i + 2, min(len(ns), i + 20) + 1):

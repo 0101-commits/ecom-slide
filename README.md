@@ -25,6 +25,6 @@ HCG 장표 3,920장의 짜임(골격)을 고객 흔적 없이 담고, 발표 엔
 - 수치 파일엔 재배포 제한이 없는 공개 계열만 둔다(ECOS · 미국 정부 기관 FRED 계열).
 
 ## 관리자
-- 공개 수치 : 저장소 Settings → Secrets 에 `ECOS_API_KEY` · `FRED_API_KEY` 를 넣으면 `series` 작업이 매일 07:40(한국) 갱신.
-- 레퍼런스 다시 만들기 : `python -X utf8 tools/ref_build.py --meta <HCG meta.json> --src <장 pptx 폴더> --build <작업 폴더> --lib library --hash rules/client_hash.json`
+- 비밀값 : `ECOM_HASH_KEY`(공개 검사의 고객명 대조 열쇠, 넣어 둠) · `ECOS_API_KEY` · `FRED_API_KEY`(공개 수치) — 수치 열쇠를 넣으면 `series` 작업이 매일 07:40(한국) 갱신.
+- 레퍼런스 다시 만들기 : `python -X utf8 tools/ref_build.py --meta <HCG meta.json> --src <장 pptx 폴더> --build <작업 폴더> --lib library --hash rules/client_hash.json` (환경 변수 `ECOM_HASH_KEY` 필요 — 고객명 열쇠 해시)
 - 글꼴 : Pretendard — SIL Open Font License 1.1 (`style/fonts/Pretendard-LICENSE.txt`).
