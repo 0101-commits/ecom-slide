@@ -1,25 +1,23 @@
 # ecom-slide
 
-ECOM 경제 스터디 발표를 **컨퍼런스형 HTML 파일 하나**로 만드는 스킬의 공개 재료 창고.
-HCG 장표 3,920장의 짜임(골격)과 목업 315종을 담고, 발표 엔진(IR 화면 + 차분한 모션 + 디자인 문법 판 2) · 이야기 규칙 · 용어 사전을 둔다. 숫자는 발표를 만드는 날 열쇠 없이 받는다.
+ECOM 경제 스터디 발표를 **HTML 파일 하나**로 만드는 스킬의 공개 재료 창고(엔진 3판 · 2026-11-11).
+사용자 Kick-off · CW44 발표 자료의 짜임 — **꼬리표 → 헤드메시지 2줄 → 꽉 찬 주석 차트 · 도식 → 왼쪽 아래 각주 · 오른쪽 아래 로고** — 를 기본 틀로, 장에 들어오면 저절로 쌓이고 장 넘김 8종으로 이어진다.
 
 | 폴더 | 내용 |
 |---|---|
-| `library/` | HCG 레퍼런스 골격 3,920장 — 도형 자리 · 모양 · 색 역할 · 칸마다 글자 「수」만(글 · 이름 · 그림 없음). `catalog.json` 목록 + `skeletons/S01~S42.json`(구조별) |
-| `library/mockups/` | 목업 315종 — 화면 종류 · 짜임 17 · 모션 기법별 slide 틀(공개 통계 숫자) |
-| `gallery/` | 골격 찾아보기(`index.html`) · 목업 315 모아 보기(`mockups.html`) |
-| `style/` | 발표 엔진(`deck.js` · `deck.css`) · 데이터 형식(`SCHEMA.md` · `SCHEMA2.md`) · 글꼴(Pretendard, OFL) |
-| `rules/` | 이야기 계획 규칙 · 문체 · 용어 규칙 · 고객명 해시(검사용, 원문 없음) |
-| `terms/` | ECOM 용어 사전(용어 풀이 · 같은 말 묶음) |
-| `rules/design_grammar.md` | 화면 디자인 문법 판 2 — PPT 디자인 스튜디오 공개 포트폴리오 95건(본문 178장) 분석 : 바탕 · 한 색 · 결론형 제목 · 짜임 17 · 결론 띠 · 점검 기준 |
-| `data/` | 계열 번호 사전(`series_ids.json`) · 목업용 숫자 묶음(`snap/`, 받은 시각 표시) |
-| `skill/ecom-slide/` | 스킬 원본(작업 저장소 `.claude/skills/` 로 복사해 씀) |
-| `tools/` | 레퍼런스 정리(`ref_build.py`, 관리자 PC 전용) · 공개 검사 · 목업 만들기 · 모아 보기 |
+| `style/` | 엔진 3판(`deck.js` · `deck.css`) + 화면 종류 부품(`parts/*.js`) · 형식 `SCHEMA3.md`(+ `SCHEMA3_charts.md` · `SCHEMA3_diagrams.md`) · 로고 자리 `brand/`(ECOM CI 그림은 공개 저장소에 두지 않고 스킬 zip · 작업 저장소에만) · 글꼴(Pretendard, OFL) · 시험 덱 `demo3*.json` · 2판 엔진은 `v2/`(옛 회차 빌드용) |
+| `rules/` | 이야기 계획(`plan.md`) · 문체(`write.md`, AI 말투 사전) · 화면 문법(`design_grammar.md`) 판 3 · 고객명 해시(검사용) · 2판 규칙은 `v2/` |
+| `library/mockups/` | 목업 315종(3판) = 새 부품 30 + 판 2 목업 285종을 3판으로 — `mockups.json` · `index.md`, 판 2 원본은 `v2/` |
+| `library/` | HCG 레퍼런스 골격 3,920장(`catalog.json` · `skeletons/`) |
+| `gallery/` | 목업 315 모아 보기(`mockups.html`, O 키) · 골격 찾아보기(`index.html`) |
+| `terms/` · `data/` | 용어 사전 · 계열 번호 사전 · 목업용 숫자 묶음(`snap/`, 받은 시각 표시) |
+| `skill/ecom-slide/` | 스킬 원본(SKILL.md · scripts/ecs.py). zip 은 `tools/sync_skill.py --zip` 이 lib/(엔진 · 규칙 · 목업)를 함께 넣어 만듦 |
+| `tools/` | 목업 만들기(`make_mockups3.py` · `mock3_*.py`) · 갤러리(`build_mockups.py`) · 미리 보기(`preview3.py`) · 화면 점검(`shot3.js`) · 공개 검사 · 레퍼런스 정리 |
 
 ## 쓰는 법
 1. 비공개 작업 저장소(ecom-study)를 Claude 앱 또는 웹의 **Code 탭**으로 연다.
 2. 「CW47 고용지표 발표 만들어 줘」 — 스킬이 이 저장소를 `.ecom-slide/` 로 받아 쓴다.
-3. 결과 : `sessions/<회차>/ECOM_<회차>.html` (← → 넘기기 · P 발표자 창 · R 읽기 겹 · O 개요).
+3. 결과 : `sessions/<회차>/ECOM_<회차>.html` (→ · Enter 다음 · ← 이전 · 숫자 + Enter 이동 · O 모아 보기 · P 발표자 창 · F 전체 화면).
 
 ## 공개 원칙
 - 이 저장소엔 회차 자료 · 완성 발표 파일 · 멤버 이름 · 고객명 원문 · 열쇠를 올리지 않는다(작업 저장소에만).

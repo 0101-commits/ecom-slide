@@ -37,7 +37,13 @@ def main():
     key = hash_key()
     hashes = set(json.load(open(ROOT / "rules" / "client_hash.json", encoding="utf-8"))["h"]) if key else set()
     bad, strings = [], {}
-    for f in sorted(ROOT.rglob("*")):
+    try:  # 올라갈 파일만(.gitignore 로 빠진 로고 · 미리 보기는 제외)
+        import subprocess
+        ls = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--cached", "--others", "--exclude-standard"], capture_output=True, text=True, encoding="utf-8", timeout=60)
+        files = [ROOT / x for x in ls.stdout.splitlines() if x.strip()] if ls.returncode == 0 else list(ROOT.rglob("*"))
+    except Exception:
+        files = list(ROOT.rglob("*"))
+    for f in sorted(files):
         if not f.is_file():
             continue
         rel = f.relative_to(ROOT).as_posix()

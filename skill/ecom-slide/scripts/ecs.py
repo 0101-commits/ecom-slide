@@ -34,9 +34,16 @@ def root():
     return Path.cwd()
 
 
+BUNDLED = Path(__file__).resolve().parent.parent / "lib"   # 스킬 묶음(zip)에 든 엔진 · 규칙 · 목업
+
+
 def lib_dir():
     env = os.environ.get("ECOM_SLIDE_LIB")
-    return Path(env) if env else root() / ".ecom-slide"
+    if env:
+        return Path(env)
+    if (BUNDLED / "style" / "deck.js").exists():
+        return BUNDLED
+    return root() / ".ecom-slide"
 
 
 def sess(name):
@@ -74,7 +81,9 @@ def browser():
 def cmd_setup(a):
     lib = lib_dir()
     msg = []
-    if (lib / ".git").exists():
+    if lib == BUNDLED:
+        msg.append("스킬 묶음 판")
+    elif (lib / ".git").exists():
         r = subprocess.run(["git", "-C", str(lib), "pull", "--ff-only", "-q"], capture_output=True, text=True, timeout=300)
         msg.append("갱신" if r.returncode == 0 else "갱신 실패(지난 판으로 진행)")
     elif lib.exists() and (lib / "style").exists():
@@ -261,19 +270,19 @@ def cmd_mockup(a):
     m = load(lib_dir() / "library" / "mockups" / "mockups.json")
     if not m:
         say({"error": "목업 목록이 없어요 — setup 먼저"}, 1)
-    items = m if isinstance(m, list) else m.get("items", [])
+    items = m if isinstance(m, list) else (m.get("items") or m.get("mockups") or [])
     if a.id:
         hit = next((x for x in items if x["id"] == a.id), None)
         if not hit:
             say({"error": f"목업 없음 : {a.id}"}, 1)
-        say({"id": hit["id"], "family": hit.get("family"), "slide": hit["slide"]})
+        say({"id": hit["id"], "kind": hit.get("kind"), "family": hit.get("family"), "slide": hit["slide"]})
     q = (a.q or "").lower()
-    hits = [x for x in items if (not a.family or x.get("family") == a.family)
+    hits = [x for x in items if (not a.family or a.family in (x.get("kind"), x.get("family")))
             and (not q or q in json.dumps([x.get("title"), x.get("tags"), x.get("variant")], ensure_ascii=False).lower())]
     fams = {}
     for x in items:
-        fams[x.get("family")] = fams.get(x.get("family"), 0) + 1
-    say({"count": len(hits), "items": [{"id": x["id"], "family": x.get("family"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
+        fams[x.get("kind") or x.get("family")] = fams.get(x.get("kind") or x.get("family"), 0) + 1
+    say({"count": len(hits), "items": [{"id": x["id"], "kind": x.get("kind"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
          "families": fams if not (a.family or q) else None})
 
 
@@ -343,6 +352,16 @@ def cmd_table(a):
     d = load(p / "work" / "outline.json") or load(p / "deck.json")
     if not d:
         say({"error": "outline.json · deck.json 이 없어요"}, 1)
+    if d.get("schema") == 3 or any(isinstance(x.get("eyebrow"), dict) for x in d.get("slides", [])):
+        rows = ["| # | 종류 | 묶음 | 주제 | 헤드메시지 | 넘김 · 바뀜 |", "|---|---|---|---|---|---|"]
+        for i, x in enumerate(d["slides"], 1):
+            e = x.get("eyebrow") or {}
+            e = e if isinstance(e, dict) else {"group": e}
+            pg = x.get("appendix") or i
+            rows.append(f"| {pg} | {x.get('kind')} | {e.get('group', '')} | {e.get('topic', '') or plain(x.get('title', ''))} | {plain(x.get('head', ''))[:60]} | {x.get('transition', '') or ''}{' · 바뀜 ' + str(len(x['beats'])) if x.get('beats') else ''} |")
+        (p / "work" / "plan_table.md").write_text("\n".join(rows), encoding="utf-8")
+        print("\n".join(rows))
+        say({"ok": True, "slides": len(d["slides"]), "file": str(p / "work" / "plan_table.md")})
     rows = ["| # | 종류 | PART | 제목 | 골격 · 배치 |", "|---|---|---|---|---|"]
     for i, s in enumerate(d["slides"], 1):
         g = " · ".join(x for x in (s.get("layout", ""), s.get("skeleton", ""), (s.get("chart") or {}).get("type", "") if isinstance(s.get("chart"), dict) else s.get("chart", "")) if x)
@@ -541,12 +560,114 @@ def lint(deck, lib):
     return iss
 
 
+# ───────── lint 3판(schema 3) ─────────
+AI_TONE = [("꼭대기", "고점"), ("고원", "지속 구간"), ("방아쇠", "요인"), ("체력", "성장 여력"), ("웃돈", "프리미엄"), ("쉽게 말해", "(지움)"),
+           ("한 줄로", "(지움)"), ("핵심은", "(지움)"), ("결국", "(지움)"), ("주목할 점은", "(지움)"), ("사실상", "(지움)"), ("좁힘", "축소"),
+           ("함께 인하", "동반 인하"), ("한국 먼저", "한국 선제 인상"), ("넉 달째", "4개월 연속"), ("内", ""), ("現", "현재"), ("强", "강세"), ("高", "높음"), ("美", "미국"), ("韓", "한국")]
+OLD_FIELDS = {"concl": "결론 띠(헤드메시지로 옮김)", "aside": "오른쪽 요점 칸(본문 안으로)", "heading": "어깨끈(꼬리표로)", "read": "읽기 겹(화면으로)", "title": "짧은 제목(head 2줄로)", "theme": "강조색(초록 고정)"}
+BARE_NUM = re.compile(r"(?<![\d.])(\d+\.\d{2})(?![\d.%~]|\s*~|%p|bp|원|배|달러|억|조|만|명|건|개월|년|월|일|장|회|분기|p|포인트|\s*(%|원|배|달러|억|조|명|bp|개월))")
+DATE = re.compile(r"\d{4}\.\d{2}")
+MEET2 = re.compile(r"(오늘|발표|회의|결정|기준)\s*\d{1,2}\.\d{1,2}")
+MEET = re.compile(r"\d{1,2}\.\d{1,2}(?=\s*(금통위|FOMC|회의|결정|발표|일|선거))")
+
+
+def strings_of(o, out=None, key=""):
+    out = [] if out is None else out
+    if isinstance(o, str):
+        out.append((key, o))
+    elif isinstance(o, dict):
+        for k, v in o.items():
+            strings_of(v, out, k)
+    elif isinstance(o, list):
+        for v in o:
+            strings_of(v, out, key)
+    return out
+
+
+def known_kinds(lib):
+    ks = set()
+    for f in (lib / "style" / "parts").glob("*.js"):
+        ks |= set(re.findall(r"ECOM\.parts\.([a-z]+)\s*=", f.read_text(encoding="utf-8")))
+        ks |= set(re.findall(r"ECOM\.parts\[['\"]([a-z]+)['\"]\]\s*=", f.read_text(encoding="utf-8")))
+    return ks
+
+
+def lint3(deck, lib):
+    iss = []
+    def add(i, item, sev, msg):
+        iss.append({"slide": i, "item": item, "sev": sev, "msg": msg})
+    kinds = known_kinds(lib)
+    m = deck.get("meta", {})
+    sl = deck.get("slides", [])
+    if not m.get("cover"):
+        add(0, "표지 모양", "확인할 것", "meta.cover 없음 — 질문 카드에서 고른 표지(A~E)를 적기")
+    body = [s for s in sl if not s.get("appendix") and s.get("kind") not in ("cover", "part")]
+    ln = m.get("length")
+    if isinstance(ln, list) and len(ln) == 2 and not (ln[0] <= len(body) <= ln[1]):
+        add(0, "본문 장 수", "확인할 것", f"본문 {len(body)}장 — 고른 범위 {ln[0]}~{ln[1]}장")
+    apx_ids = {s.get("appendix") for s in sl if s.get("appendix")}
+    prev, run = None, 0
+    for i, s in enumerate(sl, 1):
+        k = s.get("kind")
+        if k not in kinds:
+            add(i, "화면 종류", "고칠 것", f"모르는 kind : {k}")
+        run = run + 1 if k == prev else 1
+        prev = k
+        if run == 3 and k not in ("cover", "part") and not s.get("appendix"):
+            add(i, "같은 종류 연속", "확인할 것", f"{k} 3장째 — 2장까지 권고")
+        for f, why in OLD_FIELDS.items():
+            if f in s and not (f == "title" and k in ("cover", "part", "statement", "term", "further", "discuss")):
+                add(i, "판 2 칸", "고칠 것", f"`{f}` — {why}")
+        txt = strings_of(s)
+        alltxt = " ".join(t for _, t in txt)
+        for w, rep in AI_TONE:
+            if w and w in alltxt:
+                add(i, "AI 말투", "고칠 것", f"「{w}」 → {rep}")
+        if INVEST.search(alltxt):
+            add(i, "투자 권유 말", "고칠 것", INVEST.search(alltxt).group(0))
+        if HOLDER.search(alltxt):
+            add(i, "자리 표시 글", "고칠 것", HOLDER.search(alltxt).group(0))
+        if "bp" in alltxt and "%p" in alltxt and k != "term":
+            add(i, "단위 섞임", "고칠 것", "한 장에 bp 와 %p — 한 단위로")
+        for key, t in txt:
+            if key in ("text", "res", "sub", "head", "s1", "s2", "label", "end", "chip") and re.search(r"[가-힣]", t):
+                t2 = MEET2.sub("", MEET.sub("", DATE.sub("", t)))
+                for mm in BARE_NUM.finditer(t2):
+                    add(i, "단위 없는 숫자", "고칠 것", f"「{t[:40]}」의 {mm.group(1)}")
+                    break
+        if k in ("cover", "part"):
+            continue
+        e = s.get("eyebrow")
+        if not isinstance(e, dict) or not e.get("group") or not e.get("topic"):
+            add(i, "꼬리표", "고칠 것", "eyebrow{group, topic, basis} — 어깨끈 내용(무엇을 · 기준 · 단위)을 꼬리표에")
+        h = plain(s.get("head", ""))
+        n = len(re.sub(r"\s", "", h))
+        if not h:
+            add(i, "헤드메시지", "고칠 것", "head 없음 — 사실 + 의미 2줄")
+        elif n < 40 or n > 95:
+            add(i, "헤드메시지 길이", "고칠 것", f"{n}자 — 50~90자(2줄)")
+        elif ends_nominal(h) is False:
+            add(i, "헤드메시지 문체", "확인할 것", "보고서체(~함 · ~임 · ~됨)로 끝내기")
+        f = s.get("foot") or {}
+        if re.search(r"\d", json.dumps({k2: v for k2, v in s.items() if k2 not in ("foot", "eyebrow", "note")}, ensure_ascii=False)) and not f.get("source"):
+            add(i, "출처", "고칠 것", "숫자가 있는데 foot.source 없음")
+        if f.get("source") and not f.get("asof"):
+            add(i, "기준일", "확인할 것", "foot.asof(기준일) 없음")
+        b = s.get("beats") or []
+        if len(b) > 2:
+            add(i, "바뀜 단계", "고칠 것", f"{len(b)}개 — 2개까지")
+        for l in s.get("links") or []:
+            if l.get("to") not in apx_ids:
+                add(i, "부록 고리", "고칠 것", f"없는 부록 {l.get('to')}")
+    return iss
+
+
 def cmd_lint(a):
     p = sess(a.name)
     deck = load(p / "deck.json")
     if not deck:
         say({"error": "deck.json 이 없어요"}, 1)
-    iss = lint(deck, lib_dir())
+    iss = lint3(deck, lib_dir()) if deck.get("schema") == 3 else lint(deck, lib_dir())
     say({"ok": True, "fix": sum(1 for x in iss if x["sev"] == "고칠 것"), "confirm": sum(1 for x in iss if x["sev"] != "고칠 것"), "issues": iss})
 
 
@@ -585,18 +706,48 @@ def skeleton_of(lib, rid):
     return None
 
 
+def engine(lib, v3=True):
+    """엔진 3판 = style/deck.css · deck.js + style/parts/*.js(이름순) + 로고. 2판 데크(schema 없음)는 style/v2/ 로."""
+    st = lib / "style"
+    if not v3:
+        return (st / "v2" / "deck.css").read_text(encoding="utf-8"), (st / "v2" / "deck.js").read_text(encoding="utf-8"), None
+    js = (st / "deck.js").read_text(encoding="utf-8") + "\n" + "\n".join(f.read_text(encoding="utf-8") for f in sorted((st / "parts").glob("*.js")))
+    logo = {}
+    for k, f in (("green", "logo.png"), ("white", "logo_white.png")):
+        q = st / "brand" / f
+        if q.exists():
+            logo[k] = "data:image/png;base64," + base64.b64encode(q.read_bytes()).decode()
+    return (st / "deck.css").read_text(encoding="utf-8"), js, logo
+
+
+def page_html(deck, lib, nofont=False, extra_head="", title=None):
+    v3 = deck.get("schema") == 3
+    css, js, logo = engine(lib, v3)
+    payload = json.dumps(deck, ensure_ascii=False).replace("</", "<\\/")
+    face = "" if nofont else font_face(payload + (js if v3 else ""), lib)
+    m = deck.get("meta", {})
+    title = html.escape(title or f"ECOM {m.get('session', '')} · {m.get('title', '')}")
+    head_js = f"window.ECOM_LOGO={json.dumps(logo)};\n" if logo else ""
+    return (f'<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
+            f'<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{title}</title>\n'
+            f"{extra_head}<style>\n{face}{css}\n</style>\n</head>\n<body>\n"
+            f'<script type="application/json" id="deck-data">{payload}</script>\n'
+            f"<script>\n{head_js}{js}\n</script>\n</body>\n</html>\n")
+
+
 def cmd_build(a):
     p = sess(a.name)
     lib = lib_dir()
     deck = load(p / "deck.json")
     if not deck:
         say({"error": "deck.json 이 없어요"}, 1)
-    gl = load(lib / "terms" / "glossary.json", {"words": {}})
-    used = set(re.findall(r"\[\[([^\]]+)\]\]", json.dumps(deck.get("slides", []), ensure_ascii=False)))
-    deck.setdefault("glossary", {})
-    for w in used:
-        if w not in deck["glossary"] and w in gl.get("words", {}):
-            deck["glossary"][w] = gl["words"][w]
+    if deck.get("schema") != 3:
+        gl = load(lib / "terms" / "glossary.json", {"words": {}})
+        used = set(re.findall(r"\[\[([^\]]+)\]\]", json.dumps(deck.get("slides", []), ensure_ascii=False)))
+        deck.setdefault("glossary", {})
+        for w in used:
+            if w not in deck["glossary"] and w in gl.get("words", {}):
+                deck["glossary"][w] = gl["words"][w]
     miss = []
     for s in deck.get("slides", []):
         if s.get("kind") == "diagram" and s.get("layout") == "skeleton" and s.get("skeleton"):
@@ -605,21 +756,11 @@ def cmd_build(a):
                 s["skel"] = sk
             else:
                 miss.append(s["skeleton"])
-    css = (lib / "style" / "deck.css").read_text(encoding="utf-8")
-    js = (lib / "style" / "deck.js").read_text(encoding="utf-8")
-    payload = json.dumps(deck, ensure_ascii=False).replace("</", "<\\/")
-    face = "" if a.nofont else font_face(payload, lib)
-    m = deck.get("meta", {})
-    title = html.escape(f"ECOM {m.get('session', '')} · {m.get('title', '')}")
-    page = (f'<!doctype html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n'
-            f'<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>{title}</title>\n'
-            f"<style>\n{face}{css}\n</style>\n</head>\n<body>\n"
-            f'<script type="application/json" id="deck-data">{payload}</script>\n'
-            f"<script>\n{js}\n</script>\n</body>\n</html>\n")
+    page = page_html(deck, lib, a.nofont)
     out = p / f"ECOM_{a.name}.html"
     out.write_text(page, encoding="utf-8")
     say({"ok": True, "file": str(out), "kb": round(out.stat().st_size / 1024), "slides": len(deck.get("slides", [])),
-         "font": bool(face), "missing_skeletons": miss})
+         "engine": 3 if deck.get("schema") == 3 else 2, "font": "@font-face" in page, "missing_skeletons": miss})
 
 
 # ───────── check ─────────
@@ -638,7 +779,8 @@ def cmd_check(a):
     out = p / f"ECOM_{a.name}.html"
     if not deck or not out.exists():
         say({"error": "deck.json · 발표 파일이 없어요 — build 먼저"}, 1)
-    iss = lint(deck, lib)
+    v3 = deck.get("schema") == 3
+    iss = lint3(deck, lib) if v3 else lint(deck, lib)
     br = browser()
     screen = None
     if br:
@@ -649,6 +791,20 @@ def cmd_check(a):
             kinds = {i + 1: x.get("kind") for i, x in enumerate(deck.get("slides", []))}
             for s in screen.get("slides", []):
                 i = s.get("i")
+                if v3:
+                    pg = s.get("page")
+                    for key, nm in (("textOverlap", "글끼리 겹침"), ("outside", "장 밖으로 나감"), ("outsideBody", "본문 칸 밖으로")):
+                        if s.get(key):
+                            iss.append({"slide": i, "item": nm, "sev": "고칠 것", "msg": f"{len(s[key])}곳 : {str(s[key])[:120]}"})
+                    if (s.get("fnLines") or 0) > 2:
+                        iss.append({"slide": i, "item": "각주 줄", "sev": "고칠 것", "msg": f"{s['fnLines']}줄 — 2줄 안"})
+                    if (s.get("headLines") or 0) > 2:
+                        iss.append({"slide": i, "item": "헤드메시지 줄", "sev": "고칠 것", "msg": f"{s['headLines']}줄 — 2줄 안"})
+                    if s.get("minFont") and s["minFont"] < 11.5:
+                        iss.append({"slide": i, "item": "글자 크기", "sev": "고칠 것", "msg": f"가장 작은 글 {s['minFont']}px — 11.5px 이상"})
+                    if s.get("occupied") is not None and s["occupied"] < 45 and s.get("kind") not in ("cover", "part"):
+                        iss.append({"slide": i, "item": "화면 채움", "sev": "확인할 것", "msg": f"본문 칸 차지 {s['occupied']}% — 45% 밑이면 비어 보임"})
+                    continue
                 if s.get("chars", 0) > 40 and kinds.get(i) not in ("table", "cover", "end"):
                     iss.append({"slide": i, "item": "화면 글 40자", "sev": "고칠 것", "msg": f"화면에 보이는 글 {s['chars']}자"})
                 if s.get("overflow"):
@@ -691,7 +847,7 @@ def main():
     x = sp.add_parser("read"); x.add_argument("name")
     x = sp.add_parser("series"); x.add_argument("--q")
     x = sp.add_parser("fetch"); x.add_argument("name"); x.add_argument("id"); x.add_argument("--since", default="2021.01")
-    x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20)
+    x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family", help="화면 종류(kind) 또는 판 2 묶음 이름"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20)
     x = sp.add_parser("find")
     for k in ("layout", "kind", "struct"):
         x.add_argument("--" + k)
