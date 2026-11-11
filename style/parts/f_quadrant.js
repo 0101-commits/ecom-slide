@@ -13,7 +13,7 @@ ECOM.parts.quadrant = function (bd, s, ctx) {
   (s.cells || []).slice(0, 4).forEach(function (q, i) { var d = document.createElement('div'), x = c1 + (i % 2) * (cw + gp), y = r1 + Math.floor(i / 2) * (rh + gp);
     d.className = 'qc ' + K[i] + (q.tone === 'min' ? ' min' : '') + (q.tone === 'wide' ? ' wide' : ''); d.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:' + cw + 'px;height:' + rh + 'px'; d.setAttribute('data-b', 4);
     var ch = q.chip ? '<span class="chip2 ' + (q.tone === 'min' ? 'g' : q.tone === 'wide' ? 'dk' : '') + '">' + h.esc(q.chip) + '</span>' : '';
-    d.innerHTML = '<div class="vr"><div class="v"><span data-b="5" data-fx="count" data-count="' + q.v + '" data-from="' + (s.gauge ? s.gauge.cur : 0) + '" data-dec="' + (q.dec == null ? 2 : q.dec) + '">' + h.nf(q.v, q.dec == null ? 2 : q.dec) + '</span><small>' + h.esc(q.unit || '') + '</small></div>' + ch + '</div>'
+    d.innerHTML = '<div class="vr"><div class="v"><span data-b="5" data-fx="count" data-count="' + h.num(q.v) + '" data-from="' + h.num(s.gauge ? s.gauge.cur : 0) + '" data-dec="' + h.num(q.dec, 2) + '">' + h.nf(q.v, q.dec == null ? 2 : q.dec) + '</span><small>' + h.esc(q.unit || '') + '</small></div>' + ch + '</div>'
       + (q.rate ? '<div class="r">' + h.esc(q.rate) + '</div>' : '') + '<div class="x">' + h.esc(q.text || '') + (q.tag ? ' &nbsp;<span class="mt">' + h.esc(q.tag) + '</span>' : '') + '</div>' + (s.gauge ? gauge(q.v, s.gauge) : '');
     bd.insertBefore(d, svg); cells.push(d) });
   var ya = r1 + 2 * rh + gp + 16, ax = [];

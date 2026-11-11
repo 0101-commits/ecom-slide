@@ -8,7 +8,7 @@ ECOM.parts.statement = function (bd, s, ctx) {
   var tx = K.D(bd, 'kx k-sm', 0, 0, 1168, CY - 16, '<div>' + (s.label !== false ? '<em class="k-smk" data-b="1" data-fx="pop">' + h.esc(s.label || '결론') + '</em>' : '') + '<p data-b="1">' + h.md(s.text || '') + '</p>' + (s.sub ? '<span data-b="2" data-fx="fade">' + h.md(s.sub) + '</span>' : '') + '</div>');
   ev.forEach(function (e, i) { var x = i * (cw + gap);
     K.D(bd, 'kx k-sme', x, CY, cw, CH, '<div class="k-smh"><b>' + h.esc(e.label || '') + '</b>' + (e.note ? '<span>' + h.esc(e.note) + '</span>' : '') + '</div>'
-      + '<div class="k-smv"><span data-b="4" data-fx="count" data-count="' + e.value + '" data-dec="' + (e.dec || 0) + '"' + (e.sign ? ' data-sign="1"' : '') + '>' + h.nf(e.value, e.dec || 0, { sign: e.sign }) + '</span><small>' + h.esc(e.unit || '') + '</small></div>'
+      + '<div class="k-smv"><span data-b="4" data-fx="count" data-count="' + h.num(e.value) + '" data-dec="' + h.num(e.dec) + '"' + (e.sign ? ' data-sign="1"' : '') + '>' + h.nf(e.value, e.dec || 0, { sign: e.sign }) + '</span><small>' + h.esc(e.unit || '') + '</small></div>'
       + (e.source ? '<div class="k-sms">' + h.esc(e.source) + '</div>' : ''), { 'data-b': 3, 'data-fx': 'rise', 'data-ms': 420 }) });
   var svg = K.svg(ctx);
   ev.forEach(function (e, i) { if (e.chart) K.mini(svg, e.chart, i * (cw + gap) + 24, CY + 120, cw - 48, 118, 5, 1440 + i * 130) });

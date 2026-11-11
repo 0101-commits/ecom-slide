@@ -11,7 +11,7 @@ ECOM.parts.term = function (bd, s, ctx) {
   var ph = (512 - (pr.length - 1) * 14) / Math.max(1, pr.length);
   pr.forEach(function (p, i) { K.D(bd, 'kx k-tmp', RX, i * (ph + 14), RW, ph, '<em>' + (i + 1) + '</em><div><b>' + h.md(p.title || '') + '</b>' + (p.text ? '<span>' + h.md(p.text) + '</span>' : '') + '</div>', { 'data-b': 3, 'data-fx': 'right' }) });
   if (n) { K.D(bd, 'kx k-tmn', 0, ny, LW, nh, '<div class="k-smh"><b>' + h.esc(n.label || '') + '</b>' + (n.note ? '<span>' + h.esc(n.note) + '</span>' : '') + '</div>'
-      + '<div class="k-smv"><span data-b="5" data-fx="count" data-count="' + n.value + '" data-dec="' + (n.dec || 0) + '"' + (n.sign ? ' data-sign="1"' : '') + '>' + h.nf(n.value, n.dec || 0, { sign: n.sign }) + '</span><small>' + h.esc(n.unit || '') + '</small></div>'
+      + '<div class="k-smv"><span data-b="5" data-fx="count" data-count="' + h.num(n.value) + '" data-dec="' + h.num(n.dec) + '"' + (n.sign ? ' data-sign="1"' : '') + '>' + h.nf(n.value, n.dec || 0, { sign: n.sign }) + '</span><small>' + h.esc(n.unit || '') + '</small></div>'
       + (n.source ? '<div class="k-sms">' + h.esc(n.source) + '</div>' : ''), { 'data-b': 4, 'data-fx': 'rise' });
     if (n.chart) K.mini(K.svg(ctx), n.chart, 250, ny + 44, LW - 250 - 28, nh - 90, 6, 1700) }
   if (!n && s.ex) K.D(bd, 'kx k-tmx', 0, ny, LW, nh, '<b>' + h.esc(s.ex.title || '구성') + '</b><div>' + (s.ex.items || []).map(function (x) { return '<span>' + h.md(x) + '</span>' }).join('') + '</div>', { 'data-b': 4, 'data-fx': 'rise' });

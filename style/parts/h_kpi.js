@@ -6,7 +6,7 @@ var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 ECOM.parts.kpi = function (bd, s, ctx) { var u = ECOM.u, cards = s.cards || [], kb = h.H('div', 'kb', null, bd);
   kb.style.gridTemplateColumns = 'repeat(' + Math.max(1, cards.length) + ',minmax(0,1fr))';
   cards.forEach(function (c, i) { var k = h.H('div', 'kc' + ((c.hero || (i === 0 && !cards.some(function (x) { return x.hero }))) ? ' hero' : ''), null, kb); k.setAttribute('data-b', 1);
-    k.innerHTML = '<div class="l">' + h.esc(c.label) + (c.sub ? '<span>' + h.esc(c.sub) + '</span>' : '') + '</div><div class="v"><span data-b="2" data-fx="count" data-count="' + c.value + '" data-dec="' + (c.dec || 0) + '">' + h.nf(c.value, c.dec || 0) + '</span><small>' + h.esc(c.unit || '') + '</small></div>'
+    k.innerHTML = '<div class="l">' + h.esc(c.label) + (c.sub ? '<span>' + h.esc(c.sub) + '</span>' : '') + '</div><div class="v"><span data-b="2" data-fx="count" data-count="' + h.num(c.value) + '" data-dec="' + h.num(c.dec) + '">' + h.nf(c.value, c.dec || 0) + '</span><small>' + h.esc(c.unit || '') + '</small></div>'
       + '<div class="c">' + (c.chip ? '<span class="chip2 ' + (c.chip.dir === 'up' ? 'up' : c.chip.dir === 'dn' ? 'dn' : '') + '" data-b="3" data-fx="pop">' + (c.chip.dir === 'up' ? '▲ ' : c.chip.dir === 'dn' ? '▼ ' : '') + h.esc(c.chip.text) + '</span>' : '') + (c.asof ? '<span>' + h.esc(c.asof) + '</span>' : '') + '</div>' });
   var ch = s.chart; if (!ch) return; var svg = ctx.svg(512), top = 168, bot = 482, labels = ch.labels, n = labels.length, ser = ch.series || [], vals = [];
   ser.forEach(function (q) { vals = vals.concat(q.data) }); var ends = ser.length > 1 || ch.endLabels ? 150 : 30, ml = 54, x1 = 1168 - ends, slot = (x1 - ml) / n, X = function (i) { return ml + slot * (i + .5) };

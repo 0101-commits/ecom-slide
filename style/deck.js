@@ -50,7 +50,10 @@ function legend(p, x, y, items) { items.forEach(function (it) { var c = col(it.c
 function stepD(a, X, Y) { var d = '', pen = false; for (var i = 0; i < a.length; i++) { if (a[i] == null) { pen = false; continue }
     if (!pen) { d += (d ? ' ' : '') + 'M' + X(i - .5) + ' ' + Y(a[i]); pen = true } else d += ' H' + X(i - .5) + ' V' + Y(a[i]); d += ' H' + X(i + .5) } return d }
 function lineD(a, X, Y) { var d = '', pen = false; for (var i = 0; i < a.length; i++) { if (a[i] == null) { pen = false; continue } d += (pen ? ' L' : (d ? ' M' : 'M')) + X(i) + ' ' + Y(a[i]); pen = true } return d }
-function col(c) { return C[c] || c || C.main }
+// 색 = 팔레트 이름 · #hex · rgb()/hsl() · 영문 색 이름만 (따옴표 · 세미콜론 든 값은 버림 → 속성 끼워 넣기 막기)
+function col(c) { var v = C[c] || c; return (typeof v === 'string' && /^(#[0-9a-f]{3,8}|(rgb|hsl)a?\([0-9\s.,%\/]+\)|[a-z]+)$/i.test(v)) ? v : C.main }
+// 숫자 = 유한한 수만 (문자열 끼워 넣기 막기)
+function num(v, d) { var n = (v == null || v === '') ? NaN : +v; return isFinite(n) ? n : (d == null ? 0 : d) }
 function ext(a) { var lo = Infinity, hi = -Infinity; a.forEach(function (v) { if (v != null && !isNaN(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v) } }); return [lo, hi] }
 
 /* ───────── 움직임 : 쌓기(data-b 단계 · data-at 시각) · 숫자 굴림 · 바뀜 ───────── */
@@ -99,7 +102,7 @@ function settle(root) { if (!root.getAnimations) return; root.getAnimations({ su
 function finish(root) { stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); if (root._done) root._done(root) }
 
 ECOM.h = { E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2,
-  bracket: bracket, legend: legend, stepD: stepD, lineD: lineD, col: col, ext: ext, A: A, later: later, dur: dur, RM: RM, cText: cText, EIN: EIN, ESTD: ESTD, EOUT: EOUT, C: C };
+  bracket: bracket, legend: legend, stepD: stepD, lineD: lineD, col: col, num: num, ext: ext, A: A, later: later, dur: dur, RM: RM, cText: cText, EIN: EIN, ESTD: ESTD, EOUT: EOUT, C: C };
 
 /* ───────── 장 만들기 ───────── */
 var D = null, S = [], cur = -1, beatK = 0, origin = null, stage, deckEl, timers = [], chan = null, scaleK = 1, trans = null;

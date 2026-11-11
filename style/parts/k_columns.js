@@ -13,7 +13,7 @@ ECOM.parts.columns = function (bd, s, ctx) {
     cols.forEach(function (_, i) { var x = i * (cw + gap) + cw / 2; E('line', { x1: x, x2: x, y1: bus, y2: y0 - 10, stroke: C.g65, 'stroke-width': 2 }, lg); K.head(lg, x, y0 - 2, Math.PI / 2, C.g65, 9) }) }
   cols.forEach(function (c, i) { var x = i * (cw + gap), v = c.value || null;
     var html = '<div class="k-coh"><em>' + String(i + 1).padStart(2, '0') + '</em><div><b>' + h.md(c.title || '') + '</b>' + (c.sub ? '<span>' + h.md(c.sub) + '</span>' : '') + '</div></div>'
-      + (v ? '<div class="k-cov"><span class="k-con"><span data-b="4" data-fx="count" data-count="' + v.v + '" data-dec="' + (v.dec || 0) + '"' + (v.sign ? ' data-sign="1"' : '') + '>' + h.nf(v.v, v.dec || 0, { sign: v.sign }) + '</span><small>' + h.esc(v.unit || '') + '</small></span>' + (v.label ? '<i>' + h.esc(v.label) + '</i>' : '') + '</div>' : '')
+      + (v ? '<div class="k-cov"><span class="k-con"><span data-b="4" data-fx="count" data-count="' + h.num(v.v) + '" data-dec="' + h.num(v.dec) + '"' + (v.sign ? ' data-sign="1"' : '') + '>' + h.nf(v.v, v.dec || 0, { sign: v.sign }) + '</span><small>' + h.esc(v.unit || '') + '</small></span>' + (v.label ? '<i>' + h.esc(v.label) + '</i>' : '') + '</div>' : '')
       + '<div class="k-cop">' + (c.points || []).map(function (p) { return '<div><span>' + h.md(p) + '</span></div>' }).join('') + '</div>'
       + (c.note ? '<div class="k-cono"><i>' + h.esc(c.noteLabel || s.noteLabel || '확인 지표') + '</i><span>' + h.md(c.note) + '</span></div>' : '');
     var el = K.D(bd, 'kx k-coc' + (c.hi ? ' hi' : ''), x, y0, cw, y1 - y0, html, { 'data-b': 3, 'data-fx': 'rise', 'data-ms': 420 }); if (c.chart) el.style.paddingBottom = '160px' });
