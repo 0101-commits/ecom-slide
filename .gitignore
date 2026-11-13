@@ -8,6 +8,8 @@ style/preview.html
 style/brand/
 # 미리 보기 · 시험 산출물
 style/preview3*.html
+style/preview4*.html
+style/_tmp_*.html
 style/_*.json
 style/_*.html
 style/v2/preview.html

@@ -565,10 +565,12 @@ AI_TONE = [("꼭대기", "고점"), ("고원", "지속 구간"), ("방아쇠", "
            ("한 줄로", "(지움)"), ("핵심은", "(지움)"), ("결국", "(지움)"), ("주목할 점은", "(지움)"), ("사실상", "(지움)"), ("좁힘", "축소"),
            ("함께 인하", "동반 인하"), ("한국 먼저", "한국 선제 인상"), ("넉 달째", "4개월 연속"), ("内", ""), ("現", "현재"), ("强", "강세"), ("高", "높음"), ("美", "미국"), ("韓", "한국")]
 OLD_FIELDS = {"concl": "결론 띠(헤드메시지로 옮김)", "aside": "오른쪽 요점 칸(본문 안으로)", "heading": "어깨끈(꼬리표로)", "read": "읽기 겹(화면으로)", "title": "짧은 제목(head 2줄로)", "theme": "강조색(초록 고정)"}
-BARE_NUM = re.compile(r"(?<![\d.])(\d+\.\d{2})(?![\d.%~]|\s*~|%p|bp|원|배|달러|억|조|만|명|건|개월|년|월|일|장|회|분기|p|포인트|\s*(%|원|배|달러|억|조|명|bp|개월))")
+BARE_NUM = re.compile(r"(?<![\d.])(\d+\.\d{2})(?![\d.%~]|\s*~|%p|bp|원|배|달러|억|조|만|명|건|개월|년|월|일|장|회|분기|p|포인트|백만|천|십억|엔|위안|유로|\s*(%|원|배|달러|억|조|명|bp|개월|엔))")
 DATE = re.compile(r"\d{4}\.\d{2}")
 MEET2 = re.compile(r"(오늘|발표|회의|결정|기준)\s*\d{1,2}\.\d{1,2}")
 MEET = re.compile(r"\d{1,2}\.\d{1,2}(?=\s*(금통위|FOMC|회의|결정|발표|일|선거))")
+# 숫자에 단위가 없어도 되는 꼴 — 상관계수 · 배수(×) · 「a→b%」 범위의 앞 값 · 괄호 안 날짜(03.08) · 「11.12 기준」 날짜
+FREE = re.compile(r"상관[^\d]{0,14}[+−-]?\d+\.\d{2}(?:[^\d]{0,10}[+−-]?\d+\.\d{2})?|×\s*\d+\.\d{2}|\d+\.\d{2}\s*→|\(\d{1,2}\.\d{2}\)|\d{1,2}\.\d{2}(?=\s*(기준|은|는|일|\)))|(발표일|다음 날)\s*\d{1,2}\.\d{2}")
 
 
 def strings_of(o, out=None, key=""):
@@ -587,8 +589,10 @@ def strings_of(o, out=None, key=""):
 def known_kinds(lib):
     ks = set()
     for f in (lib / "style" / "parts").glob("*.js"):
-        ks |= set(re.findall(r"ECOM\.parts\.([a-z]+)\s*=", f.read_text(encoding="utf-8")))
-        ks |= set(re.findall(r"ECOM\.parts\[['\"]([a-z]+)['\"]\]\s*=", f.read_text(encoding="utf-8")))
+        ks |= set(re.findall(r"ECOM\.parts\.([a-z][a-z0-9]*)\s*=", f.read_text(encoding="utf-8")))
+        ks |= set(re.findall(r"ECOM\.parts\[['\"]([a-z][a-z0-9]*)['\"]\]\s*=", f.read_text(encoding="utf-8")))
+        for grp in re.findall(r"\[((?:\s*['\"][a-z][a-z0-9]*['\"]\s*,?)+)\]\.forEach\(\s*function\s*\(\s*\w+\s*\)\s*\{\s*ECOM\.parts\[", f.read_text(encoding="utf-8")):
+            ks |= set(re.findall(r"['\"]([a-z][a-z0-9]*)['\"]", grp))  # ['a','b'].forEach(function (k) { ECOM.parts[k] = … })
     return ks
 
 
@@ -631,7 +635,7 @@ def lint3(deck, lib):
             add(i, "단위 섞임", "고칠 것", "한 장에 bp 와 %p — 한 단위로")
         for key, t in txt:
             if key in ("text", "res", "sub", "head", "s1", "s2", "label", "end", "chip") and re.search(r"[가-힣]", t):
-                t2 = MEET2.sub("", MEET.sub("", DATE.sub("", t)))
+                t2 = FREE.sub("", MEET2.sub("", MEET.sub("", DATE.sub("", t))))
                 for mm in BARE_NUM.finditer(t2):
                     add(i, "단위 없는 숫자", "고칠 것", f"「{t[:40]}」의 {mm.group(1)}")
                     break

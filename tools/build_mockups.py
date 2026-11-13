@@ -1,4 +1,4 @@
-# 목업 갤러리(3판) — library/mockups/mockups.json(315) → gallery/mockups.html (엔진 3판 발표 파일 하나, O 키로 모아 보기)
+# 목업 갤러리(4판) — library/mockups/mockups.json(264) → gallery/mockups.html (엔진 3판 발표 파일 하나, O 키로 모아 보기)
 # 실행: python -X utf8 tools/build_mockups.py
 import json, sys
 from pathlib import Path
@@ -18,8 +18,8 @@ for m in M["mockups"]:
         s["eyebrow"]["basis"] = (s["eyebrow"].get("basis") or "") + f" · 목업 {m['id']}"
     slides.append(s)
     facts.update(m.get("facts", {}))
-deck = {"schema": 3, "meta": {"session": "MOCK3", "title": f"ECOM 목업 {len(slides)}", "date": M["got"][:10], "cover": "A", "combo": "A"}, "facts": facts, "slides": slides}
+deck = {"schema": 3, "meta": {"session": "MOCK4", "title": f"ECOM 목업 {len(slides)}", "date": M["got"][:10], "cover": "A", "combo": "A"}, "facts": facts, "slides": slides}
 out = ROOT / "gallery" / "mockups.html"
-out.write_text(ecs.page_html(deck, ROOT, title=f"ECOM 목업 {len(slides)}종 (엔진 3판)"), encoding="utf-8")
+out.write_text(ecs.page_html(deck, ROOT, title=f"ECOM 목업 {len(slides)}종 (4판)"), encoding="utf-8")
 (ROOT / "library" / "mockups" / "deck.json").write_text(json.dumps(deck, ensure_ascii=False), encoding="utf-8")
 print(out, round(out.stat().st_size / 1024), "KB", len(slides), "장")

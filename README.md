@@ -7,9 +7,9 @@ ECOM 경제 스터디 발표를 **HTML 파일 하나**로 만드는 스킬의 �
 |---|---|
 | `style/` | 엔진 3판(`deck.js` · `deck.css`) + 화면 종류 부품(`parts/*.js`) · 형식 `SCHEMA3.md`(+ `SCHEMA3_charts.md` · `SCHEMA3_diagrams.md`) · 로고 자리 `brand/`(ECOM CI 그림은 공개 저장소에 두지 않고 스킬 zip · 작업 저장소에만) · 글꼴(Pretendard, OFL) · 시험 덱 `demo3*.json` · 2판 엔진은 `v2/`(옛 회차 빌드용) |
 | `rules/` | 이야기 계획(`plan.md`) · 문체(`write.md`, AI 말투 사전) · 화면 문법(`design_grammar.md`) 판 3 · 고객명 해시(검사용) · 2판 규칙은 `v2/` |
-| `library/mockups/` | 목업 315종(3판) = 새 부품 30 + 판 2 목업 285종을 3판으로 — `mockups.json` · `index.md`, 판 2 원본은 `v2/` |
+| `library/mockups/` | 목업 264종(4판) = 3판에서 남긴 80 + 새 목업 184(19계열, `v4/` · 만들기 `tools/make_mockups4*.py`) — `mockups.json` · `index.md`, 3판 목록 `v3/` · 판 2 원본 `v2/` |
 | `library/` | HCG 레퍼런스 골격 3,920장(`catalog.json` · `skeletons/`) |
-| `gallery/` | 목업 315 모아 보기(`mockups.html`, O 키) · 골격 찾아보기(`index.html`) |
+| `gallery/` | 목업 264 모아 보기(`mockups.html`, O 키) · 골격 찾아보기(`index.html`) |
 | `terms/` · `data/` | 용어 사전 · 계열 번호 사전 · 목업용 숫자 묶음(`snap/`, 받은 시각 표시) |
 | `skill/ecom-slide/` | 스킬 원본(SKILL.md · scripts/ecs.py). zip 은 `tools/sync_skill.py --zip` 이 lib/(엔진 · 규칙 · 목업)를 함께 넣어 만듦 |
 | `tools/` | 목업 만들기(`make_mockups3.py` · `mock3_*.py`) · 갤러리(`build_mockups.py`) · 미리 보기(`preview3.py`) · 화면 점검(`shot3.js`) · 공개 검사 · 레퍼런스 정리 |

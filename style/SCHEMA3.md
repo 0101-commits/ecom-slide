@@ -80,7 +80,7 @@
 ### `table` 표 — `cols[{t,w,align,hc,tx,k}]` · `rows[{c:[…],hi}]`(칸 `{ph:1,t:'…'}` = 번호) · `chips{"행,열":{text,dir}}` · `range{col,lo,hi,unit,data:[[min,max,last]]}` · `bars{col,max,dec,unit}` · `after`
 
 ### 차트 부품(`j_*.js`) · 도식 부품(`k_*.js`)
-각 파일 머리 주석과 `style/SCHEMA3_charts.md` · `style/SCHEMA3_diagrams.md` 참고.
+각 파일 머리 주석과 `style/SCHEMA3_charts.md` · `style/SCHEMA3_diagrams.md` 참고. 목업 4판에서 더한 부품(l_* · n_*, 168 kind)은 `style/SCHEMA4.md` 색인.
 
 ## 5. 부품 만들기 규칙(parts/*.js)
 - 등록 : `ECOM.parts[kind] = function (bd, s, ctx) {…}` — `bd` 본문 칸(1168×512), `ctx.svg(h)` 로 본문 SVG, `ctx.root` 장 요소, `ctx.deck` 덱.

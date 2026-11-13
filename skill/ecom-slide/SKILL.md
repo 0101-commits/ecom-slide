@@ -12,7 +12,7 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 ## 고정 값
 - `<스킬>` = 「Base directory for this skill」 경로. 명령 : `python "<스킬>/scripts/ecs.py" <단계> ...` (Windows 에서 `python` 이 없으면 `py -3`). **작업 저장소(ecom-study) 안에서** 돌린다.
 - 결과는 마지막 줄 JSON. `error` 면 그 문장을 그대로 전하고 멈춘다. `setup` · `fetch` · `build` · `check` 는 도구 timeout 600000.
-- 규칙 문서(`setup` 이 받는 `.ecom-slide/`, 스킬 묶음에 `lib/` 가 있으면 그것) : **`rules/plan.md` · `rules/write.md` · `rules/design_grammar.md`** · 형식 **`style/SCHEMA3.md` + `style/SCHEMA3_charts.md` + `style/SCHEMA3_diagrams.md`** · 용어 `terms/glossary.json` · 목업 315종 `library/mockups/`.
+- 규칙 문서(`setup` 이 받는 `.ecom-slide/`, 스킬 묶음에 `lib/` 가 있으면 그것) : **`rules/plan.md` · `rules/write.md` · `rules/design_grammar.md`** · 형식 **`style/SCHEMA3.md` + `style/SCHEMA3_charts.md` + `style/SCHEMA3_diagrams.md`** · 용어 `terms/glossary.json` · 목업 264종(4판) `library/mockups/` + 고르는 표 **`rules/mockup_map.md`** · 새 부품 칸 `style/SCHEMA4.md`.
 
 ## 0. 준비
 - 「준비하는 중이에요」 → `ecs.py setup` → `browser` 없으면 「화면 재기는 건너뛰어요」.
@@ -34,7 +34,7 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 
 ## 4. 이야기 계획표 → 확인 1번
 - `rules/plan.md` 를 읽고 `work/outline.json` : 장마다 `kind` · `eyebrow` · `head`(초안) · `place`(본문 / 부록) · `mockup`(참고한 목업 번호).
-- **목업 고르기** : `ecs.py mockup --family <kind>` 로 후보를 보고 `ecs.py mockup <M번호>` 로 slide 틀을 꺼내 숫자 · 글만 바꾼다. 화면 종류 = cover · part · line · bar · hub · timeline · quadrant · formula · kpi · table · (차트) race · zoom · wipe · slope · rank · morph · split · bridge · waffle · donut · minis · heatmap · drivers · combo · (도식) axis · stairs · pyramid · balance · flow · ladder · cycle · columns · tree · calendar · discuss · further · statement · term.
+- **목업 고르기** : 장마다 글 짜임(인과 사슬 · 사건 차례 · 역사 비유 · 기업 비교 · 시나리오 · 발언 해설 …)을 먼저 정하고 `rules/mockup_map.md` 표에서 계열(F01~F19)을 고른다. `ecs.py mockup --family <계열 또는 kind>` · `--q <낱말>` 로 후보를 보고 `ecs.py mockup <번호>`(N · C · M) 로 slide 틀을 꺼내 숫자 · 글만 바꾼다. 「예시 값」 목업은 모양만 빌리고 숫자는 사실표 값으로 바꾼다. 4판 새 kind 는 `style/SCHEMA4.md`. 화면 종류 = cover · part · line · bar · hub · timeline · quadrant · formula · kpi · table · (차트) race · zoom · wipe · slope · rank · morph · split · bridge · waffle · donut · minis · heatmap · drivers · combo · (도식) axis · stairs · pyramid · balance · flow · ladder · cycle · columns · tree · calendar · discuss · further · statement · term.
 - **PART 별 발표 순서(목록) 장은 만들지 않는다.** 들어가며는 지금 숫자(`line` 계단 + 결정 일지 · `kpi`) → 주제 도식(`hub`).
 - `ecs.py table <회차>` → AskUserQuestion 「이대로 만들까요?」(이대로 / 고칠 곳 말하기).
 
