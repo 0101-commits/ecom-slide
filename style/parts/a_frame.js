@@ -33,8 +33,32 @@ function coverD(el, s, ctx) { var m = meta(ctx), b = s.big || {}; el.innerHTML =
   + '<div class="ttl" data-b="2">' + md(s.title || m.title || '') + '</div><div class="sub" data-b="3">' + md(s.sub || '') + '</div><div class="cpy">' + esc(s.copy || COPY) + '</div>' }
 function coverE(el, s, ctx) { var m = meta(ctx); el.innerHTML = ECOM.logo(false, 'lgc') + '<div class="kick" data-b="1">' + esc(s.kicker || 'ECOM 경제 스터디 · ' + (m.session || '')) + '</div>'
   + '<div class="ttl" data-b="2">' + md(s.title || m.title || '') + '</div><div class="sub" data-b="3">' + md(s.sub || '') + '</div><div class="dt" data-b="3">' + esc(s.date || m.date || '') + '</div><div class="bar"></div>' }
+/* Kick-off 그림(비공개 brand/kick → ecs.py 가 window.ECOM_LOGO.art 로 넣음). 없으면 타일 없이 그림 */
+function art() { return (window.ECOM_LOGO && window.ECOM_LOGO.art) || null }
+/* 표지 뒤 층 : Kick-off 1쪽 타일 12개를 처음부터 뒤에 투명도 11% · 흐림으로 깔고 앞 그래프보다 느리게 떠다니게 함(s.backdrop === false 면 뺌) */
+function backdrop(el, s) { var A = art(), C0 = A && A.cover; if (s.backdrop === false || !C0 || !C0.tiles || !C0.tiles.length) return;
+  var p = C0.place || { x: 33, y: 150, scale: .811 }, f = p.scale, kt = document.createElement('div'); kt.className = 'kt'; kt.setAttribute('aria-hidden', 'true');
+  kt.setAttribute('data-at', 0); kt.setAttribute('data-fx', 'fade'); kt.setAttribute('data-ms', 1800); var inner = h.H('div', 'kti', null, kt);
+  C0.tiles.forEach(function (t, i) { var b = t.b; h.H('i', null, '<img alt="" src="' + t.src + '">', inner, 'left:' + (p.x + b[0] * f) + 'px;top:' + (p.y + b[1] * f) + 'px;width:' + ((b[2] - b[0]) * f) + 'px;--d:' + (9 + (i % 4) * 1.6) + 's;--dl:' + (-i * .9) + 's;--dx:' + (i % 2 ? 6 : -6) + 'px') });
+  el.insertBefore(kt, el.firstChild) }
 ECOM.parts.cover = function (el, s, ctx) { var st = String(s.style || (ctx.deck.meta && ctx.deck.meta.cover) || 'A').toUpperCase(); el.classList.add('cv-' + st.toLowerCase());
-  ({ A: coverA, B: coverB, C: coverC, D: coverD, E: coverE }[st] || coverA)(el, s, ctx) };
+  ({ A: coverA, B: coverB, C: coverC, D: coverD, E: coverE }[st] || coverA)(el, s, ctx); if (/^[ADE]$/.test(st)) backdrop(el, s) };
+/* 마지막 장(end) : Kick-off 21쪽을 부품 11개로 — 판 테두리 그리기 → 판 안 아이콘 4 → 타일 6(작게 밀려 들어옴) → 문구 → 로고 · 쪽 번호.
+   흔들림 · 흐림 · 회전 없음. 본문 맨 끝(토의 · 추후 분석 뒤) 한 장, 부록은 그 뒤 고리로. 그림이 없으면 문구만 */
+ECOM.parts.end = function (el, s, ctx) { var A = art() && art().end, foot = '<div class="lg" data-at="2900" data-fx="fade">' + ECOM.logo(false) + '<span>' + esc(ctx.page) + '</span></div>';
+  if (!A) { el.innerHTML = '<div data-b="1" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;letter-spacing:.02em;color:' + C.main + '">' + esc(s.text || 'Economic Connection Opportunity Momentum') + '</div>' + foot; return }
+  var k = A.scale || .62, ox = (1280 - A.w * k) / 2, oy = (720 - A.h * k) / 2, SEQ = ['hand', 'eye', 'globe', 'people', 'pencil', 'net'];
+  function place(t, at, fx, ms, from) { var b = t.b, d = h.H('i', 'ep', '<img alt="" src="' + t.src + '">', el, 'left:' + (ox + b[0] * k) + 'px;top:' + (oy + b[1] * k) + 'px;width:' + ((b[2] - b[0]) * k) + 'px');
+    d.setAttribute('data-at', at); d.setAttribute('data-fx', fx); d.setAttribute('data-ms', ms); if (from) { d.setAttribute('data-dx', from[0]); d.setAttribute('data-dy', from[1]) } return d }
+  function tile(t) { var i = Math.max(0, SEQ.indexOf(t.n)); return place(t, 1300 + i * 130, 'slide', 620, t.from || [0, 18]) }
+  (A.under || []).forEach(tile);
+  var P = A.panel, svg = E('svg', { viewBox: '0 0 1280 720', width: 1280, height: 720, style: 'position:absolute;left:0;top:0' }, el), px = ox + P[0] * k, py = oy + P[1] * k, pw = (P[2] - P[0]) * k, ph = (P[3] - P[1]) * k;
+  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: '#fff', 'data-at': 500, 'data-fx': 'fade', 'data-ms': 500 }, svg);
+  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: 'none', stroke: C.main, 'stroke-width': 2, 'data-at': 0, 'data-fx': 'draw', 'data-ms': 900 }, svg);
+  (A.icons || []).forEach(function (t, i) { place(t, 800 + i * 110, 'zoom', 450) });
+  (A.tiles || []).forEach(tile);
+  if (A.motto) place(A.motto, 2500, 'wipe', 900);
+  el.insertAdjacentHTML('beforeend', foot); el.setAttribute('aria-label', 'ECOM — Economic Connection Opportunity Momentum') };
 /* 간지 : {no:'PART 01', name, desc, parts:[이름], idx} */
 ECOM.parts.part = function (el, s) { el.classList.add('pt');
   el.innerHTML = '<div class="no mv">' + esc(s.no || '') + '</div><div class="nm mv">' + md(s.name || '') + '</div>' + (s.desc ? '<div class="ds mv">' + md(s.desc) + '</div>' : '')

@@ -68,7 +68,8 @@ ECOM.parts.qtscale = function (bd, s, ctx) {
   var zs = s.zones || [{ a: 0, b: .38, name: '매파', tone: 'warn' }, { a: .38, b: .62, name: '중립', tone: 'gray' }, { a: .62, b: 1, name: '비둘기', tone: 'main' }];
   zs.forEach(function (z) { var c = tcol(z.tone); E('rect', { x: X(z.a), y: 84, width: X(z.b) - X(z.a), height: 330, fill: c, opacity: .09 }, g0); T(g0, (X(z.a) + X(z.b)) / 2, 112, z.name, { 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700, fill: c }) });
   E('line', { x1: x0, x2: x1, y1: ay, y2: ay, stroke: C.axis, 'stroke-width': 3, 'stroke-linecap': 'round' }, g0);
-  T(g0, x0, ay + 80 + 150, s.left || '금리 인상 쪽', { 'font-size': 13.5, fill: C.mute, 'font-weight': 600 }); T(g0, x1, ay + 80 + 150, s.right || '금리 인하 쪽', { 'text-anchor': 'end', 'font-size': 13.5, fill: C.mute, 'font-weight': 600 });
+  T(g0, x0, ay + 30, '← ' + (s.left || '금리 인상 쪽'), { 'font-size': 13.5, fill: C.mute, 'font-weight': 600 }); T(g0, x1, ay + 30, (s.right || '금리 인하 쪽') + ' →', { 'text-anchor': 'end', 'font-size': 13.5, fill: C.mute, 'font-weight': 600 });
+  var md = s.median, gd = md != null ? h.at(svg, 500 + ms.length * 230 + 200, { 'data-fx': 'fade', 'data-ms': 360 }) : null;
   var placed = [], R = 21; ms.forEach(function (m) { var cx = X(m.pos), k = 0, up = 1; m._x = cx; m._y = ay - 50; while (placed.some(function (p) { return Math.abs(p.x - cx) < R * 2 + 2 && Math.abs(p.y - m._y) < R * 2 + 2 })) { k++; m._y = ay - 50 - (k % 2 ? 1 : -1) * Math.ceil(k / 2) * (R * 2 + 4) + (k % 2 ? 0 : 0); if (k > 8) break }
     placed.push({ x: cx, y: m._y }) });
   ms.forEach(function (m, i) { var gm = h.at(svg, 500 + i * 230, { 'data-fx': 'drop', 'data-ms': 420 }), c = m.pos < zs[0].b ? C.warn : m.pos > zs[2].a ? C.main : C.axis;
@@ -78,7 +79,7 @@ ECOM.parts.qtscale = function (bd, s, ctx) {
     E('circle', { cx: m._x, cy: ay, r: 5, fill: c }, gm);
     E('circle', { cx: m._x, cy: m._y, r: m.chair ? R + 4 : R, fill: m.chair ? C.dark : c }, gm); T(gm, m._x, m._y + 6, m.n, { 'text-anchor': 'middle', 'font-size': m.chair ? 17 : 16, 'font-weight': 700, fill: '#fff' });
     if (m.chair) T(gm, m._x, ay + 30, '의장', { 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 700, fill: C.dark }) });
-  var md = s.median; if (md != null) { var gd = h.at(svg, 500 + ms.length * 230 + 200, { 'data-fx': 'fade', 'data-ms': 360 }); E('line', { x1: X(md), x2: X(md), y1: 126, y2: 414, stroke: C.dark, 'stroke-width': 2, 'stroke-dasharray': '6 4' }, gd);
+  if (md != null) { E('line', { x1: X(md), x2: X(md), y1: 126, y2: 414, stroke: C.dark, 'stroke-width': 2, 'stroke-dasharray': '6 4' }, gd);
     chip(gd, X(md), 430, s.medianText || '중간값', C.dark, '#fff', 13) }
   var gs = h.at(svg, 500 + ms.length * 230 + 500, { 'data-fx': 'rise', 'data-ms': 400 }), cnt = s.counts || [], cw = (1168 - 6 * 12) / Math.max(1, cnt.length);
   cnt.forEach(function (c, i) { var x = i * (cw + 12), col = tcol(c.tone); box(gs, x, 456, cw, 54, '#fff', { rx: 12, stroke: C.line }); E('rect', { x: x, y: 456, width: 8, height: 54, rx: 4, fill: col }, gs);

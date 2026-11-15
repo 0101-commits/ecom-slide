@@ -17,7 +17,8 @@
    개념(`term` · `formula` · `axis` · `pyramid`) → 추이(`line` 주석 차트 — Kick-off 12쪽 틀) → 분석(`bar` 재생 · 분포, `timeline` 국면, `table`, `heatmap`) → 연결(`hub` · `flow` · `stairs` · `balance`) → 시나리오 · 정리(`quadrant` · `statement`)
 4. **토의** 1~2장 — `discuss`(다룬 내용 요약 → 토의 주제 2~3, 손들기).
 5. **추후 분석** 1장 — `further`(Analysis 1~4).
-6. **부록** — 본문 결론에 꼭 필요하지 않은 정의 · 계산 · 긴 표. `appendix:"A1"` + 본문 장 `links`.
+6. **마지막 장** 1장 — `{"kind":"end"}`(Kick-off 21쪽 타일이 하나씩 차분히 들어옴). 본문 맨 끝, 칸 없음. 그 뒤 → 는 멈추고 부록은 고리 · O 모아 보기로(PDF 는 부록 뒤 맨 끝).
+7. **부록** — 본문 결론에 꼭 필요하지 않은 정의 · 계산 · 긴 표. `appendix:"A1"` + 본문 장 `links`.
 - 간지(`part`)는 기본으로 쓰지 않는다. 묶음이 4개 이상이고 사용자가 원할 때만.
 
 ## 장마다

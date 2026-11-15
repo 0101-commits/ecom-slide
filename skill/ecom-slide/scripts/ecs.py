@@ -605,7 +605,13 @@ def lint3(deck, lib):
     sl = deck.get("slides", [])
     if not m.get("cover"):
         add(0, "표지 모양", "확인할 것", "meta.cover 없음 — 질문 카드에서 고른 표지(A~E)를 적기")
-    body = [s for s in sl if not s.get("appendix") and s.get("kind") not in ("cover", "part")]
+    body = [s for s in sl if not s.get("appendix") and s.get("kind") not in ("cover", "part", "end")]
+    main = [s for s in sl if not s.get("appendix")]
+    ends = [i for i, s in enumerate(main) if s.get("kind") == "end"]
+    if not ends:
+        add(0, "마지막 장", "확인할 것", "본문 맨 끝(토의 · 추후 분석 뒤)에 {\"kind\":\"end\"} 한 장 — Kick-off 마지막 장 타일")
+    elif ends != [len(main) - 1]:
+        add(sl.index(main[ends[0]]) + 1, "마지막 장", "고칠 것", "kind end 는 본문 맨 끝에 한 장만(부록은 그 뒤 고리로)")
     ln = m.get("length")
     if isinstance(ln, list) and len(ln) == 2 and not (ln[0] <= len(body) <= ln[1]):
         add(0, "본문 장 수", "확인할 것", f"본문 {len(body)}장 — 고른 범위 {ln[0]}~{ln[1]}장")
@@ -617,7 +623,7 @@ def lint3(deck, lib):
             add(i, "화면 종류", "고칠 것", f"모르는 kind : {k}")
         run = run + 1 if k == prev else 1
         prev = k
-        if run == 3 and k not in ("cover", "part") and not s.get("appendix"):
+        if run == 3 and k not in ("cover", "part", "end") and not s.get("appendix"):
             add(i, "같은 종류 연속", "확인할 것", f"{k} 3장째 — 2장까지 권고")
         for f, why in OLD_FIELDS.items():
             if f in s and not (f == "title" and k in ("cover", "part", "statement", "term", "further", "discuss")):
@@ -639,7 +645,7 @@ def lint3(deck, lib):
                 for mm in BARE_NUM.finditer(t2):
                     add(i, "단위 없는 숫자", "고칠 것", f"「{t[:40]}」의 {mm.group(1)}")
                     break
-        if k in ("cover", "part"):
+        if k in ("cover", "part", "end"):
             continue
         e = s.get("eyebrow")
         if not isinstance(e, dict) or not e.get("group") or not e.get("topic"):
@@ -710,23 +716,48 @@ def skeleton_of(lib, rid):
     return None
 
 
-def engine(lib, v3=True):
-    """엔진 3판 = style/deck.css · deck.js + style/parts/*.js(이름순) + 로고. 2판 데크(schema 없음)는 style/v2/ 로."""
+def engine(lib, v3=True, brand=True):
+    """엔진 3판 = style/deck.css · deck.js + style/parts/*.js(이름순) + 로고 · Kick-off 그림(brand=False 면 뺌 — 공개 저장소 파일용). 2판 데크(schema 없음)는 style/v2/ 로."""
     st = lib / "style"
     if not v3:
         return (st / "v2" / "deck.css").read_text(encoding="utf-8"), (st / "v2" / "deck.js").read_text(encoding="utf-8"), None
     js = (st / "deck.js").read_text(encoding="utf-8") + "\n" + "\n".join(f.read_text(encoding="utf-8") for f in sorted((st / "parts").glob("*.js")))
     logo = {}
+    if not brand:
+        return (st / "deck.css").read_text(encoding="utf-8"), js, logo
     for k, f in (("green", "logo.png"), ("white", "logo_white.png")):
         q = st / "brand" / f
         if q.exists():
             logo[k] = "data:image/png;base64," + base64.b64encode(q.read_bytes()).decode()
+    art = kick_art(st / "brand" / "kick")
+    if art:
+        logo["art"] = art
     return (st / "deck.css").read_text(encoding="utf-8"), js, logo
 
 
-def page_html(deck, lib, nofont=False, extra_head="", title=None):
+def kick_art(d):
+    """Kick-off 타일(비공개 brand/kick) → 표지 뒤 흐린 층 · 마지막 장 부품. 없으면 None(엔진이 타일 없이 그림)."""
+    def b64(f):
+        return "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode() if f.exists() else None
+    out = {}
+    cj = load(d / "cover" / "cover.json")
+    if cj:
+        tiles = [dict(t, src=b64(d / "cover" / t["f"])) for t in cj.get("tiles", [])]
+        out["cover"] = {"place": cj.get("place"), "tiles": [t for t in tiles if t["src"]]}
+    ej = load(d / "end" / "end.json")
+    if ej:
+        for key in ("under", "icons", "tiles"):
+            ej[key] = [dict(t, src=b64(d / "end" / f"{t['n']}.png")) for t in ej.get(key, [])]
+        if ej.get("motto"):
+            ej["motto"]["src"] = b64(d / "end" / f"{ej['motto']['n']}.png")
+        ej.pop("note", None)
+        out["end"] = ej
+    return out or None
+
+
+def page_html(deck, lib, nofont=False, extra_head="", title=None, brand=True):
     v3 = deck.get("schema") == 3
-    css, js, logo = engine(lib, v3)
+    css, js, logo = engine(lib, v3, brand)
     payload = json.dumps(deck, ensure_ascii=False).replace("</", "<\\/")
     face = "" if nofont else font_face(payload + (js if v3 else ""), lib)
     m = deck.get("meta", {})
@@ -776,6 +807,41 @@ def run_browser(br, url, extra, timeout=180):
     return subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=timeout)
 
 
+# 점검 넓히기(5판) — deck.js deepCheck 결과 키 → 항목 이름 · 구분
+DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 걸침", "고칠 것"), ("hidden", "상자-자료 가림", "고칠 것"),
+        ("farLabel", "이름표 거리", "고칠 것"), ("gap", "선 끊김(결측)", "고칠 것"), ("outAxis", "축 밖 값", "고칠 것"),
+        ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
+        ("deco", "장식 도형", "고칠 것"), ("error", "점검 오류", "확인할 것"))
+
+
+def screen_check(br, page, timeout=600):
+    """발표 파일을 ?check 로 열어 deck.js 가 잰 화면 점검 JSON 을 돌려줌(창 1280×720)."""
+    r = run_browser(br, Path(page).resolve().as_uri() + "?check", ["--dump-dom", "--window-size=1280,720"], timeout)
+    m = re.search(r'<pre id="ecom-check"[^>]*>(.*?)</pre>', r.stdout, re.S)
+    return json.loads(html.unescape(m.group(1))) if m else None
+
+
+def screen_issues3(screen):
+    iss = []
+    for s in screen.get("slides", []):
+        i = s.get("i")
+        for key, nm in (("textOverlap", "글끼리 겹침"), ("outside", "장 밖으로 나감"), ("outsideBody", "본문 칸 밖으로")):
+            if s.get(key):
+                iss.append({"slide": i, "item": nm, "sev": "고칠 것", "msg": f"{len(s[key])}곳 : {str(s[key])[:120]}"})
+        if (s.get("fnLines") or 0) > 2:
+            iss.append({"slide": i, "item": "각주 줄", "sev": "고칠 것", "msg": f"{s['fnLines']}줄 — 2줄 안"})
+        if (s.get("headLines") or 0) > 2:
+            iss.append({"slide": i, "item": "헤드메시지 줄", "sev": "고칠 것", "msg": f"{s['headLines']}줄 — 2줄 안"})
+        if s.get("minFont") and s["minFont"] < 11.5:
+            iss.append({"slide": i, "item": "글자 크기", "sev": "고칠 것", "msg": f"가장 작은 글 {s['minFont']}px — 11.5px 이상"})
+        if s.get("occupied") is not None and s["occupied"] < 45 and s.get("kind") not in ("cover", "part", "end"):
+            iss.append({"slide": i, "item": "화면 채움", "sev": "확인할 것", "msg": f"본문 칸 차지 {s['occupied']}% — 45% 밑이면 비어 보임"})
+        for key, nm, sev in DEEP:
+            if s.get(key):
+                iss.append({"slide": i, "item": nm, "sev": sev, "msg": f"{len(s[key])}곳 : {' / '.join(map(str, s[key]))[:160]}"})
+    return iss
+
+
 def cmd_check(a):
     p = sess(a.name)
     lib = lib_dir()
@@ -788,27 +854,13 @@ def cmd_check(a):
     br = browser()
     screen = None
     if br:
-        r = run_browser(br, out.resolve().as_uri() + "?check", ["--dump-dom"])
-        m = re.search(r'<pre id="ecom-check"[^>]*>(.*?)</pre>', r.stdout, re.S)
-        if m:
-            screen = json.loads(html.unescape(m.group(1)))
+        screen = screen_check(br, out)
+        if screen:
             kinds = {i + 1: x.get("kind") for i, x in enumerate(deck.get("slides", []))}
-            for s in screen.get("slides", []):
+            if v3:
+                iss += screen_issues3(screen)
+            for s in ([] if v3 else screen.get("slides", [])):
                 i = s.get("i")
-                if v3:
-                    pg = s.get("page")
-                    for key, nm in (("textOverlap", "글끼리 겹침"), ("outside", "장 밖으로 나감"), ("outsideBody", "본문 칸 밖으로")):
-                        if s.get(key):
-                            iss.append({"slide": i, "item": nm, "sev": "고칠 것", "msg": f"{len(s[key])}곳 : {str(s[key])[:120]}"})
-                    if (s.get("fnLines") or 0) > 2:
-                        iss.append({"slide": i, "item": "각주 줄", "sev": "고칠 것", "msg": f"{s['fnLines']}줄 — 2줄 안"})
-                    if (s.get("headLines") or 0) > 2:
-                        iss.append({"slide": i, "item": "헤드메시지 줄", "sev": "고칠 것", "msg": f"{s['headLines']}줄 — 2줄 안"})
-                    if s.get("minFont") and s["minFont"] < 11.5:
-                        iss.append({"slide": i, "item": "글자 크기", "sev": "고칠 것", "msg": f"가장 작은 글 {s['minFont']}px — 11.5px 이상"})
-                    if s.get("occupied") is not None and s["occupied"] < 45 and s.get("kind") not in ("cover", "part"):
-                        iss.append({"slide": i, "item": "화면 채움", "sev": "확인할 것", "msg": f"본문 칸 차지 {s['occupied']}% — 45% 밑이면 비어 보임"})
-                    continue
                 if s.get("chars", 0) > 40 and kinds.get(i) not in ("table", "cover", "end"):
                     iss.append({"slide": i, "item": "화면 글 40자", "sev": "고칠 것", "msg": f"화면에 보이는 글 {s['chars']}자"})
                 if s.get("overflow"):

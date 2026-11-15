@@ -23,7 +23,7 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 
 ## 2. 질문 카드 (AskUserQuestion 한 번, 4문항 — 매 회차 반드시)
 1. **본문 장 수** : 20~24 · 25~30 · 31~36장.
-2. **표지** : 5종을 `preview` 로 보여 주고 고름 — A 주제 그래픽형(대표 계열 · 숫자) · B 초록 타일형 · C 짙은 초록 전면 · D 큰 숫자형 · E 흰 바탕 · 아래 띠.
+2. **표지** : 5종을 `preview` 로 보여 주고 고름 — A 주제 그래픽형(대표 계열 · 숫자) · B 초록 타일형 · C 짙은 초록 전면 · D 큰 숫자형 · E 흰 바탕 · 아래 띠. A · D · E 는 뒤에 Kick-off 타일이 흐리게 깔림(엔진이 자동).
 3. **깊이** : 입문 · 실무.  4. **토의 질문 수** : 2 · 3.
 답은 `meta.length`([최소, 최대]) · `meta.cover` · `meta.depth` · `meta.questions`.
 
@@ -34,7 +34,7 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 
 ## 4. 이야기 계획표 → 확인 1번
 - `rules/plan.md` 를 읽고 `work/outline.json` : 장마다 `kind` · `eyebrow` · `head`(초안) · `place`(본문 / 부록) · `mockup`(참고한 목업 번호).
-- **목업 고르기** : 장마다 글 짜임(인과 사슬 · 사건 차례 · 역사 비유 · 기업 비교 · 시나리오 · 발언 해설 …)을 먼저 정하고 `rules/mockup_map.md` 표에서 계열(F01~F19)을 고른다. `ecs.py mockup --family <계열 또는 kind>` · `--q <낱말>` 로 후보를 보고 `ecs.py mockup <번호>`(N · C · M) 로 slide 틀을 꺼내 숫자 · 글만 바꾼다. 「예시 값」 목업은 모양만 빌리고 숫자는 사실표 값으로 바꾼다. 4판 새 kind 는 `style/SCHEMA4.md`. 화면 종류 = cover · part · line · bar · hub · timeline · quadrant · formula · kpi · table · (차트) race · zoom · wipe · slope · rank · morph · split · bridge · waffle · donut · minis · heatmap · drivers · combo · (도식) axis · stairs · pyramid · balance · flow · ladder · cycle · columns · tree · calendar · discuss · further · statement · term.
+- **목업 고르기** : 장마다 글 짜임(인과 사슬 · 사건 차례 · 역사 비유 · 기업 비교 · 시나리오 · 발언 해설 …)을 먼저 정하고 `rules/mockup_map.md` 표에서 계열(F01~F19)을 고른다. `ecs.py mockup --family <계열 또는 kind>` · `--q <낱말>` 로 후보를 보고 `ecs.py mockup <번호>`(N · C · M) 로 slide 틀을 꺼내 숫자 · 글만 바꾼다. 「예시 값」 목업은 모양만 빌리고 숫자는 사실표 값으로 바꾼다. 4판 새 kind 는 `style/SCHEMA4.md`. 화면 종류 = cover · part · line · bar · hub · timeline · quadrant · formula · kpi · table · (차트) race · zoom · wipe · slope · rank · morph · split · bridge · waffle · donut · minis · heatmap · drivers · combo · (도식) axis · stairs · pyramid · balance · flow · ladder · cycle · columns · tree · calendar · discuss · further · statement · term · end(마지막 장, 본문 맨 끝 한 장).
 - **PART 별 발표 순서(목록) 장은 만들지 않는다.** 들어가며는 지금 숫자(`line` 계단 + 결정 일지 · `kpi`) → 주제 도식(`hub`).
 - `ecs.py table <회차>` → AskUserQuestion 「이대로 만들까요?」(이대로 / 고칠 곳 말하기).
 
@@ -50,6 +50,8 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 ## 6. 묶기 · 점검
 - `ecs.py build <회차>` → `ecs.py check <회차> --shots all`.
 - **글끼리 겹침 · 장 밖 · 본문 칸 밖 · 각주 3줄 이상 · 헤드메시지 3줄 이상 · 글자 11.5px 밑**은 0 이 될 때까지 고친다(최대 3번). 「화면 채움 45% 밑」은 장을 다시 짠다. 캡처(`work/shots/`)를 눈으로 보고 점검이 놓친 겹침 · 빈 곳도 고친다.
+- 점검 5판 항목도 0 까지 : **글-선 겹침**(이름표를 선에서 떼기 · `dx`/`dy`) · **글-도형 걸침**(글이 막대 · 칸 가장자리에 반쯤 걸침) · **상자-자료 가림**(시사점 상자 · 말풍선이 선 · 점 · 사건 글을 덮음 — `box` 는 엔진이 빈자리를 찾으니 `x0`/`top` 을 비운 곳으로) · **이름표 거리**(가리키는 점과 40px 넘으면 `leader` 지시선) · **선 끊김**(빈 달은 엔진이 연한 점선으로 이음 — 차트 위 「자료 없음 · 미발표」 글 금지, 각주로) · **축 밖 값**(`y.max`/`min` 을 값보다 넓게) · **흐름 방향**(산키 · 흐름도는 왼→오 · 위→아래, 띠 교차 최소) · **뜻 표시 누락**(점선 · 면 · 빗금마다 범례나 40px 안 이름표) · **장식 도형**(기울인 도장 · 흐림 · 뜻 없는 옅은 도형 금지).
+- 한 장을 2번 고쳐도 남으면 고른 목업 틀의 기본 배치로 되돌리고 마지막 말에 「되돌린 장」으로 적는다.
 
 ## 7. 저장 · 알림
 - 작업 저장소에 커밋 · push.

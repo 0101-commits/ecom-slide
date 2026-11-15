@@ -46,14 +46,19 @@
 - 공통 `title`(`**굵게**` 가능) · `sub` · `kicker` · `date` · `session` · `copy`.
 - **A 주제 그래픽형** `graphic:{labels, series:[{data,color,step,end}], band:{a,b,from}, big:{value,dec,unit,label,carry}}` — 대표 계열이 그려지고 큰 숫자가 굴러 올라옴.
 - **B 초록 타일형**(CW44식) `tiles:["%","₩",...]` · **C 짙은 초록 전면** · **D 큰 숫자형** `big:{value,dec,unit}` · **E 흰 바탕 · 아래 띠**(Kick-off식).
+- **A · D · E 뒤 층**(5판) : Kick-off 1쪽 타일 12개가 처음부터 뒤에 투명도 11% · 흐림으로 깔려 앞 그래프보다 느리게 떠다님(움직임 줄이기 · `?still` 이면 멈춤). 끄려면 `backdrop:false`. 타일 그림은 비공개 `style/brand/kick/`(없으면 층 없이 그림).
+
+### 마지막 장 `end`(5판) — 칸 없음 `{"kind":"end"}`
+- Kick-off 21쪽을 부품 11개로 : 가운데 판 테두리가 그려짐 → 판 안 아이콘 4 → 타일 6이 작게 밀려 들어옴 → 「Economic Connection Opportunity Momentum」 → 로고 · 쪽 번호. 흔들림 · 흐림 · 회전 없음, 지구본 타일은 테두리 없이.
+- 본문 맨 끝(토의 · 추후 분석 뒤) 한 장. 이 장에서 → 는 멈춤(부록은 고리 · O 모아 보기). PDF 로 뽑으면 부록 뒤 맨 끝. 그림이 없으면 문구만(`text`).
 
 ### 간지 `part` — `no` · `name` · `desc` · `parts:[이름]` · `idx`
 
 ### `line` 주석 선 · 계단 차트(Kick-off 12쪽 · CW48 6장)
 `labels` · `series[{name,data,color('main'|'cmp'|…),step(기본 true),width,dash,end('미국 4.00%')}]` · `y{min,max,step,dec,unit,suf}` · `ticks[idx]`
 `band{a,b,from,legend,labels:[{at|[i0,i1],text,size,carry}]}`(두 계열 사이 면) · `phases[{from,to,name,now}]`(국면 띠 + 번호) · `avg[{s,from,to,x0,x1,label:'미국 평균 {v}%³⁾'}]`
-`values[{s,at,text,pos:'above|below',dx,dy,anchor}]`(꺾임점 값) · `events[{at,v,text,sub,anchor,dx,dy,leader:[v0,v1]}]` · `arrows[{at,a,b,text,sub,side,dx}]`(차이 화살)
-`box{title:'시사점',items:[…],x0,x1,top}`(차트 안 시사점 상자 — x 는 칸 번호, top 은 값) · `lanes[{name,sub,color,marks:[{at,kind:'up|down|hold|next',date,res,vote}]}]`(결정 일지)
+`values[{s,at,text,pos:'above|below',dx,dy,anchor}]`(꺾임점 값) · `events[{at,v,text,sub,anchor,dx,dy,leader:[v0,v1]}]`(글이 가리키는 점과 40px 넘게 떨어지면 `leader` 필수 — 점검 「이름표 거리」) · `arrows[{at,a,b,text,sub,side,dx}]`(차이 화살)
+`box{title:'시사점',items:[…],x0,x1,top,fixed}`(차트 안 시사점 상자 — x 는 칸 번호, top 은 값. 정한 자리가 선 · 이름표를 덮으면 엔진이 그림 칸 안 가까운 빈자리로 옮김, `fixed:true` 면 그대로) · `lanes[{name,sub,color,marks:[{at,kind:'up|down|hold|next',date,res,vote}]}]`(결정 일지)
 `future{n,xlabels,title,branches:[{s,at,to}],labels:[{v,text,color}],range:{v,sub,text}}`(다음 결정 구역)
 쌓기 : 축 · 국면 → 선 → 면 · 평균 → 값 · 사건 · 화살 → 결정 점 → 다음 구역 → 시사점 상자.
 

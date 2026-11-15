@@ -185,4 +185,15 @@ body.pres #stage{display:none}
 #pres button{font:inherit;font-size:15px;font-weight:700;background:#fff;color:var(--ink);border:0;border-radius:8px;padding:8px 16px;cursor:pointer}
 #ecom-check{display:none}
 @media print{body{overflow:visible;background:#fff}#stage{position:static;display:block}#deck{transform:none!important;box-shadow:none;width:1280px;height:auto;overflow:visible}.sl{display:block;position:relative;page-break-after:always}}
-@media (prefers-reduced-motion:reduce){.hov.bob{animation:none}}
+@media (prefers-reduced-motion:reduce){.hov.bob{animation:none}.sl .kt i{animation:none}}
+/* 표지 뒤 Kick-off 타일 층(5판) : 투명도 11% · 흐림 · 앞 그래프보다 느리게 떠다님 — 움직임 줄이기 · ?still · 점검 · 발표자 창에서는 멈춤 */
+.sl .kt{position:absolute;inset:0;pointer-events:none;z-index:0}
+.sl .kt .kti{position:absolute;inset:0;opacity:.11;filter:blur(6px);transform:scale(1.04)}
+.sl .kt i{position:absolute;display:block;animation:ktf var(--d,9s) ease-in-out var(--dl,0s) infinite alternate}
+.sl .kt i img{display:block;width:100%;height:auto}
+@keyframes ktf{from{translate:0 -9px}to{translate:var(--dx,6px) 9px}}
+body.still .sl .kt i,body.pres .sl .kt i{animation:none}
+/* 마지막 장(end) : Kick-off 21쪽 부품 — 판 테두리 → 아이콘 4 → 타일 6 → 문구 */
+.sl-end .ep{position:absolute;display:block}
+.sl-end .ep img{display:block;width:100%;height:auto}
+@media print{#deck{display:flex;flex-direction:column}.sl.sl-end{order:2}}

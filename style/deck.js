@@ -9,7 +9,7 @@ var C = ECOM.C = { main: '#00744F', dark: '#005136', g65: '#4D9E83', g40: '#99C7
   cmp: '#3E4743', gray: '#C9D1CD', light: '#E1E6E3', grid: '#E3E8E5', axis: '#9AA3A0', mute: '#6B7570', ink: '#1D2521', sub: '#3E4743',
   warn: '#B4461E', warnsoft: '#F6EDE8', paper: '#F5F7F6', well: '#EEF3F0', line: '#DDE3E0' };
 var EIN = 'cubic-bezier(.05,.7,.1,1)', ESTD = 'cubic-bezier(.2,0,.38,.9)', EOUT = 'cubic-bezier(.3,0,.8,.15)';
-var Q = new URLSearchParams(location.search), STILL = Q.has('still'), CHECK = Q.has('check'), PRES = Q.has('presenter');
+var Q = new URLSearchParams(location.search), STILL = Q.has('still'), CHECK = Q.has('check'), PRES = Q.has('presenter'), CHECK_SHALLOW = Q.get('check') === 'quick';
 var RMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 function RM() { return STILL || CHECK || PRES || (RMQ && RMQ.matches) || document.hidden }
 function dur(ms) { return RM() ? 1 : ms }
@@ -74,6 +74,9 @@ function fx(root, e, delay) {
   if (f === 'pop') { e.style.transformBox = 'fill-box'; e.style.transformOrigin = '50% 50%'; AF(e, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], ms || 380, EIN, delay); return delay + (ms || 380) }
   if (f === 'fade') { AF(e, [{ opacity: 0 }, { opacity: 1 }], ms || 420, 'linear', delay); return delay + (ms || 420) }
   if (f === 'drop') { var dy = +(e.getAttribute('data-dy') || 220); AF(e, [{ opacity: 0, transform: 'translateY(-' + dy + 'px)' }, { opacity: 1, offset: .25 }, { opacity: 1, transform: 'translateY(0)' }], ms || 760, ESTD, delay); return delay + (ms || 760) }
+  if (f === 'zoom') { if (e.namespaceURI === NS) { e.style.transformBox = 'fill-box'; e.style.transformOrigin = '50% 50%' } AF(e, [{ opacity: 0, transform: 'scale(.92)' }, { opacity: 1, transform: 'scale(1)' }], ms || 450, EIN, delay); return delay + (ms || 450) }
+  if (f === 'slide') { var sx = +(e.getAttribute('data-dx') || 0), sy = +(e.getAttribute('data-dy') || 0); AF(e, [{ opacity: 0, transform: 'translate(' + sx + 'px,' + sy + 'px)' }, { opacity: 1, transform: 'translate(0,0)' }], ms || 620, 'cubic-bezier(.2,.7,.2,1)', delay); return delay + (ms || 620) }
+  if (f === 'wipe') { AF(e, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }], ms || 900, 'cubic-bezier(.6,0,.2,1)', delay); return delay + (ms || 900) }
   if (f === 'left') { AF(e, [{ opacity: 0, transform: 'translateX(-24px)' }, { opacity: 1, transform: 'translateX(0)' }], ms || 360, EIN, delay); return delay + (ms || 360) }
   if (f === 'right') { AF(e, [{ opacity: 0, transform: 'translateX(24px)' }, { opacity: 1, transform: 'translateX(0)' }], ms || 360, EIN, delay); return delay + (ms || 360) }
   AF(e, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }], ms || 320, EIN, delay); return delay + (ms || 320);
@@ -119,7 +122,8 @@ function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
   var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx };
   ctx.svg = function (h, bd) { var v = E('svg', { class: 'cv', viewBox: '0 0 1168 ' + (h || 512), width: 1168, height: h || 512 }); (bd || ctx.bd).appendChild(v); return v };
-  if (kind === 'cover' || kind === 'part' || s.bare) { try { if (part) part(el, s, ctx); } catch (err) { el.innerHTML = '<p style="padding:40px;color:#B4461E">' + esc(kind) + ' 오류: ' + esc(err.message) + '</p>'; console.error(err) } }
+  if (kind === 'end') el.classList.add('sl-end');
+  if (kind === 'cover' || kind === 'part' || kind === 'end' || s.bare) { try { if (part) part(el, s, ctx); } catch (err) { el.innerHTML = '<p style="padding:40px;color:#B4461E">' + esc(kind) + ' 오류: ' + esc(err.message) + '</p>'; console.error(err) } }
   else {
     var lk = '';
     if (x.apx) lk = '<a data-back="1">← 본문으로</a>';
@@ -131,9 +135,24 @@ function buildSlide(x) {
     else try { part(ctx.bd, s, ctx) } catch (err) { ctx.bd.innerHTML = '<p style="color:#B4461E">' + esc(kind) + ' 그리기 오류 : ' + esc(err.message) + '</p>'; console.error(err) }
   }
   el.querySelectorAll('[data-count]').forEach(function (e) { e.textContent = cText(e, +e.getAttribute('data-count')) });
+  try { bridgeGaps(el) } catch (err) { console.error(err) }
   el.querySelectorAll('.lk a').forEach(function (a) { a.addEventListener('click', function (ev) { ev.stopPropagation();
     if (a.getAttribute('data-back')) { back(); return } var j = S.findIndex(function (y) { return y.apx && y.s.appendix === a.getAttribute('data-to') }); if (j >= 0) { origin = cur; go(j, 1) } }) });
   return el }
+/* 결측 이음 : 차트 선(칠 없음 · 굵기 2 이상 · 점선 아님 · M/L/H/V 만)이 빈 달로 끊긴 곳을 같은 색 연한 점선으로 이음(data-gap).
+   차트 위 「자료 없음」 글은 두지 않고 설명은 각주 · 마우스 올림 카드에. 세로 눈금처럼 가로로 안 나아가는 선은 건드리지 않음 */
+function bridgeGaps(root) { root.querySelectorAll('.bd path').forEach(function (p) {
+  if (p.hasAttribute('data-gap') || p.getAttribute('fill') !== 'none' || p.getAttribute('stroke-dasharray') || +(p.getAttribute('stroke-width') || 0) < 2) return;
+  var d = p.getAttribute('d') || ''; if (/[^MLHV0-9.,\s\-e]/.test(d)) return;
+  var tk = d.match(/[MLHV]|-?[\d.]+(?:e-?\d+)?/g) || [], x = 0, y = 0, cmd = '', subs = [], cs = null, i = 0;
+  while (i < tk.length) { var t = tk[i]; if (/^[MLHV]$/.test(t)) { cmd = t; i++; continue }
+    if (cmd === 'M') { x = +tk[i]; y = +tk[i + 1]; i += 2; cs = { s: [x, y], e: [x, y], n: 0 }; subs.push(cs); cmd = 'L' }
+    else if (cmd === 'L') { x = +tk[i]; y = +tk[i + 1]; i += 2; cs.e = [x, y]; cs.n++ }
+    else if (cmd === 'H') { x = +tk[i]; i++; cs.e = [x, y]; cs.n++ } else if (cmd === 'V') { y = +tk[i]; i++; cs.e = [x, y]; cs.n++ } else i++ }
+  if (subs.length < 2 || subs.filter(function (q) { return q.e[0] - q.s[0] > 10 }).length < 2) return;
+  var dd = ''; for (var j = 1; j < subs.length; j++) { var a = subs[j - 1].e, b = subs[j].s; if (b[0] <= a[0]) return; dd += 'M' + a[0] + ' ' + a[1] + ' L' + b[0] + ' ' + b[1] + ' ' }
+  var g = E('path', { d: dd.trim(), fill: 'none', stroke: p.getAttribute('stroke'), 'stroke-width': 1.8, 'stroke-dasharray': '2 5', 'stroke-linecap': 'round', opacity: .55, 'data-gap': 1 });
+  if (p.hasAttribute('data-b')) { g.setAttribute('data-b', p.getAttribute('data-b')); g.setAttribute('data-fx', 'fade') } p.parentNode.insertBefore(g, p) }) }
 function nBeats(i) { var s = S[i].s; return (s.beats && s.beats.length) || S[i].el._nb || 0 }
 
 /* ───────── 장 넘김 8종 ─────────
@@ -148,6 +167,7 @@ function pick(f, t, dir) {
   if (dir < 0) return (A0.apx || B0.apx) ? 'sheet' : (A0.s.kind === 'part' || B0.s.kind === 'cover' ? 'fade' : 'push');
   if (B0.s.transition && NAMES[B0.s.transition]) return B0.s.transition;
   if (A0.apx !== B0.apx) return 'sheet';
+  if (B0.s.kind === 'end') return 'fade';
   if (A0.s.kind === 'cover' || A0.s.kind === 'part' || B0.s.kind === 'part') return 'wipe';
   if (carryPair(A0.el, B0.el)) return 'num';
   if (B0.s.chart && A0.s.chart === B0.s.chart) return 'carry';
@@ -203,6 +223,7 @@ function building() { var el = cur >= 0 && S[cur].el; return el && el._until && 
 function next() { if (cur < 0) return; if (trans) { skipTrans(); return } var el = S[cur].el;
   if (building()) { finish(el); if (el._beat) el._beat(beatK); toast('쌓기를 바로 끝 상태로'); post(); return }
   if (beatK < nBeats(cur)) { beatK++; if (el._beat) el._beat(beatK); post(); hud(); return }
+  if (S[cur].s.kind === 'end' && (cur === S.length - 1 || S[cur + 1].apx)) { toast('마지막 장이에요 — 부록은 오른쪽 위 고리 · O 모아 보기로'); return }
   if (cur < S.length - 1) go(cur + 1, 1) }
 function prev() { if (trans) skipTrans(); if (cur > 0) go(cur - 1, -1) }
 function back() { var j = origin != null ? origin : S.findIndex(function (y) { return !y.apx && y.s.links && y.s.links.some(function (l) { return l.to === S[cur].s.appendix }) }); origin = null; go(j >= 0 ? j : 0, -1) }
@@ -239,6 +260,120 @@ function presenterUI() { document.body.classList.add('pres'); var p = document.g
   p.querySelector('.pv').onclick = function () { chan && chan.postMessage({ cmd: 'prev' }) }; p.querySelector('.nx').onclick = function () { chan && chan.postMessage({ cmd: 'next' }) };
   document.addEventListener('keydown', function (e) { if (e.key === 'ArrowRight' || e.key === ' ') chan && chan.postMessage({ cmd: 'next' }); if (e.key === 'ArrowLeft') chan && chan.postMessage({ cmd: 'prev' }) }) }
 
+/* ───────── 점검 넓히기(5판) : 글-선 · 글-도형 · 상자-자료 가림 · 이름표 거리 · 결측 끊김 · 축 밖 · 흐름 방향 · 뜻 표시 · 장식 도형 ─────────
+   본문 칸(.bd) 안만 봄. 모양은 화면에 그려진 그대로(isPointInStroke · isPointInFill)로 잼. 부품이 일부러 겹치게 한 선은 data-ok 로 뺌.
+   이름표 거리는 부품이 data-pt="x,y"(가리키는 점, svg 좌표) · data-leader(지시선 있음)를 단 글만 잼. 결측 이음 선은 data-gap. */
+var SHP = 'line,path,polyline,polygon,rect,circle,ellipse';
+function rgbA(s) { var m = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(s || ''); return m ? [+m[1], +m[2], +m[3], m[4] == null ? 1 : +m[4]] : null }
+function lumA(c) { return c ? (.2126 * c[0] + .7152 * c[1] + .0722 * c[2]) / 255 : 1 }
+function cdist(a, b) { return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) }
+function deepCheck(el, bd, k, r0, toS, visible, R) {
+  var o = { textLine: [], textShape: [], hidden: [], farLabel: [], gap: [], outAxis: [], flowRev: [], flowCross: [], meaning: [], deco: [] }, CI = new Map();
+  function push(a, s) { if (a.indexOf(s) < 0) a.push(s) }
+  function cl(x, y) { return new DOMPoint(r0.left + x * k, r0.top + y * k) }
+  function user(e, x, y) { var m = CI.get(e); if (m === undefined) { var c = e.getScreenCTM && e.getScreenCTM(); m = c ? c.inverse() : null; CI.set(e, m) } return m ? cl(x, y).matrixTransform(m) : null }
+  function slideOf(e, p) { var q = new DOMPoint(p.x, p.y).matrixTransform(e.getScreenCTM()); return [(q.x - r0.left) / k, (q.y - r0.top) / k] }
+  function inB(e, x, y) { var b = e._b; return !b || (x >= b.l - 1 && x <= b.r + 1 && y >= b.t - 1 && y <= b.b + 1) }
+  function inStroke(e, x, y) { if (!inB(e, x, y)) return false; var p = user(e, x, y); try { return !!p && e.isPointInStroke(p) } catch (er) { return false } }
+  function inFill(e, x, y) { if (e.namespaceURI !== NS) { var b = e._b; return x >= b.l && x <= b.r && y >= b.t && y <= b.b } if (!inB(e, x, y)) return false; var p = user(e, x, y); try { return !!p && e.isPointInFill(p) } catch (er) { return false } }
+  function hit(a, b, pad) { pad = pad || 0; return a.l < b.r + pad && a.r > b.l - pad && a.t < b.b + pad && a.b > b.t - pad }
+  function grid(q, nx, ny) { var P = []; for (var i = 0; i < nx; i++) for (var j = 0; j < ny; j++) P.push([q.l + (q.r - q.l) * (i + .5) / nx, q.t + (q.b - q.t) * (j + .5) / ny]); return P }
+  function nm(e) { var t = e.textContent && e.textContent.trim(); if (t) return t.slice(0, 10); var g = e.parentNode && e.parentNode.querySelector && e.parentNode.querySelector('text'); return (g && g.textContent.trim().slice(0, 10)) || e.tagName }
+  function ib(a, b) { return { l: Math.max(a.l, b.l), t: Math.max(a.t, b.t), r: Math.min(a.r, b.r), b: Math.min(a.b, b.b) } }
+  function boxOf(e, x, y, w, hh) { var m = e.getScreenCTM(); if (!m) return null; var P = [[x, y], [x + w, y], [x, y + hh], [x + w, y + hh]].map(function (c) { var q = new DOMPoint(c[0], c[1]).matrixTransform(m); return [(q.x - r0.left) / k, (q.y - r0.top) / k] });
+    return { l: Math.min.apply(null, P.map(function (c) { return c[0] })), r: Math.max.apply(null, P.map(function (c) { return c[0] })), t: Math.min.apply(null, P.map(function (c) { return c[1] })), b: Math.max.apply(null, P.map(function (c) { return c[1] })) } }
+  // 그려도 보이는 곳 = 장 · 본문 칸 ∩ 안쪽 svg 판 ∩ clip-path 상자
+  var BDB = toS(bd.getBoundingClientRect()), VIEW = ib({ l: 0, t: 0, r: 1280, b: 720 }, { l: BDB.l - 40, t: BDB.t - 40, r: BDB.r + 40, b: BDB.b + 40 });
+  function clipOf(e) { var c = VIEW, n = e;
+    while (n && n !== bd && n.nodeType === 1) { if (n.namespaceURI === NS) {
+        if (n.tagName === 'svg' && n.ownerSVGElement && n.parentNode.getScreenCTM) { var vb = boxOf(n.parentNode, n.x.baseVal.value, n.y.baseVal.value, n.width.baseVal.value, n.height.baseVal.value); if (vb) c = ib(c, vb) }
+        var cp = n.getAttribute('clip-path'), id = cp && /#([^)"']+)/.exec(cp); if (id) { var ce = document.getElementById(id[1]), r = ce && ce.firstElementChild; if (r && r.getBBox) { var bb = r.getBBox(), cb = boxOf(n, bb.x, bb.y, bb.width, bb.height); if (cb) c = ib(c, cb) } } }
+      n = n.parentNode }
+    return c }
+  function samples(e) { var P = [], L = 0; try { L = e.getTotalLength() } catch (er) { return P } var st = Math.max(4, L / 300); for (var d = 0; d <= L; d += st) P.push(slideOf(e, e.getPointAtLength(d))); return P }
+  var Sh = [];
+  bd.querySelectorAll(SHP).forEach(function (e) { if (!visible(e) || e.closest('defs,marker,pattern,clipPath,mask')) return; var cs = getComputedStyle(e), op = 1, n = e;
+    while (n && n !== el && n.nodeType === 1) { op *= +getComputedStyle(n).opacity; n = n.parentNode }
+    var st = cs.stroke && cs.stroke !== 'none' ? rgbA(cs.stroke) : null, sw = parseFloat(cs.strokeWidth) || 0, so = (+cs.strokeOpacity) * op;
+    if (st && (sw <= 0 || so < .05 || st[3] === 0)) st = null;
+    var fid = /url\(["']?#([^"')]+)/.exec(cs.fill || ''), fe = fid && document.getElementById(fid[1]), fu = !!(fe && fe.tagName === 'pattern'), fl = !fid && cs.fill && cs.fill !== 'none' ? rgbA(cs.fill) : null, fo = (+cs.fillOpacity) * op * (fl ? fl[3] : 1);
+    if (fl && fo < .03) fl = null; if (e.tagName === 'line') { fl = null; fu = false }
+    var b = ib(toS(e.getBoundingClientRect()), clipOf(e)); if (b.r - b.l < .5 || b.b - b.t < .5) { if (!(e.tagName === 'line' && (b.r - b.l >= 0 && b.b - b.t >= 0) && (b.r - b.l > 2 || b.b - b.t > 2))) return } e._b = b;
+    Sh.push({ e: e, st: st, sw: sw, fl: fl, fu: fu, fo: fo, b: b, w: b.r - b.l, h: b.b - b.t, dash: !!(cs.strokeDasharray && cs.strokeDasharray !== 'none'), hair: !!st && sw <= 1.5 && lumA(st) > .85, svg: e.ownerSVGElement }) });
+  // 차트 판 = 가로 눈금선(옅은 점선) 3개 이상인 svg — 위아래 끝 = 가로 긴 선의 끝
+  var charts = new Map();
+  bd.querySelectorAll('svg').forEach(function (sv) { var Hz = Sh.filter(function (s) { return s.svg === sv && s.st && s.w > 200 && s.h < 3 });
+    if (Hz.filter(function (s) { return s.hair && s.dash }).length >= 3) charts.set(sv, { top: Math.min.apply(null, Hz.map(function (s) { return s.b.t })), bot: Math.max.apply(null, Hz.map(function (s) { return s.b.b })), ys: Hz.map(function (s) { return (s.b.t + s.b.b) / 2 }) }) });
+  var Tx = R.filter(function (a) { return bd.contains(a[0]) });
+  // ① 글-선 · ② 글-도형(걸침)
+  Tx.forEach(function (a) { var t = a[0], q0 = a[1], q = { l: q0.l + 2, r: q0.r - 2, t: q0.t + 1.5, b: q0.b - 1.5 }; if (q.r <= q.l || q.b <= q.t) return;
+    var tcs = getComputedStyle(t), halo = t.namespaceURI === NS && /^stroke/.test(tcs.paintOrder || '') && tcs.stroke !== 'none';
+    var P = grid(q, Math.max(3, Math.min(14, Math.round((q.r - q.l) / 6))), 3);
+    // 받침 = 글 밑에 먼저 그린 불투명 칸(번호 동그라미 · 이름표 상자 · 카드) — 그보다 먼저 그린 선 · 면은 가려져 안 보이므로 뺌
+    var back = null;
+    Sh.forEach(function (s) { if (!s.fl || s.fo < .9 || s.e.tagName === 'line' || !hit(s.b, q) || !(t.compareDocumentPosition(s.e) & Node.DOCUMENT_POSITION_PRECEDING)) return;
+      var n = 0; P.forEach(function (p) { if (inFill(s.e, p[0], p[1])) n++ }); if (n >= P.length * .9 && (!back || (back.compareDocumentPosition(s.e) & Node.DOCUMENT_POSITION_FOLLOWING))) back = s.e });
+    if (!back) { var an = t.parentElement; while (an && an !== bd) { var bc = an.namespaceURI !== NS && rgbA(getComputedStyle(an).backgroundColor); if (bc && bc[3] >= .9) { back = an; break } an = an.parentElement } }
+    Sh.forEach(function (s) { if (!hit(s.b, q)) return; var e = s.e; if (e.hasAttribute('data-ok') || (e.parentNode && e.parentNode.hasAttribute && e.parentNode.hasAttribute('data-ok'))) return;
+      if (back && (e === back || (back.compareDocumentPosition(e) & Node.DOCUMENT_POSITION_PRECEDING))) return;
+      if (s.st && !s.hair && !halo && P.some(function (p) { return inStroke(e, p[0], p[1]) })) { push(o.textLine, a[2] + ' × 선(' + e.tagName + ')'); return }
+      if (((s.fl && lumA(s.fl) < .86 && s.fo >= .3) || s.fu) && e.tagName !== 'line' && ((e.getAttribute('d') || '').match(/[LHVCQA]/gi) || []).length <= 80) { var n = 0; P.forEach(function (p) { if (inFill(e, p[0], p[1])) n++ }); if (n > 0 && n < P.length) push(o.textShape, a[2] + ' × 도형(' + e.tagName + ')') } }) });
+  // ③ 상자-자료 가림 : 나중에 그린 불투명 상자가 먼저 그린 글 · 차트 선 · 점을 덮음
+  var covers = Sh.filter(function (s) { return s.fl && s.fo >= .9 && s.w * s.h >= 1500 && s.e.tagName !== 'line' });
+  bd.querySelectorAll('div').forEach(function (d) { if (!visible(d)) return; var c = rgbA(getComputedStyle(d).backgroundColor); if (!c || c[3] < .9) return; var b = toS(d.getBoundingClientRect()), w = b.r - b.l, hh = b.b - b.t;
+    if (w * hh < 1500 || (w > 1000 && hh > 400)) return; d._b = b; covers.push({ e: d, b: b }) });
+  var marks = Tx.map(function (a) { return { e: a[0], b: a[1], t: 'text', name: a[2] } });
+  Sh.forEach(function (s) { if (!charts.get(s.svg)) return; if (s.st && s.sw >= 2 && !s.dash && !s.fl && /^(path|polyline|line)$/.test(s.e.tagName)) marks.push({ e: s.e, b: s.b, t: 'line' });
+    else if (s.e.tagName === 'circle' && s.fl && s.w <= 18) marks.push({ e: s.e, b: s.b, t: 'dot' }) });
+  covers.forEach(function (c) { marks.forEach(function (m) { if (m.e === c.e || !hit(c.b, m.b) || c.e.contains(m.e) || m.e.contains(c.e)) return;
+    if (!(c.e.compareDocumentPosition(m.e) & Node.DOCUMENT_POSITION_PRECEDING)) return;
+    var pts = m.t === 'text' ? grid(m.b, 4, 2) : m.t === 'dot' ? [[(m.b.l + m.b.r) / 2, (m.b.t + m.b.b) / 2]] : samples(m.e), n = 0;
+    pts.forEach(function (p) { if (p[0] > c.b.l && p[0] < c.b.r && p[1] > c.b.t && p[1] < c.b.b && inFill(c.e, p[0], p[1])) n++ });
+    if (m.t === 'text' ? n >= 4 : n >= (m.t === 'dot' ? 1 : 2)) push(o.hidden, '「' + nm(c.e) + '」 상자가 ' + (m.t === 'text' ? '글 「' + m.name + '」' : m.t === 'dot' ? '자료 점' : '차트 선') + ' 가림') }) });
+  // ④ 이름표 거리 : 가리키는 점과 40px 넘게 떨어졌는데 지시선 없음
+  bd.querySelectorAll('[data-pt]').forEach(function (t) { if (!visible(t)) return; var sv = t.ownerSVGElement, a = String(t.getAttribute('data-pt')).split(',').map(Number); if (!sv || a.length < 2 || isNaN(a[0]) || isNaN(a[1])) return;
+    var q = new DOMPoint(a[0], a[1]).matrixTransform(sv.getScreenCTM()), px = (q.x - r0.left) / k, py = (q.y - r0.top) / k, b = toS(t.getBoundingClientRect());
+    var dx = Math.max(b.l - px, 0, px - b.r), dy = Math.max(b.t - py, 0, py - b.b), d = Math.sqrt(dx * dx + dy * dy);
+    if (d > 40 && !t.hasAttribute('data-leader')) push(o.farLabel, '「' + t.textContent.trim().slice(0, 12) + '」 ' + Math.round(d) + 'px') });
+  // ⑤ 결측 끊김 · ⑥ 축 밖
+  Sh.forEach(function (s) { var ch = charts.get(s.svg); if (!ch || !s.st || s.fl || s.sw < 2 || s.dash) return;
+    if (s.e.tagName === 'path') { var d = s.e.getAttribute('d') || '', nM = (d.match(/M/g) || []).length, nSeg = (d.match(/[LHVC]/g) || []).length;
+      if (nM > 1 && nSeg >= 6 && !s.svg.querySelector('[data-gap]')) push(o.gap, '선 ' + (nM - 1) + '곳 끊김') }
+    if (/^(path|polyline)$/.test(s.e.tagName) && samples(s.e).some(function (p) { return (p[1] < ch.top - 6 && p[1] > ch.top - 40) || (p[1] > ch.bot + 6 && p[1] < ch.bot + 40) })) push(o.outAxis, '선이 축 범위 밖') });
+  Sh.forEach(function (s) { var ch = charts.get(s.svg); if (ch && s.e.tagName === 'circle' && s.fl && s.w <= 18) { var y = (s.b.t + s.b.b) / 2; if ((y < ch.top - 6 && y > ch.top - 40) || (y > ch.bot + 6 && y < ch.bot + 40)) push(o.outAxis, '점이 축 범위 밖') } });
+  charts.forEach(function (ch, sv) { sv.querySelectorAll('text').forEach(function (t) { if (/자료\s*없음|미발표|결측/.test(t.textContent)) push(o.gap, '차트 위 결측 글 「' + t.textContent.trim().slice(0, 12) + '」') }) });
+  // ⑦ 흐름 방향 : 산키 띠(M C L C Z) — 오른쪽 → 왼쪽 띠 · 같은 두 기둥 사이 띠 교차
+  var rib = [];
+  Sh.forEach(function (s) { if (!(s.fl || s.fu) || s.e.tagName !== 'path') return; var d = s.e.getAttribute('d') || '', cm = d.replace(/[^MCLZ]/gi, '').toUpperCase(), nu = d.match(/-?[\d.]+/g) || [];
+    if (cm !== 'MCLCZ' || nu.length !== 16) return; nu = nu.map(Number); rib.push({ x0: nu[0], x1: nu[6], a: (nu[1] + nu[15]) / 2, b: (nu[7] + nu[9]) / 2 });
+    if (nu[6] < nu[0] - 2) push(o.flowRev, '띠 ' + Math.round(nu[0]) + '→' + Math.round(nu[6])) });
+  var nx = 0; rib.forEach(function (p, i) { for (var j = i + 1; j < rib.length; j++) { var q = rib[j]; if (Math.abs(p.x0 - q.x0) < 2 && Math.abs(p.x1 - q.x1) < 2 && (p.a - q.a) * (p.b - q.b) < -1) nx++ } });
+  if (nx) push(o.flowCross, '띠 교차 ' + nx + '곳');
+  // ⑧ 뜻 표시 : 점선 · 면 · 빗금마다 범례(같은 색)나 24px 안 이름표(눈금 글 뺌)
+  var legC = [];
+  bd.querySelectorAll('.leg i').forEach(function (i) { var cs = getComputedStyle(i), c = rgbA(cs.backgroundColor); if (c && c[3] > 0) legC.push(c); var m = /rgba?\([^)]*\)/.exec(cs.backgroundImage || ''); if (m) legC.push(rgbA(m[0])) });
+  Sh.forEach(function (s) { if (s.fl && s.w <= 18 && s.h <= 16) legC.push(s.fl); if (s.st && s.e.tagName === 'line' && s.w <= 32 && s.h <= 5) legC.push(s.st) });
+  var lab = Tx.filter(function (a) { var t = a[0], cs = getComputedStyle(t), fz = parseFloat(cs.fontSize), c = rgbA(t.namespaceURI === NS ? cs.fill : cs.color); return !(fz <= 12.6 && c && cdist(c, [107, 117, 112]) < 40 && /^[\d\s.,:%~\-−+'()QH년월분기]*$/.test(t.textContent.trim())) });
+  Sh.forEach(function (s) { var e = s.e, kind = null, c = null;
+    if (s.st && s.dash && !s.hair && !s.fl && Math.sqrt(s.w * s.w + s.h * s.h) >= 40) { kind = '점선'; c = s.st }
+    else if (s.fu && s.w * s.h >= 600) kind = '빗금';
+    else if (s.fl && e.tagName !== 'line' && s.w * s.h >= 2500 && Math.min(s.w, s.h) >= 14 && lumA(s.fl) < .985 && (s.fo < .9 || lumA(s.fl) >= .88) && ((e.getAttribute('d') || '').match(/[CQA]/gi) || []).length < 2) { kind = '면'; c = s.fl }
+    if (!kind) return;
+    var ch = charts.get(s.svg); if (kind === '면' && e.tagName === 'rect' && ch && ch.ys.some(function (y) { return Math.abs(s.b.b - y) <= 2.5 || Math.abs(s.b.t - y) <= 2.5 })) return;   // 막대
+    if (kind === '점선') { var ends = []; try { var L = e.getTotalLength(); ends = [slideOf(e, e.getPointAtLength(0)), slideOf(e, e.getPointAtLength(L))] } catch (er) { }   // 잇는 선 = 끝이 글 · 칸에 닿음
+      if (ends.some(function (pt) { var bx = { l: pt[0], r: pt[0], t: pt[1], b: pt[1] }; return Tx.some(function (a) { return hit(a[1], bx, 10) }) || Sh.some(function (q) { return q !== s && (q.fl || q.st) && q.w * q.h >= 120 && q.e.tagName !== 'line' && hit(q.b, bx, 8) }) })) return }
+    if (lab.some(function (a) { return hit(a[1], s.b, 40) }) || (c && legC.some(function (q) { return cdist(q, c) < 24 }))) return;
+    push(o.meaning, kind + '(' + e.tagName + ' ' + Math.round(s.b.l) + ',' + Math.round(s.b.t) + ')') });
+  // ⑨ 장식 도형 : 기울인 글 · 도장(90도 배수 아님) · 흐림 필터 · 아주 옅은 큰 도형
+  bd.querySelectorAll('[transform]').forEach(function (e) { if (!visible(e) || !e.ownerSVGElement || !(e.tagName === 'text' || e.querySelector('text'))) return;
+    var m = e.ownerSVGElement.getScreenCTM().inverse().multiply(e.getScreenCTM()), ang = Math.atan2(m.b, m.a) * 180 / Math.PI, r = ((ang % 90) + 90) % 90;
+    if (r > 2 && r < 88 && !(e.parentNode && e.parentNode.closest && e.parentNode.closest('[transform]') && o.deco.length)) push(o.deco, '기울인 글 · 도장 「' + nm(e) + '」 ' + Math.round(ang) + '°') });
+  bd.querySelectorAll('*').forEach(function (e) { var cs = getComputedStyle(e); if (/blur/.test(cs.filter || '') && visible(e)) push(o.deco, '흐림 필터 「' + nm(e) + '」');
+    if (e.namespaceURI !== NS && cs.transform && cs.transform !== 'none' && Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim() })) { var mm = /matrix\(([^,]+),\s*([^,]+)/.exec(cs.transform); if (mm) { var an = Math.atan2(+mm[2], +mm[1]) * 180 / Math.PI, rr = ((an % 90) + 90) % 90; if (rr > 2 && rr < 88) push(o.deco, '기울인 글 「' + nm(e) + '」 ' + Math.round(an) + '°') } } });
+  Sh.forEach(function (s) { if (/^(rect|circle|ellipse)$/.test(s.e.tagName) && !s.st && s.fl && s.fo > 0 && s.fo <= .15 && s.w * s.h >= 8000 && !lab.some(function (a) { return hit(a[1], s.b, 24) })) push(o.deco, '옅은 장식 도형(' + s.e.tagName + ' ' + Math.round(s.b.l) + ',' + Math.round(s.b.t) + ')') });
+  Sh.forEach(function (s) { delete s.e._b });
+  return o }
+
 /* ───────── 점검(?check) ───────── */
 function runCheck() {
   var out = { engine: 3, slides: [] }, B0 = { l: 50, t: 136, r: 1230, b: 664 };
@@ -257,9 +392,11 @@ function runCheck() {
         if (bdE && bdE.contains(a[0]) && (q.t < B0.t || q.b > B0.b || q.l < B0.l || q.r > B0.r)) outB.push(a[2] + ' ' + [q.l, q.t, q.r, q.b].map(Math.round).join(','));
         for (var j = ii + 1; j < R.length; j++) { var c = R[j][1]; if (a[0] === R[j][0] || a[0].contains(R[j][0]) || R[j][0].contains(a[0])) continue;
           var ix = Math.min(q.r, c.r) - Math.max(q.l, c.l), iy = Math.min(q.b, c.b) - Math.max(q.t, c.t); if (ix > 2 && iy > 3) ov.push(a[2] + ' × ' + R[j][2]) } });
-      return { ov: ov, outS: outS, outB: outB, minF: minF } }
-    var ti = textIssues(), nb = nBeats(i), ov = ti.ov, outS = ti.outS, outB = ti.outB, minF = ti.minF;
-    if (nb && el._beat) { el._beat(nb); var t2 = textIssues(); t2.ov.forEach(function (x) { if (ov.indexOf(x) < 0) ov.push('[바뀜] ' + x) }); t2.outS.forEach(function (x) { if (outS.indexOf(x) < 0) outS.push('[바뀜] ' + x) }); t2.outB.forEach(function (x) { if (outB.indexOf(x) < 0) outB.push('[바뀜] ' + x) }); el._beat(0) }
+      var dp = null; if (bdE && !CHECK_SHALLOW) { try { dp = deepCheck(el, bdE, k, r0, toS, visible, R) } catch (er) { dp = { error: [String(er && er.message || er).slice(0, 80)] } } }
+      return { ov: ov, outS: outS, outB: outB, minF: minF, dp: dp } }
+    var ti = textIssues(), nb = nBeats(i), ov = ti.ov, outS = ti.outS, outB = ti.outB, minF = ti.minF, dp = ti.dp || {};
+    if (nb && el._beat) { el._beat(nb); var t2 = textIssues(); t2.ov.forEach(function (x) { if (ov.indexOf(x) < 0) ov.push('[바뀜] ' + x) }); t2.outS.forEach(function (x) { if (outS.indexOf(x) < 0) outS.push('[바뀜] ' + x) }); t2.outB.forEach(function (x) { if (outB.indexOf(x) < 0) outB.push('[바뀜] ' + x) });
+      if (t2.dp) Object.keys(t2.dp).forEach(function (key) { dp[key] = dp[key] || []; t2.dp[key].forEach(function (x) { if (dp[key].indexOf(x) < 0 && dp[key].indexOf('[바뀜] ' + x) < 0) dp[key].push('[바뀜] ' + x) }) }); el._beat(0) }
     var gw = 58, gh = 26, cells = new Uint8Array(gw * gh), bd = el.querySelector('.bd');
     if (bd) { var bb = toS(bd.getBoundingClientRect()); bd.querySelectorAll('text,rect,path,circle,line,polyline,polygon,.card,.qc,.pc,.kb .kc,table,.eq,.hov,div').forEach(function (e) {
         if (!visible(e)) return; if (e.tagName === 'DIV' && !Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim() })) {
@@ -273,6 +410,7 @@ function runCheck() {
     out.slides.push({ i: i + 1, page: pageOf(i), kind: x.s.kind, textOverlap: ov.slice(0, 12), outside: outS.slice(0, 8), outsideBody: outB.slice(0, 8), minFont: minF === 99 ? null : Math.round(minF * 10) / 10,
       fnLines: fn && fn.textContent.trim() ? Math.round(fn.getBoundingClientRect().height / k / 18.75) : 0, headLen: hm ? hm.textContent.replace(/\s/g, '').length : 0,
       headLines: hm && hm.textContent.trim() ? Math.round(hm.getBoundingClientRect().height / k / 35.5) : 0, occupied: bd ? Math.round(occ / cells.length * 100) : null, beats: nBeats(i) });
+    var rec = out.slides[out.slides.length - 1]; Object.keys(dp).forEach(function (key) { if (dp[key] && dp[key].length) rec[key] = dp[key].slice(0, 8) });
     el.classList.remove('on') });
   if (cur >= 0) S[cur].el.classList.add('on'); return out }
 
@@ -280,7 +418,7 @@ function runCheck() {
 function init() {
   var dd = document.getElementById('deck-data'); if (!dd) return; D = JSON.parse(dd.textContent); var sl = D.slides || [];
   document.body.insertAdjacentHTML('beforeend', '<div id="stage" tabindex="0"><div id="deck"></div></div><div id="ov"></div><div id="toast"></div><div id="pres"></div>');
-  stage = document.getElementById('stage'); deckEl = document.getElementById('deck');
+  stage = document.getElementById('stage'); deckEl = document.getElementById('deck'); if (STILL || CHECK) document.body.classList.add('still');
   var main = sl.filter(function (s) { return !s.appendix }), apx = sl.filter(function (s) { return s.appendix });
   main.concat(apx).forEach(function (s, i) { S.push({ s: s, i: i, apx: !!s.appendix, page: s.appendix ? null : i + 1 }) });
   S.forEach(function (x) { deckEl.appendChild(buildSlide(x)) });

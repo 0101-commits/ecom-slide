@@ -20,6 +20,6 @@ for m in M["mockups"]:
     facts.update(m.get("facts", {}))
 deck = {"schema": 3, "meta": {"session": "MOCK4", "title": f"ECOM 목업 {len(slides)}", "date": M["got"][:10], "cover": "A", "combo": "A"}, "facts": facts, "slides": slides}
 out = ROOT / "gallery" / "mockups.html"
-out.write_text(ecs.page_html(deck, ROOT, title=f"ECOM 목업 {len(slides)}종 (4판)"), encoding="utf-8")
+out.write_text(ecs.page_html(deck, ROOT, title=f"ECOM 목업 {len(slides)}종 (4판)", brand=False), encoding="utf-8")
 (ROOT / "library" / "mockups" / "deck.json").write_text(json.dumps(deck, ensure_ascii=False), encoding="utf-8")
 print(out, round(out.stat().st_size / 1024), "KB", len(slides), "장")

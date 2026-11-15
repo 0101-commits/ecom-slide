@@ -9,8 +9,9 @@ ECOM.parts.brbubble = function (bd, s, ctx) {
   var gap = 26, sumRel = I.reduce(function (a, it) { return a + Math.sqrt(it.value / mx) }, 0), Dmax = Math.min((1168 - gap * (n - 1)) / sumRel, 290);
   var by = 372, g0 = h.at(svg, 0, { 'data-fx': 'fade' }); E('line', { x1: 0, x2: 1168, y1: by, y2: by, stroke: C.line }, g0);
   var tw = sumRel * Dmax + gap * (n - 1), x = (1168 - tw) / 2;
-  I.forEach(function (it, i) { var d = Math.sqrt(it.value / mx) * Dmax, r = d / 2, cx = x + r, t0 = 150 + i * 160, on = i === hero, g = h.at(svg, t0 + 350, { 'data-fx': 'fade' }), cy = by - 12 - r;
+  I.forEach(function (it, i) { var d = Math.sqrt(it.value / mx) * Dmax, r = d / 2, cx = x + r, t0 = 150 + i * 160, on = i === hero, cy = by - 12 - r;
     E('circle', { cx: cx, cy: cy, r: r, fill: on ? C.dark : (it.value / mx > .3 ? C.main : C.g65), opacity: on ? 1 : .9, 'data-at': t0, 'data-fx': 'pop', 'data-ms': 420 }, svg);
+    var g = h.at(svg, t0 + 350, { 'data-fx': 'fade' });
     if (r > 40) T(g, cx, cy + 8, h.nf(it.value, dec), { 'text-anchor': 'middle', 'font-size': r > 70 ? 28 : 20, 'font-weight': 700, fill: '#fff' }); else T(g, cx, cy - r - 9, h.nf(it.value, dec), { 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700, fill: C.ink });
     T(g, cx, by + 30, it.name, { 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700, fill: C.ink });
     T(g, cx, by + 50, u, { 'text-anchor': 'middle', 'font-size': 13, fill: C.mute });

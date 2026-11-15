@@ -54,6 +54,10 @@ def main():
                 bad.append(f"올리면 안 되는 파일 : {rel}")
             continue
         txt = f.read_text(encoding="utf-8", errors="ignore")
+        if f.suffix.lower() == ".html" and re.search(r"window\.ECOM_LOGO\s*=\s*\{\s*\"", txt):
+            bad.append(f"로고 · Kick-off 그림이 공개 파일에 들어감 : {rel} (page_html(..., brand=False) 로 다시 만들기)")
+        if f.suffix.lower() == ".html" and re.search(r"data:image/(png|jpe?g|webp);base64,", txt):
+            bad.append(f"그림(base64)이 공개 HTML 에 들어감 : {rel}")
         if f.suffix.lower() == ".json":
             try:
                 data = json.loads(txt)

@@ -47,11 +47,12 @@ ECOM.parts.line = function (bd, s, ctx) { u = ECOM.u;
       var t = T(gl, X((at0[0] + at0[1]) / 2), y, l.text, { 'text-anchor': 'middle', 'font-size': l.size || 14, 'font-weight': 700, fill: C.dark }); if (l.carry) t.setAttribute('data-carry', l.carry) }) }
   /* 꺾임점 값 */
   var vg = h.lv(svg, 4); (s.values || []).forEach(function (v) { var q = ser[v.s || 0], c = q.color || (v.s ? 'main' : 'cmp'), val = q.data[v.at], below = v.pos === 'below';
-    L.push(u.label(vg, X(v.at) + (v.dx != null ? v.dx : -slot / 2 + 4), Y(val) + (v.dy != null ? v.dy : below ? 19 : -8), v.text || h.nf(val, sc.dec < 2 ? 2 : sc.dec), { color: c, size: 13.5, anchor: v.anchor, dir: below ? 1 : -1 })) });
+    L.push(u.label(vg, X(v.at) + (v.dx != null ? v.dx : -slot / 2 + 4), Y(val) + (v.dy != null ? v.dy : below ? 19 : -8), v.text || h.nf(val, sc.dec < 2 ? 2 : sc.dec), { color: c, size: 13.5, anchor: v.anchor, dir: below ? 1 : -1, pt: [X(v.at), Y(val)] })) });
   /* 사건 */
   var eg = h.lv(svg, 4); (s.events || []).forEach(function (ev) { var x = X(ev.at) + (ev.dx || 0), y = Y(ev.v) + (ev.dy || 0), an = ev.anchor || 'end';
     if (ev.leader) E('line', { x1: X(ev.at), x2: X(ev.at), y1: Y(ev.leader[0]), y2: Y(ev.leader[1]), stroke: C.mute, 'stroke-dasharray': '2 3' }, eg);
-    L.push(u.label(eg, x, y, ev.text, { anchor: an, size: 13.5 })); if (ev.sub) T(eg, x, y + 17, ev.sub, { 'text-anchor': an, 'font-size': 12.5, fill: C.mute }) });
+    var pv = null; ser.forEach(function (q) { var v = q.data[ev.at]; if (v != null && (pv == null || Math.abs(Y(v) - y) < Math.abs(Y(pv) - y))) pv = v });
+    var lb = u.label(eg, x, y, ev.text, { anchor: an, size: 13.5, pt: pv != null ? [X(ev.at), Y(pv)] : null, leader: !!ev.leader }); if (ev.sub) { lb.sub = T(eg, x, y + 17, ev.sub, { 'text-anchor': an, 'font-size': 12.5, fill: C.mute }); lb.below = 17 } L.push(lb) });
   /* 차이 화살 */
   (s.arrows || []).forEach(function (ar) { var g = h.lv(svg, 4), x = X(ar.at) + (ar.dx || 0), sd = ar.side || 1; h.arrow2(g, x, Y(ar.a), Y(ar.b), C.dark);
     var ty = (Y(ar.a) + Y(ar.b)) / 2; T(g, x + sd * 10, ty - 2, ar.text, { 'font-size': 14, 'font-weight': 700, fill: C.dark, 'text-anchor': sd > 0 ? 'start' : 'end' });
@@ -63,9 +64,14 @@ ECOM.parts.line = function (bd, s, ctx) { u = ECOM.u;
       E('path', { d: 'M' + xb + ' ' + Y(lvv) + ' V' + Y(br.to) + ' H' + xe, fill: 'none', stroke: c, 'stroke-width': 2, 'stroke-dasharray': '2 4' }, fb) });
     (fut.labels || []).forEach(function (l) { T(fb, xe + 8, Y(l.v) + 5, l.text, { 'font-size': 13, 'font-weight': 700, fill: h.col(l.color || 'cmp') }) });
     if (fut.range) { T(fb, xe + 8, Y(fut.range.v) - 2, fut.range.sub || '', { 'font-size': 12.5, fill: C.mute }); T(fb, xe + 8, Y(fut.range.v) + 17, fut.range.text, { 'font-size': 15, 'font-weight': 700, fill: C.dark }) } }
-  u.avoid(L);
+  var SEG = []; ser.forEach(function (q) { SEG = SEG.concat(u.segsOf(q.data, X, Y, q.step)) });
+  /* 시사점 상자 : 정한 자리가 선 · 이름표를 덮으면 그림 칸 안 가까운 빈자리로(못 찾으면 그대로) */
+  var BX = null; if (s.box) { var bx0 = s.box, it0 = bx0.items || [], bw = X(bx0.x1) - X(bx0.x0), bh = 46 + it0.length * 30, LB = L.map(function (l) { var x0 = l.anchor === 'end' ? l.x - l.w : l.anchor === 'middle' ? l.x - l.w / 2 : l.x; return { l: x0, r: x0 + l.w, t: l.y - l.h, b: l.y + 4 } });
+    var spot = bx0.fixed ? null : u.freeSpot({ l: X(bx0.x0), t: Y(bx0.top), w: bw, h: bh }, SEG, LB, { l: ml + 6, t: top + 4, r: X(n - .5) - 4, b: bot - 4 });
+    BX = { l: spot ? spot.l : X(bx0.x0), t: spot ? spot.t : Y(bx0.top), w: bw, h: bh } }
+  u.avoid(L, 15, SEG, BX ? [{ l: BX.l, t: BX.t, r: BX.l + BX.w, b: BX.t + BX.h }] : []);
   /* 시사점 상자 */
-  if (s.box) { var bx = s.box, g5 = h.lv(svg, 7), xa = X(bx.x0), xb2 = X(bx.x1), ya = Y(bx.top), items = bx.items || [], hh = 46 + items.length * 30;
+  if (s.box) { var bx = s.box, g5 = h.lv(svg, 7), xa = BX.l, xb2 = BX.l + BX.w, ya = BX.t, items = bx.items || [], hh = BX.h;
     E('rect', { x: xa, y: ya, width: xb2 - xa, height: hh, rx: 10, fill: '#fff', stroke: C.gray }, g5);
     E('rect', { x: xa, y: ya, width: 92, height: 28, rx: 10, fill: C.dark }, g5); T(g5, xa + 46, ya + 19, bx.title || '시사점', { 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 700, fill: '#fff' });
     items.forEach(function (t, k) { var yy = ya + 52 + k * 30; E('circle', { cx: xa + 22, cy: yy - 5, r: 9.5, fill: C.main }, g5); T(g5, xa + 22, yy - 1, String(k + 1), { 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#fff' });
