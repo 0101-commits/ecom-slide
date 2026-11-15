@@ -128,7 +128,7 @@
 
 ### 강조 `emph`
 - `{"mode":"focus","keys":["한국"]}` — 쌓기가 끝나면 `data-key` 가 keys 에 없는 항목을 흐리게(새 배치 · 지도 배치는 항목마다 data-key 있음).
-- `{"mode":"lens","at":[x,y],"r":95,"zoom":1.8,"text":"바닥에서 반등"}` — 본문 좌표(1168×512) 한 곳을 동그란 돋보기로 확대(쌓기 끝). 돋보기 아래 글은 가려지니 숫자 · 선이 있는 곳에.
+- `{"mode":"lens","at":[x,y],"r":95,"zoom":1.8,"text":"바닥에서 반등"}` — 본문 좌표(1168×512) 한 곳을 동그란 돋보기로 확대(쌓기 끝). 돋보기가 덮는 자리의 글은 가려지니 숫자 · 선이 있는 곳에.
 
 ### 전면 지도 `fullmap`(다큐형 4형식 · 장 전체가 지도)
 `form`: `zoom`(지역 확대 — 해협 · 도시) · `globe`(지구본 회전 — 먼 길) · `flow`(세계 흐름 — 여러 나라 → 한 곳) · `choro`(나라 칠하기 — 나라별 값). 칸: `region` · `paint[{c,tone,label}]` · `tags` · `routes[{path,style:'lane|pipe|ship',label}]` · `rings` · `points` · `card` · `globe{from,to}` · `flows[{from,to,value,group}]` + `groups` · `values{나라:값}` + `scale` · `key`. 자세한 것 = `style/parts/l_fullmap.js` 머리 주석 · 목업 V052~V055.

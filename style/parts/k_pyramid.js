@@ -1,7 +1,7 @@
 /* pyramid — 층 피라미드(CW44 8쪽) : 아래층부터 쌓임 → 층마다 설명 상자 → 가운데 순환(선택) 그려짐 → 오른쪽 괄호 메모가 밀려 들어옴
    layers[3~5 · 0 = 꼭대기]{label,sub,desc,note:{title,items[]}|'글'} · cycle{label,from,to}(층 번호 범위 · 가운데 둥근 화살) · beats[{spot:층}]
    layout(없으면 default = 위 그림) : stairs 계단(아래층이 왼쪽 낮은 계단 · 계단 위 카드) · rings 동심원(바깥 = 넓은 아래층, 오른쪽 설명 줄)
-     · bars 층 막대(길이 = layers[].value, 없으면 아래로 갈수록 길게) · blocks 블록 쌓기(이름 띠 + 설명, 폭 계단식) · funnel 깔때기(아래층 = 첫 단계, layers[].value 모두 있으면 폭 = 값 + 줄어든 몫 표시)
+     · bars 층 막대(길이 = layers[].value, 없으면 아래로 갈수록 길게) · blocks 블록 쌓기(이름 띠 + 설명, 폭 계단식) · funnel 깔때기형(맨 아래층 = 첫 단계, layers[].value 모두 있으면 폭 = 값 + 줄어든 몫 표시)
      새 배치는 cycle 은 안 그림, 선택 칸 value(숫자)·s.unit·s.dec 만 더 받음. 짙은 바탕(bg deep) 가능 */
 (function () {
 'use strict';
