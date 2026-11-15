@@ -19,20 +19,26 @@ function curve(P, k) { /* Catmull-Rom → 베지어. 끝 접선도 돌려줌. �
   return { d: d, ang: ang } }
 function hit(a, b) { return a[0] < b[0] + b[2] + 3 && b[0] < a[0] + a[2] + 3 && a[1] < b[1] + b[3] + 2 && b[1] < a[1] + a[3] + 2 }
 ECOM.parts.map = function (bd, s, ctx) {
-  var fr = s.frame || {}, W = fr.w || 1168, H = fr.h || 512, G = ECOM.geo, root = ctx.root, svg = ctx.svg(H), OY = 24, dec = s.dec != null ? s.dec : 0, unit = s.unit || '';
+  /* 5판 배치 : region 범위 확대(고운 해안선) · bubbles 점 크기 + 오른쪽 순위 · lanes 항로(흐르는 점선 · 길목 고리) — 범위는 빌드가 자료에서 정함(s.geo.region 로 지정 가능) */
+  var LZ = /^(region|bubbles|lanes)$/.test(s.layout || '') && ECOM.gm && ECOM.gm.ok(s), LN = LZ && s.layout === 'lanes';
+  if (LZ && s.layout === 'bubbles') s = Object.assign({}, s, { bubble: true, bubbleKey: null, frame: { w: 870 }, box: s.box || { title: s.boxTitle || s.bubbleKey || '규모', pos: 'side', rows: (s.points || []).filter(function (p) { return p.value != null }).sort(function (a, b) { return b.value - a.value }).slice(0, 8).map(function (p) { return { label: p.label, value: p.value } }) } });
+  var fr = s.frame || {}, W = fr.w || 1168, H = fr.h || 512, G = LZ ? ECOM.gm.geoLike(s, W, H - 24 - 18) : ECOM.geo, root = ctx.root, svg = ctx.svg(H), OY = 24, dec = s.dec != null ? s.dec : 0, unit = s.unit || '';
   var flows = s.flows || [], pts = s.points || [], chk = s.chokes || [], fill = s.fill || null, leg = s.legend || null, box = s.box || null;
   /* 확대(view.bbox=[lon0,lat0,lon1,lat1]) : 투영 좌표를 상자에 맞춰 늘림 */
   var VK = 1, VX = 0, VY = 0;
-  if (s.view && s.view.bbox) { var b = s.view.bbox, a1 = G.project(b[0], b[3]), a2 = G.project(b[2], b[1]), vw = a2[0] - a1[0], vh = a2[1] - a1[1], th = H - OY - 18;
+  if (!LZ && s.view && s.view.bbox) { var b = s.view.bbox, a1 = G.project(b[0], b[3]), a2 = G.project(b[2], b[1]), vw = a2[0] - a1[0], vh = a2[1] - a1[1], th = H - OY - 18;
     VK = Math.min(W / vw, th / vh); VX = (W - vw * VK) / 2 - a1[0] * VK; VY = (th - vh * VK) / 2 - a1[1] * VK}
-  else if (W < 1168) { var th0 = H - OY - 18; VK = Math.min(W / 1168, th0 / 470); VX = (W - 1168 * VK) / 2; VY = (th0 - 470 * VK) / 2 }
+  else if (!LZ && W < 1168) { var th0 = H - OY - 18; VK = Math.min(W / 1168, th0 / 470); VX = (W - 1168 * VK) / 2; VY = (th0 - 470 * VK) / 2 }
   var TRF = VK === 1 && !VX && !VY ? 'translate(0,' + OY + ')' : 'translate(' + VX.toFixed(2) + ',' + (VY + OY).toFixed(2) + ') scale(' + VK.toFixed(4) + ')', VE = VK === 1 ? {} : { 'vector-effect': 'non-scaling-stroke' };
   if (VK !== 1 || VX) svg.style.overflow = 'hidden';
   var P = function (v) { var q = G.find(v); return q ? [q[0] * VK + VX, q[1] * VK + VY + OY] : null };
   var FV = function (v) { return typeof v === 'number' ? h.nf(v, dec) + unit : String(v == null ? '' : v) };
   var occ = [], LX = 20, bottom = H - 12, blocks = [];
   /* 1) 지도 바탕 */
-  E('path', Object.assign({ d: G.land, transform: TRF, fill: C.light, stroke: '#fff', 'stroke-width': .6, 'data-at': 0, 'data-fx': 'fade', 'data-ms': 500 }, VE), svg);
+  if (LZ) { var cpi = 'mz' + ctx.index, cpp = E('clipPath', { id: cpi }, E('defs', {}, svg)); E('rect', { x: 0, y: OY, width: box && box.pos === 'side' ? 1168 : W, height: H - OY - 18, rx: 12 }, cpp); svg.setAttribute('clip-path', 'url(#' + cpi + ')');
+    E('rect', { x: 0, y: OY, width: W, height: H - OY - 18, rx: 12, fill: '#D3E3DF', 'data-at': 0, 'data-fx': 'fade', 'data-ms': 500 }, svg);
+    E('path', { d: G.land, transform: TRF, fill: 'none', stroke: '#AFC4BC', 'stroke-width': 2.6, opacity: .55, 'data-at': 0, 'data-fx': 'fade', 'data-ms': 500 }, svg) }
+  E('path', Object.assign({ d: G.land, transform: TRF, fill: LZ ? '#fff' : C.light, stroke: LZ ? '#C5D1CC' : '#fff', 'stroke-width': LZ ? .8 : .6, 'data-at': 0, 'data-fx': 'fade', 'data-ms': 500 }, VE), svg);
   /* 구분 칠(zones[{iso:[ISO3…],tone,label,at,pos}]) : 나라 묶음을 색으로 구분(값 없음) */
   var ZT = { main: C.main, dark: C.dark, g65: C.g65, g40: C.g40, g18: C.g18, g08: C.g08 };
   (s.zones || []).forEach(function (z, zi) { (z.iso || []).forEach(function (k) { var d = G.countries[k]; if (!d) return;
@@ -46,9 +52,9 @@ ECOM.parts.map = function (bd, s, ctx) {
       E('path', { d: d, transform: TRF, fill: STEPS[cls(fill[k]) + (5 - bins.length)] || STEPS[4], stroke: '#fff', 'stroke-width': .7, 'data-at': 300 + i * 40, 'data-fx': 'fade', 'data-ms': 360 }, svg) }) }
   /* 2) 왼쪽 아래 칸(범례 · 순위 · 열쇠) 자리 먼저 */
   var bx = LX, boxW = 250, boxH = 0, rows = box && box.rows || [];
-  if (box) { boxH = 46 + rows.length * 24 + 6; if (leg && fill) bx = LX + 176; if (box.pos === 'right') bx = W - LX - boxW; occ.push([bx, bottom - boxH, boxW, boxH]) }
+  if (box) { boxH = 46 + rows.length * 24 + 6; if (leg && fill) bx = LX + 176; if (box.pos === 'right') bx = W - LX - boxW; if (box.pos === 'side') { boxW = 1168 - W - 20; bx = W + 20 } occ.push([bx, bottom - boxH, boxW, boxH]) }
   var lh = 0; if (fill && leg) { lh = 40 + (bins.length + 1) * 22; occ.push([LX, bottom - lh, 168, lh]) }
-  var keys = []; if (flows.length && !s.noFlowKey) keys.push('f'); if (pts.some(function (p) { return p.kind === 'dst' }) && !s.noDstKey) keys.push('d'); if (s.bubble && s.bubbleKey) keys.push('b'); if (s.numKey) keys.push('n');
+  var keys = []; if (flows.length && (!s.noFlowKey || LN)) keys.push('f'); if (pts.some(function (p) { return p.kind === 'dst' }) && !s.noDstKey) keys.push('d'); if (s.bubble && s.bubbleKey) keys.push('b'); if (s.numKey) keys.push('n');
   var kTop = bottom - (box ? boxH + 14 + (box.pos === 'right' ? 0 : 0) : 0) - keys.length * 26 - (box ? 0 : 4);
   if (keys.length && !(fill && leg)) occ.push([LX, kTop, 140, keys.length * 26]);
   /* 3) 흐름 선 */
@@ -56,7 +62,9 @@ ECOM.parts.map = function (bd, s, ctx) {
   var T0 = 300, STEP = 260;
   flows.forEach(function (f, i) { var q = [P(f.from)].concat((f.via || []).map(function (v) { return P(v) })).concat([P(f.to)]); if (q.some(function (z) { return !z })) return;
     var w = 3 + 8 * (+f.value || vmax * .4) / vmax, col = TONE[f.tone || 'main'] || C.main, cv = curve(q), t = T0 + i * STEP;
-    E('path', { d: cv.d, fill: 'none', stroke: col, 'stroke-width': w.toFixed(1), 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: .82, 'data-at': t, 'data-fx': 'draw', 'data-ms': 700 }, svg);
+    if (LN) { E('path', { d: cv.d, fill: 'none', stroke: col, 'stroke-width': (w * 2.2).toFixed(1), 'stroke-linecap': 'round', opacity: .14, 'data-at': t, 'data-fx': 'fade', 'data-ms': 500 }, svg);
+      E('path', { d: cv.d, fill: 'none', stroke: col, 'stroke-width': Math.max(2.6, w * .5).toFixed(1), 'stroke-linecap': 'round', 'stroke-dasharray': '2 8', class: 'fm-run', 'data-at': t, 'data-fx': 'fade', 'data-ms': 500 }, svg) }
+    else E('path', { d: cv.d, fill: 'none', stroke: col, 'stroke-width': w.toFixed(1), 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: .82, 'data-at': t, 'data-fx': 'draw', 'data-ms': 700 }, svg);
     var e = q[q.length - 1], sz = 11 + w * .5, a1 = cv.ang + 2.6, a2 = cv.ang - 2.6, ga = h.at(svg, t + 620, { 'data-fx': 'fade', 'data-ms': 160 });
     E('path', { d: 'M' + e[0].toFixed(1) + ' ' + e[1].toFixed(1) + ' L' + (e[0] + sz * Math.cos(a1)).toFixed(1) + ' ' + (e[1] + sz * Math.sin(a1)).toFixed(1) + ' L' + (e[0] + sz * Math.cos(a2)).toFixed(1) + ' ' + (e[1] + sz * Math.sin(a2)).toFixed(1) + ' Z', fill: col }, ga) });
   var tPt = T0 + Math.max(flows.length, 1) * STEP + 300;
@@ -89,18 +97,19 @@ ECOM.parts.map = function (bd, s, ctx) {
   (s.zones || []).forEach(function (z, zi) { if (!z.label) return; var q = P(z.at || G.anchor[(z.iso || [])[0]]); if (!q) return; var w = h.textW(z.label, 14, 1), pl = place(q[0], q[1], w, 18, z.pos ? [z.pos] : ['t', 'b', 'r', 'l'], 0), an = anchorOf(pl.pos, pl.r), g = h.at(svg, 900 + zi * 100, { 'data-fx': 'fade', 'data-ms': 300 });
     TL(g, an[0], pl.r[1] + 14, z.label, { 'font-size': 14, 'font-weight': 700, fill: C.ink, 'text-anchor': an[1] }) });
   (s.seas || []).forEach(function (z, zi) { var q = P(z.at); if (!q) return; var g = h.at(svg, 1000 + zi * 100, { 'data-fx': 'fade', 'data-ms': 300 }); occ.push([q[0] - h.textW(z.label, 13, 1) / 2, q[1] - 12, h.textW(z.label, 13, 1), 16]);
-    T(g, q[0], q[1], z.label, { 'font-size': 13, 'font-weight': 600, 'font-style': 'italic', fill: C.g65, 'text-anchor': 'middle', 'letter-spacing': 2 }) });
+    (LZ ? TL : T)(g, q[0], q[1], z.label, { 'font-size': 13, 'font-weight': 600, 'font-style': 'italic', fill: C.g65, 'text-anchor': 'middle', 'letter-spacing': 2 }) });
   /* 5) 길목 */
   chk.forEach(function (c, i) { var q = P(c.at); if (!q) return; var w = h.textW(c.label || '', 12, 1), pl = place(q[0], q[1], w, 16, c.pos ? [c.pos] : ['r', 'b', 'l', 't']), an = anchorOf(pl.pos, pl.r), g = h.at(svg, tPt + 400 + i * 60, { 'data-fx': 'fade', 'data-ms': 300 });
-    E('circle', { cx: q[0], cy: q[1], r: 4.5, fill: '#fff', stroke: C.cmp, 'stroke-width': 1.6 }, g); TL(g, an[0], pl.r[1] + 12.5, c.label || '', { 'font-size': 12, 'font-weight': 600, fill: C.mute, 'text-anchor': an[1] }) });
+    if (LN) E('circle', { cx: q[0], cy: q[1], r: 17, fill: 'none', stroke: C.warn, 'stroke-width': 2, 'stroke-dasharray': '4 4' }, g); E('circle', { cx: q[0], cy: q[1], r: 4.5, fill: '#fff', stroke: LN ? C.warn : C.cmp, 'stroke-width': 1.6 }, g); TL(g, an[0], pl.r[1] + 12.5, c.label || '', { 'font-size': 12, 'font-weight': 600, fill: C.mute, 'text-anchor': an[1] }) });
   /* 6) 범례(구분도) */
   if (fill && leg) { var ly = bottom - lh, g1 = h.at(svg, 700, { 'data-fx': 'fade', 'data-ms': 400 });
     E('rect', { x: LX, y: ly, width: 168, height: lh, rx: 10, fill: '#fff', stroke: C.line }, g1); T(g1, LX + 14, ly + 24, leg.title || '', { 'font-size': 14, 'font-weight': 700, fill: C.ink });
     var items = bins.map(function (b, i) { return { c: STEPS[i + (5 - bins.length)], t: i < bins.length - 1 ? h.nf(b, dec) + '~' + h.nf(bins[i + 1], dec) + unit : h.nf(b, dec) + unit + ' 이상' } }); items.push({ c: C.light, t: leg.none || '자료 없음' });
     items.forEach(function (it, i) { var y = ly + 40 + i * 22; E('rect', { x: LX + 14, y: y - 4, width: 22, height: 14, rx: 2, fill: it.c, stroke: i === items.length - 1 ? C.axis : 'none', 'stroke-width': .6 }, g1); T(g1, LX + 46, y + 8, it.t, { 'font-size': 13, 'font-weight': 600, fill: C.cmp }) }) }
   /* 열쇠(굵기 · 도착) */
-  if (keys.length && !(fill && leg)) { var gk = h.at(svg, 700, { 'data-fx': 'fade', 'data-ms': 400 }); keys.forEach(function (k, i) { var y = kTop + 13 + i * 26;
-      if (k === 'f') { E('line', { x1: LX + 4, x2: LX + 44, y1: y, y2: y, stroke: C.main, 'stroke-width': 10 }, gk); T(gk, LX + 56, y + 5, '굵기 = ' + (s.flowKey || '물량'), { 'font-size': 13, 'font-weight': 600, fill: C.mute }) }
+  if (keys.length && !(fill && leg)) { var gk = h.at(svg, 700, { 'data-fx': 'fade', 'data-ms': 400 }); if (LZ) E('rect', { x: LX - 8, y: kTop - 6, width: 210, height: keys.length * 26 + 10, rx: 8, fill: '#fff', stroke: C.line }, gk); keys.forEach(function (k, i) { var y = kTop + 13 + i * 26;
+      if (k === 'f' && LN) { E('line', { x1: LX + 4, x2: LX + 44, y1: y, y2: y, stroke: C.main, 'stroke-width': 3, 'stroke-dasharray': '2 8', 'stroke-linecap': 'round' }, gk); T(gk, LX + 56, y + 5, s.flowKey || '항로', { 'font-size': 13, 'font-weight': 600, fill: C.mute }) }
+      else if (k === 'f') { E('line', { x1: LX + 4, x2: LX + 44, y1: y, y2: y, stroke: C.main, 'stroke-width': 10 }, gk); T(gk, LX + 56, y + 5, '굵기 = ' + (s.flowKey || '물량'), { 'font-size': 13, 'font-weight': 600, fill: C.mute }) }
       else if (k === 'n') { E('circle', { cx: LX + 24, cy: y, r: 11, fill: C.dark }, gk); T(gk, LX + 24, y + 4.5, '1', { 'font-size': 13, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' }); T(gk, LX + 56, y + 5, s.numKey, { 'font-size': 13, 'font-weight': 600, fill: C.mute }) }
       else if (k === 'b') { E('circle', { cx: LX + 24, cy: y, r: 9, fill: C.main, opacity: .82 }, gk); T(gk, LX + 56, y + 5, s.bubbleKey, { 'font-size': 13, 'font-weight': 600, fill: C.mute }) }
       else { E('rect', { x: LX + 17, y: y - 7, width: 14, height: 14, rx: 3, fill: '#fff', stroke: C.dark, 'stroke-width': 3 }, gk); T(gk, LX + 56, y + 5, s.dstKey || '도착 지역', { 'font-size': 13, 'font-weight': 600, fill: C.mute }) } }) }
@@ -114,4 +123,5 @@ ECOM.parts.map = function (bd, s, ctx) {
       T(svg, bx + 22 + lw + bw, y + 3, FV(r.value), { 'font-size': 12.5, 'font-weight': 700, fill: C.ink, 'data-at': 900 + i * 120, 'data-fx': 'fade', 'data-ms': 260 }) }) }
   root.setAttribute('data-gap', 300);
 };
+ECOM.parts.map.layouts = ['default', 'region', 'bubbles', 'lanes'];
 })();

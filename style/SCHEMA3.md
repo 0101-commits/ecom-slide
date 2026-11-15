@@ -94,3 +94,49 @@
 - 도움 : `ECOM.h`(E · T · H · nf · textW · wrap · niceTicks · lin · lv · at · tri · arrow2 · bracket · legend · stepD · lineD · col · A(el,kf,ms,ease,delay,fill) · later · RM) · `ECOM.u`(yScale · yAxis · xTicks · xLabels · phaseBands · laneMarks · avoid · label · legendHTML) · `ECOM.C` 색.
 - 색은 `ECOM.C` 만(초록 main · dark · g65 · g40 · g18 · g08, 진회색 cmp, 회색 gray · light, 나쁜 뜻 warn). 장마다 강조 역할 3가지까지.
 - 글 : 본문 13~16px, 작은 라벨 11.5px 이상, 숫자 라벨엔 반드시 단위(장 안 같은 양은 한 단위). 글끼리 · 글과 막대가 겹치면 안 됨(`?check` 의 textOverlap 0).
+
+## 5판 손잡이 · 재료 (목업 V001~V058)
+
+### 배치 `layout` — 같은 자료, 다른 그림
+장 칸에 `"layout":"<이름>"` 만 더하면 같은 칸 값으로 다른 짜임을 그린다. 없거나 `"default"` 면 지금 그림. 이름이 틀리면 `ecs.py lint` 가 「배치 이름 · 고칠 것」.
+**같은 회차 안 같은 kind 두 번째부터는 앞과 다른 배치**를 쓴다. 각 배치의 더 받는 칸은 부품 파일 머리 주석(`style/parts/*.js`)과 해당 V 목업에 있음.
+
+| kind | 배치(목업) | 짙은 바탕 되는 배치 |
+|---|---|---|
+| `axis` | `scale` 좌우 저울(V008) · `bars` 겹친 막대(V009) · `overlay` 두 시기 겹친 선(V010) · `cards` 카드 두 장(V011) | — |
+| `columns` | `venn` 겹친 원(V018) · `rows` 가로 띠(V019) · `iconcards` 아이콘 카드(V020) | iconcards, venn |
+| `discuss` | `qcards` 질문 카드 3(V028) · `map` 지도형 토의(V051) | — |
+| `formula` | `invoice` 계산서형(V021) · `blocks` 블록 더하기(V022) | — |
+| `further` | `tree` 나무형(V029) · `grid` 2×2(V030) | — |
+| `hub` | `grid` 2×2 칸 + 가운데 원형(V042) · `branch` 위→아래 갈래형(V043) · `map` 지도 위 경로(V050) | — |
+| `kpi` | `hero` 큰 하나 + 작은 셋(V005) · `spark` 숫자 + 긴 미니 선(V006) · `band` 짙은 띠(V007) · `map` 지도 위 숫자(V049) · `map` 강조 focus(V057) | — |
+| `line` | `phasefull` 국면 띠 전면형(V001) · `small` 작은 여러 개(V002) · `endbig` 끝 이름표 큰 숫자형(V003) · `deep` 짙은 초록 바탕형(V004) | deep |
+| `map` | `region` 범위 확대(V046) · `bubbles` 점 크기 + 오른쪽 순위(V047) · `lanes` 항로(V048) | — |
+| `pyramid` | `stairs` 계단형(V034) · `rings` 동심원형(V035) · `bars` 층 막대형(V036) · `blocks` 블록 쌓기형(V037) · `funnel` 깔때기형(V038) | bars, blocks, funnel, rings, stairs |
+| `sankey` | `twoline` 굵은 띠 흐름형(V044) · `pipe` 배관형(V045) | pipe, twoline |
+| `stairs` | `domino` 가로 도미노(V012) · `vtimeline` 세로 연표(V013) · `causetree` 원인 나무(V014) | causetree, domino, vtimeline |
+| `statement` | `steps` 숫자 셋 계단(V025) · `onepic` 한 그림 요약(V026) · `deep` 짙은 바탕(V027) | deep |
+| `structure` | `hier` 위아래 계층형(V039) · `trade` 좌우 거래 흐름형(V040) · `matrix` 주체 × 역할 행렬형(V041) | hier, matrix, trade |
+| `table` | `bars` 막대 든 표(V023) · `heat` 색 칸 표(V024) | — |
+| `term` | `dict` 사전형(V031) · `picture` 그림 풀이(V032) · `calc` 계산 예(V033) | — |
+| `tree` | `topdown` 위→아래 나무(V015) · `sunburst` 선버스트(V016) · `table` 표형(V017) | sunburst, table, topdown |
+
+- `map` 의 `region` · `bubbles` · `lanes` 와 `kpi` · `hub` · `discuss` 의 `map` 은 칸에 `at`(나라 이름 · ISO3 · [경도, 위도])이 있어야 함. 범위는 빌드가 자료에서 정함(`view.bbox` 가 있으면 그것, `geo:{"region":"gulf"}` 로 지정 가능). `at` 이 없으면 기본 그림.
+
+### 바탕 `bg` — 본문의 15~25%
+`"bg":"mint"`(연초록, 모든 부품) · `"deep"`(짙은 초록 — 위 표의 「짙은 바탕 되는 배치」만, 아니면 lint 「바탕 · 고칠 것」이고 엔진은 흰 바탕으로 그림) · `"map"`(전면 지도 = `fullmap` 이 저절로).
+
+### 강조 `emph`
+- `{"mode":"focus","keys":["한국"]}` — 쌓기가 끝나면 `data-key` 가 keys 에 없는 항목을 흐리게(새 배치 · 지도 배치는 항목마다 data-key 있음).
+- `{"mode":"lens","at":[x,y],"r":95,"zoom":1.8,"text":"바닥에서 반등"}` — 본문 좌표(1168×512) 한 곳을 동그란 돋보기로 확대(쌓기 끝). 돋보기 아래 글은 가려지니 숫자 · 선이 있는 곳에.
+
+### 전면 지도 `fullmap`(다큐형 4형식 · 장 전체가 지도)
+`form`: `zoom`(지역 확대 — 해협 · 도시) · `globe`(지구본 회전 — 먼 길) · `flow`(세계 흐름 — 여러 나라 → 한 곳) · `choro`(나라 칠하기 — 나라별 값). 칸: `region` · `paint[{c,tone,label}]` · `tags` · `routes[{path,style:'lane|pipe|ship',label}]` · `rings` · `points` · `card` · `globe{from,to}` · `flows[{from,to,value,group}]` + `groups` · `values{나라:값}` + `scale` · `key`. 자세한 것 = `style/parts/l_fullmap.js` 머리 주석 · 목업 V052~V055.
+- 지도 자료 = Natural Earth(10m · 50m · 110m, `style/geo/`) — 빌드(`geo_pack.py`)가 그 범위 나라 윤곽만 잘라 덱에 넣고 d3-geo 를 내장(인터넷 없이 열림). 나라 이름은 한글 짧은 이름 · 별칭(사우디아라비아 → 사우디) · ISO3 모두 됨.
+- 바다 #3E9DAA 계열 · 땅 #0B2427 + 해안 빛, 이름표 = 흰 상자. 흐르는 점선은 움직임 줄이기 · `?still` · 발표자 창에서 멈춤.
+
+### 몸 그림 `body`(건강 · 제약)
+`organs[{o:'brain|eye|lung|heart|liver|stomach|pancreas|kidney|intestine|fat|blood|bone|joint|skin', label, value, unit, sub, tone}]` · `title` · `side`. 실루엣 위 장기를 칠하고 양옆 설명 칸으로 끌어냄(목업 V056). 다른 부품에서 `ECOM.bodyFig(svg,x,y,k,organs)`.
+
+### 회사 로고 칸 `ECOM.coLogo(p,x,y,w,h,이름)`
+비공개 `style/brand/logos/<이름>.png` 가 있으면 그림, 없으면 글자 칸(첫 글자 동그라미 + 이름). 로고 그림은 공개 저장소에 넣지 않음(보도 자료 · IR · 저작권 없는 공용 그림만 비공개 보관).

@@ -11,7 +11,8 @@ M = json.loads((ROOT / "library" / "mockups" / "mockups.json").read_text(encodin
 slides, facts = [], {}
 for m in M["mockups"]:
     s = json.loads(json.dumps(m["slide"]))
-    s["note"] = f"{m['id']} · {m['kind']} · {m.get('variant', '')}"
+    if not isinstance(s.get("note"), dict):  # 산키 등은 note 를 메모 칸으로 씀 — 덮어쓰지 않음
+        s["note"] = f"{m['id']} · {m['kind']} · {m.get('variant', '')}"
     s.pop("appendix", None)
     s.pop("links", None)
     if isinstance(s.get("eyebrow"), dict):

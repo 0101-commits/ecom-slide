@@ -8,6 +8,10 @@ var NS = 'http://www.w3.org/2000/svg';
 var C = ECOM.C = { main: '#00744F', dark: '#005136', g65: '#4D9E83', g40: '#99C7B9', g18: '#D1E8E0', g08: '#ECF5F1', on: '#8FD9B6',
   cmp: '#3E4743', gray: '#C9D1CD', light: '#E1E6E3', grid: '#E3E8E5', axis: '#9AA3A0', mute: '#6B7570', ink: '#1D2521', sub: '#3E4743',
   warn: '#B4461E', warnsoft: '#F6EDE8', paper: '#F5F7F6', well: '#EEF3F0', line: '#DDE3E0' };
+/* 짙은 바탕(bg deep · map) 색표 — 같은 이름, 어두운 면에서 읽히는 값. 부품은 var P = ctx.dark ? ECOM.Cd : ECOM.C */
+ECOM.Cd = { main: '#8FD9B6', dark: '#CDEFE0', g65: '#6FC29F', g40: '#3F8A6E', g18: '#1F5A45', g08: '#0F4433', on: '#FFFFFF',
+  cmp: '#E1E6E3', gray: '#5F7A70', light: '#2E5547', grid: 'rgba(255,255,255,.12)', axis: 'rgba(255,255,255,.45)', mute: 'rgba(255,255,255,.62)', ink: '#FFFFFF', sub: 'rgba(255,255,255,.82)',
+  warn: '#FF9B73', warnsoft: '#5A2E1E', paper: '#0E4635', well: '#0B3D2E', line: 'rgba(255,255,255,.2)', bg: '#003D2B' };
 var EIN = 'cubic-bezier(.05,.7,.1,1)', ESTD = 'cubic-bezier(.2,0,.38,.9)', EOUT = 'cubic-bezier(.3,0,.8,.15)';
 var Q = new URLSearchParams(location.search), STILL = Q.has('still'), CHECK = Q.has('check'), PRES = Q.has('presenter'), CHECK_SHALLOW = Q.get('check') === 'quick';
 var RMQ = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
@@ -88,9 +92,26 @@ function stopPlay(root) {
   root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.strokeDasharray = ''; if (e.hasAttribute('data-count')) e.textContent = cText(e, +e.getAttribute('data-count')) });
   if (root._reset) root._reset(root); root._until = 0 }
 function prep(root) { stopPlay(root); if (RM()) return; root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = 0 }); if (root._prep) root._prep(root) }
+/* 강조 손잡이(5판) emph{mode:'focus', keys:[이름…]} : 쌓기가 끝나면 data-key 가 keys 에 없는 항목을 흐리게
+   emph{mode:'lens', at:[x,y](본문 좌표), r, zoom, text} : 그 자리를 동그란 돋보기로 확대해 보임(쌓기 끝에 나타남) */
+function emphOn(root) { var m = root._s && root._s.emph; if (m && m.mode === 'lens' && m.at && !CHECK) { var bd0 = root.querySelector('.bd'); if (bd0 && !bd0.querySelector('.lens')) try { makeLens(bd0, m) } catch (err) { console.error(err) } return }
+  if (!m || m.mode !== 'focus') return; var ks = (m.keys || []).map(function (k) { return String(k) }), all = root.querySelectorAll('[data-key]'), hit = 0;
+  all.forEach(function (e) { if (ks.indexOf(e.getAttribute('data-key')) >= 0) hit++ }); if (!hit) return;
+  all.forEach(function (e) { var k = function (n) { return n && ks.indexOf(n.getAttribute('data-key')) >= 0 }, up = e.parentElement && e.parentElement.closest('[data-key]');
+    var on = k(e) || k(up) || Array.prototype.some.call(e.querySelectorAll('[data-key]'), k); e.classList.toggle('emph-dim', !on && !(up && up.classList.contains('emph-dim'))) }) }
+function emphOff(root) { root.querySelectorAll('.emph-dim').forEach(function (e) { e.classList.remove('emph-dim') }); root.querySelectorAll('.lens').forEach(function (e) { e.remove() }) }
+function makeLens(bd, m) { var r = m.r || 90, z = m.zoom || 1.8, x = m.at[0], y = m.at[1], L = document.createElement('div'); L.className = 'lens';
+  L.style.cssText = 'left:' + (x - r) + 'px;top:' + (y - r) + 'px;width:' + 2 * r + 'px;height:' + 2 * r + 'px';
+  var inner = document.createElement('div'); inner.className = 'lens-in'; inner.style.transform = 'translate(' + (r - x * z) + 'px,' + (r - y * z) + 'px) scale(' + z + ')';
+  Array.prototype.forEach.call(bd.children, function (c) { if (c === L) return; var k = c.cloneNode(true), oa = [c].concat(Array.prototype.slice.call(c.querySelectorAll('*'))), ka = [k].concat(Array.prototype.slice.call(k.querySelectorAll('*')));
+    oa.forEach(function (o, i) { var cs = getComputedStyle(o), op = +cs.opacity; if (ka[i] && (op < .999 || cs.visibility === 'hidden' || cs.display === 'none')) { ka[i].style.opacity = cs.display === 'none' || cs.visibility === 'hidden' ? '0' : String(op) } }); k.querySelectorAll('[data-b],[data-at],[data-fx]').forEach(function (e) { e.removeAttribute('data-b'); e.removeAttribute('data-at'); e.removeAttribute('data-fx') });
+    ['data-b', 'data-at', 'data-fx'].forEach(function (a) { k.removeAttribute(a) }); k.querySelectorAll('[id]').forEach(function (e) { e.removeAttribute('id') }); inner.appendChild(k) });
+  L.appendChild(inner); if (!RM() && L.animate) L.animate([{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 450, easing: 'cubic-bezier(.2,.7,.2,1)' });
+  if (m.text) { var t = document.createElement('b'); t.className = 'lens-t'; t.textContent = m.text; L.appendChild(t) }
+  bd.appendChild(L) }
 function play(root, skip) {
-  stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' });
-  if (RM()) { if (root._done) root._done(root); return 0 }
+  stopPlay(root); emphOff(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' });
+  if (RM()) { if (root._done) root._done(root); emphOn(root); return 0 }
   var gap = +(root.getAttribute('data-gap') || 300), stg = +(root.getAttribute('data-stg') || 45), byL = {}, end = 0;
   root.querySelectorAll('[data-b],[data-at]').forEach(function (e) {
     if (skip && (e === skip || e.hasAttribute('data-carry-host'))) return;
@@ -98,11 +119,11 @@ function play(root, skip) {
     var l = +e.getAttribute('data-b'); (byL[l] = byL[l] || []).push(e) });
   Object.keys(byL).forEach(function (l) { byL[l].forEach(function (e, i) { end = Math.max(end, fx(root, e, (l - 1) * gap + i * stg)) }) });
   if (root._hook) end = Math.max(end, root._hook(root) || 0);
-  later(root, function () { settle(root); if (root._done) root._done(root) }, end + 30);
+  later(root, function () { settle(root); if (root._done) root._done(root) }, end + 30); later(root, function () { emphOn(root) }, end + 250);
   root._until = performance.now() + end; return end }
 /* 쌓기가 끝나면 쌓기 움직임(끝 모습 = 기본값)만 지움 — 바뀜 단계에서 style.opacity 로 흐리게 하는 것이 먹도록. 부품 고리(_hook)의 움직임은 그대로 둠 */
 function settle(root) { if (!root.getAnimations) return; root.getAnimations({ subtree: true }).forEach(function (a) { if (a._fx === 1 && a.playState === 'finished') a.cancel() }) }
-function finish(root) { stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); if (root._done) root._done(root) }
+function finish(root) { stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); if (root._done) root._done(root); emphOn(root) }
 
 ECOM.h = { E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2,
   bracket: bracket, legend: legend, stepD: stepD, lineD: lineD, col: col, num: num, ext: ext, A: A, later: later, dur: dur, RM: RM, cText: cText, EIN: EIN, ESTD: ESTD, EOUT: EOUT, C: C };
@@ -120,7 +141,13 @@ function footHTML(s) { var f = s.foot || {}, out = [], n = f.notes || [];
 function pageOf(i) { var x = S[i]; return x.apx ? x.s.appendix : String(x.page) }
 function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
-  var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx };
+  var bg = /^(mint|deep|map)$/.test(s.bg || '') ? s.bg : (kind === 'fullmap' ? 'map' : '');
+  /* 짙은 바탕은 그 배치가 짙은 색표를 아는 때만(ECOM.parts.<kind>.dark = ['배치', …]) — 모르면 흰 바탕으로 그리고 점검에 남김 */
+  if ((bg === 'deep' || bg === 'map') && !(part && part.dark && part.dark.indexOf(s.layout || 'default') >= 0)) { x.bgOff = bg; bg = '' }
+  if (bg) el.classList.add('bg-' + bg);
+  var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx, bg: bg, dark: bg === 'deep' || bg === 'map', P: (bg === 'deep' || bg === 'map') ? ECOM.Cd : C };
+  /* 전면 층(bg map 등) : 장 전체 1280×720 을 덮는 판 — 꼬리표 · 헤드메시지 · 각주는 그 위 */
+  ctx.full = function () { var f = el.querySelector('.fl'); if (!f) { f = document.createElement('div'); f.className = 'fl'; el.insertBefore(f, el.firstChild) } return f };
   ctx.svg = function (h, bd) { var v = E('svg', { class: 'cv', viewBox: '0 0 1168 ' + (h || 512), width: 1168, height: h || 512 }); (bd || ctx.bd).appendChild(v); return v };
   if (kind === 'end') el.classList.add('sl-end');
   if (kind === 'cover' || kind === 'part' || kind === 'end' || s.bare) { try { if (part) part(el, s, ctx); } catch (err) { el.innerHTML = '<p style="padding:40px;color:#B4461E">' + esc(kind) + ' 오류: ' + esc(err.message) + '</p>'; console.error(err) } }
@@ -129,7 +156,7 @@ function buildSlide(x) {
     if (x.apx) lk = '<a data-back="1">← 본문으로</a>';
     else if (s.links && s.links.length) lk = s.links.map(function (l) { return '<a data-to="' + esc(l.to) + '">' + esc(l.text || l.to) + ' →</a>' }).join('');
     el.innerHTML = '<div class="tag ch">' + eyebrow(s) + '</div><div class="hm mv">' + md(s.head || '') + '</div><div class="bd mv"></div><div class="fn ch">' + footHTML(s) + '</div>'
-      + '<div class="lg ch">' + logoImg(false) + '<span>' + esc(ctx.page) + '</span></div>' + (lk ? '<div class="lk ch">' + lk + '</div>' : '');
+      + '<div class="lg ch">' + logoImg(ctx.dark) + '<span>' + esc(ctx.page) + '</span></div>' + (lk ? '<div class="lk ch">' + lk + '</div>' : '');
     ctx.bd = el.querySelector('.bd');
     if (!part) ctx.bd.innerHTML = '<p style="color:#B4461E">모르는 화면 종류 : ' + esc(kind) + '</p>';
     else try { part(ctx.bd, s, ctx) } catch (err) { ctx.bd.innerHTML = '<p style="color:#B4461E">' + esc(kind) + ' 그리기 오류 : ' + esc(err.message) + '</p>'; console.error(err) }

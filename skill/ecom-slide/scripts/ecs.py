@@ -282,7 +282,7 @@ def cmd_mockup(a):
     fams = {}
     for x in items:
         fams[x.get("kind") or x.get("family")] = fams.get(x.get("kind") or x.get("family"), 0) + 1
-    say({"count": len(hits), "items": [{"id": x["id"], "kind": x.get("kind"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
+    say({"count": len(hits), "items": [{"id": x["id"], "kind": x.get("kind"), "layout": x.get("layout"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
          "families": fams if not (a.family or q) else None})
 
 
@@ -596,11 +596,23 @@ def known_kinds(lib):
     return ks
 
 
+def part_handles(lib):
+    """부품 파일 끝의 ECOM.parts.<kind>.layouts / .dark 목록 → {kind: (배치 set, 짙은 바탕 set)}"""
+    out = {}
+    for f in (lib / "style" / "parts").glob("*.js"):
+        t = f.read_text(encoding="utf-8")
+        for kind, what, body in re.findall(r"ECOM\.parts\.([a-z][a-z0-9]*)\.(layouts|dark)\s*=\s*\[([^\]]*)\]", t):
+            lay, dk = out.setdefault(kind, (set(), set()))
+            (lay if what == "layouts" else dk).update(re.findall(r"['\"]([a-z0-9]+)['\"]", body))
+    return out
+
+
 def lint3(deck, lib):
     iss = []
     def add(i, item, sev, msg):
         iss.append({"slide": i, "item": item, "sev": sev, "msg": msg})
     kinds = known_kinds(lib)
+    handles = part_handles(lib)
     m = deck.get("meta", {})
     sl = deck.get("slides", [])
     if not m.get("cover"):
@@ -621,6 +633,14 @@ def lint3(deck, lib):
         k = s.get("kind")
         if k not in kinds:
             add(i, "화면 종류", "고칠 것", f"모르는 kind : {k}")
+        hd = handles.get(k)
+        lay = s.get("layout")
+        if lay and lay != "default" and hd and hd[0] and lay not in hd[0]:
+            add(i, "배치 이름", "고칠 것", f"{k} 에 없는 layout : {lay} — 있는 것 {sorted(hd[0])}")
+        if s.get("bg") in ("deep", "map") and k != "fullmap" and not (hd and (lay or "default") in hd[1]):
+            add(i, "바탕", "고칠 것", f"{k} · {lay or 'default'} 는 짙은 바탕을 못 견딤 — bg 빼거나 짙은 배치({sorted(hd[1]) if hd else []})로")
+        if s.get("bg") and s.get("bg") not in ("mint", "deep", "map"):
+            add(i, "바탕", "고칠 것", f"모르는 bg : {s.get('bg')} — mint · deep · map")
         run = run + 1 if k == prev else 1
         prev = k
         if run == 3 and k not in ("cover", "part", "end") and not s.get("appendix"):
@@ -732,6 +752,9 @@ def engine(lib, v3=True, brand=True):
     art = kick_art(st / "brand" / "kick")
     if art:
         logo["art"] = art
+    co = {f.stem: "data:image/png;base64," + base64.b64encode(f.read_bytes()).decode() for f in sorted((st / "brand" / "logos").glob("*.png"))} if (st / "brand" / "logos").is_dir() else {}
+    if co:  # 회사 로고(비공개) — 없으면 엔진이 글자 칸으로
+        logo["co"] = co
     return (st / "deck.css").read_text(encoding="utf-8"), js, logo
 
 
@@ -758,6 +781,14 @@ def kick_art(d):
 def page_html(deck, lib, nofont=False, extra_head="", title=None, brand=True):
     v3 = deck.get("schema") == 3
     css, js, logo = engine(lib, v3, brand)
+    if v3:  # 지도 장이 있으면 그 범위 나라 윤곽 + d3-geo(내장, 오프라인)를 넣음
+        import copy
+        import geo_pack
+        d2 = copy.deepcopy(deck)
+        if geo_pack.add_geo(d2, Path(lib)):
+            deck = d2
+            vd = Path(lib) / "style" / "vendor"
+            js = "\n".join((vd / f).read_text(encoding="utf-8") for f in ("d3-array.min.js", "d3-geo.min.js")) + "\n" + js
     payload = json.dumps(deck, ensure_ascii=False).replace("</", "<\\/")
     face = "" if nofont else font_face(payload + (js if v3 else ""), lib)
     m = deck.get("meta", {})
@@ -834,7 +865,7 @@ def screen_issues3(screen):
             iss.append({"slide": i, "item": "헤드메시지 줄", "sev": "고칠 것", "msg": f"{s['headLines']}줄 — 2줄 안"})
         if s.get("minFont") and s["minFont"] < 11.5:
             iss.append({"slide": i, "item": "글자 크기", "sev": "고칠 것", "msg": f"가장 작은 글 {s['minFont']}px — 11.5px 이상"})
-        if s.get("occupied") is not None and s["occupied"] < 45 and s.get("kind") not in ("cover", "part", "end"):
+        if s.get("occupied") is not None and s["occupied"] < 45 and s.get("kind") not in ("cover", "part", "end", "fullmap"):
             iss.append({"slide": i, "item": "화면 채움", "sev": "확인할 것", "msg": f"본문 칸 차지 {s['occupied']}% — 45% 밑이면 비어 보임"})
         for key, nm, sev in DEEP:
             if s.get(key):
