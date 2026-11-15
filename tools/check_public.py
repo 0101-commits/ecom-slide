@@ -21,16 +21,17 @@ ITEM_KEYS = {"id", "s", "t", "tn", "ch", "kind", "layout", "nb", "ns", "cols", "
 SKIP = {"rules/client_hash.json"}
 
 
-def json_strings(o):
+def json_strings(o, path=""):
+    """(칸 경로, 글) — 걸렸을 때 어느 칸인지만 알려 주려고 경로를 같이 넘김(글 자체는 찍지 않음)"""
     if isinstance(o, str):
-        yield o
+        yield path, o
     elif isinstance(o, dict):
         for k, v in o.items():
-            yield k
-            yield from json_strings(v)
+            yield path + "{key}", k
+            yield from json_strings(v, f"{path}.{k}")
     elif isinstance(o, list):
-        for v in o:
-            yield from json_strings(v)
+        for i, v in enumerate(o):
+            yield from json_strings(v, f"{path}[{i}]")
 
 
 def main():
@@ -76,19 +77,19 @@ def main():
                 for it in data["items"]:
                     if set(it) - ITEM_KEYS:
                         bad.append(f"목록 칸 이상 : {it['id']} {sorted(set(it) - ITEM_KEYS)}")
-            for s in json_strings(data):  # 한 줄로 된 JSON 도 글 값마다 따로
+            for path, s in json_strings(data):  # 한 줄로 된 JSON 도 글 값마다 따로
                 if s.strip():
-                    strings.setdefault(s.strip(), rel)
+                    strings.setdefault(s.strip(), (rel, path))
             continue
-        for line in txt.splitlines():
+        for n, line in enumerate(txt.splitlines(), 1):
             s = line.strip()
             if s:
-                strings.setdefault(s, rel)
+                strings.setdefault(s, (rel, f"줄 {n}"))
     if key:
-        for s, rel in strings.items():
+        for s, (rel, where) in strings.items():
             h = hit(s, hashes)
             if h:
-                bad.append(f"고객명 해시 일치 : {rel} (글자 수 {len(h)})")
+                bad.append(f"고객명 해시 일치 : {rel} {where[:120]} (글자 수 {len(h)})")
     else:
         print("! ECOM_HASH_KEY 가 없어 고객명 대조는 건너뜀(칸 · 파일 검사는 함)")
     for b in bad:
