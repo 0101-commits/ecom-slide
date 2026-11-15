@@ -12,12 +12,14 @@ function yScale(vals, o, top, bot) { o = o || {}; var e = h.ext(vals), lo = o.mi
   if (!ticks) { ticks = []; for (var v = Math.ceil(lo / st - 1e-9) * st; v <= hi + st / 1000; v += st) ticks.push(+v.toFixed(10)) }
   var dec = o.dec != null ? o.dec : Math.max.apply(null, ticks.map(function (t) { var s = String(t).split('.')[1]; return s ? Math.min(2, s.length) : 0 }));
   return { lo: lo, hi: hi, ticks: ticks, dec: dec, Y: h.lin(lo, hi, bot, top) } }
-function yAxis(g, x0, x1, sc, o) { o = o || {}; sc.ticks.forEach(function (v) { var z = v === 0 || v === sc.lo && o.base;
+function yAxis(g, x0, x1, sc, o) { o = o || {}; tipReg(g, 'y', { top: Math.min.apply(null, sc.ticks.map(sc.Y)), bot: Math.max.apply(null, sc.ticks.map(sc.Y)), x0: x0, x1: x1 }); sc.ticks.forEach(function (v) { var z = v === 0 || v === sc.lo && o.base;
     E('line', { x1: x0, x2: x1, y1: sc.Y(v), y2: sc.Y(v), stroke: z ? (v === 0 ? C.mute : C.axis) : C.grid, 'stroke-dasharray': z ? null : '3 4', 'stroke-width': z && v === 0 ? 1.2 : 1 }, g);
     T(g, x0 - 9, sc.Y(v) + 4.5, h.nf(v, sc.dec) + (o.suf || ''), { 'text-anchor': 'end', 'font-size': 12.5, fill: C.mute }) });
   if (o.unit) T(g, x0 - 9, sc.Y(sc.ticks[sc.ticks.length - 1]) - 16, o.unit, { 'text-anchor': 'end', 'font-size': 12.5, 'font-weight': 700, fill: C.mute }) }
 function xTicks(n, want, given) { if (given) return given; var k = Math.max(1, Math.ceil(n / (want || 10))), cand = [1, 2, 3, 4, 6, 12, 24]; for (var i = 0; i < cand.length; i++) if (cand[i] >= k) { k = cand[i]; break } var out = []; for (var j = 0; j < n; j += k) out.push(j); return out }
-function xLabels(g, labels, X, y, idx, o) { o = o || {}; var last = labels.length - 1, shown = {};
+/* 마우스 올림(P7) : x축을 그린 자리를 svg 에 적어 두면 엔진(autoTips)이 그 위에 투명 세로 칸을 깔아 값 카드를 띄움 */
+function tipReg(g, k, v) { try { var sv = g && (g.ownerSVGElement || (g.tagName === 'svg' ? g : null)); if (!sv) return; if (k === 'y') { sv._tipY = v; return } v.g = g; v.yAx = sv._tipY || null; (sv._tipX = sv._tipX || []).push(v) } catch (e) { } }
+function xLabels(g, labels, X, y, idx, o) { tipReg(g, 'x', { X: X, n: labels.length, y: y }); o = o || {}; var last = labels.length - 1, shown = {};
   idx.forEach(function (i) { if (o.boldLast && last - i < (idx[1] - idx[0] || 1) * .6 && i !== last) return; shown[i] = 1; T(g, X(i), y, short(labels[i]), { 'text-anchor': 'middle', 'font-size': 12.5, fill: C.mute }) });
   if (o.boldLast && !shown[last]) T(g, X(last), y, short(labels[last]), { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 700, fill: C.ink }) }
 /* 국면 띠 : phases [{from,to,name}] → 띠 + 번호 동그라미 */

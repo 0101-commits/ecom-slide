@@ -163,6 +163,7 @@ function buildSlide(x) {
   }
   el.querySelectorAll('[data-count]').forEach(function (e) { e.textContent = cText(e, +e.getAttribute('data-count')) });
   try { bridgeGaps(el) } catch (err) { console.error(err) }
+  try { autoTips(el, s) } catch (err) { console.error(err) }
   el.querySelectorAll('.lk a').forEach(function (a) { a.addEventListener('click', function (ev) { ev.stopPropagation();
     if (a.getAttribute('data-back')) { back(); return } var j = S.findIndex(function (y) { return y.apx && y.s.appendix === a.getAttribute('data-to') }); if (j >= 0) { origin = cur; go(j, 1) } }) });
   return el }
@@ -206,7 +207,7 @@ function clearT() { timers.forEach(clearTimeout); timers = [] }
 function enter(to, skip) { var b = S[to].el; beatK = 0; if (b._beat) b._beat(0); play(b, skip); post(); hud() }
 function go(to, dir, how) {
   if (to < 0 || to >= S.length || to === cur) return; dir = dir || (to > cur ? 1 : -1);
-  if (trans) skipTrans(); clearT(); var from = cur, a = from >= 0 ? S[from].el : null, b = S[to].el, t = how || pick(from, to, dir); cur = to; beatK = 0;
+  tipHide(); if (trans) skipTrans(); clearT(); var from = cur, a = from >= 0 ? S[from].el : null, b = S[to].el, t = how || pick(from, to, dir); cur = to; beatK = 0;
   try { history.replaceState(null, '', '#' + (to + 1)) } catch (e) { }
   S.forEach(function (x) { if (x.el !== a && x.el !== b) { stopPlay(x.el); x.el.classList.remove('on'); x.el.style.cssText = '' } });
   if (a) finish(a); prep(b);
@@ -284,8 +285,8 @@ function onKey(e) {
   else if (k === 'Home') go(0); else if (k === 'End') go(S.length - 1);
   else if (k === 'o' || k === 'O') overview(); else if (k === 'p' || k === 'P') window.open(location.pathname + '?presenter#' + (cur + 1), 'ecom-presenter', 'width=1200,height=760');
   else if (k === 'f' || k === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen() }
-  else if (k === 'Escape') numBuf = '' }
-function overview() { var ov = document.getElementById('ov'); if (ov.classList.contains('on')) { ov.classList.remove('on'); ov.innerHTML = ''; return }
+  else if (k === 'Escape') { numBuf = ''; tipHide() } }
+function overview() { tipHide(); var ov = document.getElementById('ov'); if (ov.classList.contains('on')) { ov.classList.remove('on'); ov.innerHTML = ''; return }
   S.forEach(function (x, i) { var it = H('div', 'it' + (i === cur ? ' cur' : ''), null, ov), th = H('div', 'th', null, it); H('div', null, esc(pageOf(i)) + ' · ' + esc((x.s.eyebrow && (x.s.eyebrow.topic || x.s.eyebrow.group)) || x.s.title || x.s.kind), it);
     var c = x.el.cloneNode(true); c.classList.add('on'); c.style.cssText = ''; c.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); th.appendChild(c);
     requestAnimationFrame(function () { c.style.transform = 'scale(' + (th.clientWidth / 1280) + ')' });
@@ -437,6 +438,7 @@ function runCheck() {
       var dp = null; if (bdE && !CHECK_SHALLOW) { try { dp = deepCheck(el, bdE, k, r0, toS, visible, R) } catch (er) { dp = { error: [String(er && er.message || er).slice(0, 80)] } } }
       return { ov: ov, outS: outS, outB: outB, minF: minF, dp: dp } }
     var ti = textIssues(), nb = nBeats(i), ov = ti.ov, outS = ti.outS, outB = ti.outB, minF = ti.minF, dp = ti.dp || {};
+    if (!(el._tips > 0) && el.querySelector('.bd svg') && /line|bar|combo|minis|zoom|slope|race|rank|map|kpi|odo|heat|donut|waffle|split|bridge/.test(x.s.kind || '')) dp.noTip = ['차트 · 지도 · 숫자에 마우스 올림 카드 없음'];
     if (nb && el._beat) { el._beat(nb); var t2 = textIssues(); t2.ov.forEach(function (x) { if (ov.indexOf(x) < 0) ov.push('[바뀜] ' + x) }); t2.outS.forEach(function (x) { if (outS.indexOf(x) < 0) outS.push('[바뀜] ' + x) }); t2.outB.forEach(function (x) { if (outB.indexOf(x) < 0) outB.push('[바뀜] ' + x) });
       if (t2.dp) Object.keys(t2.dp).forEach(function (key) { dp[key] = dp[key] || []; t2.dp[key].forEach(function (x) { if (dp[key].indexOf(x) < 0 && dp[key].indexOf('[바뀜] ' + x) < 0) dp[key].push('[바뀜] ' + x) }) }); el._beat(0) }
     var gw = 58, gh = 26, cells = new Uint8Array(gw * gh), bd = el.querySelector('.bd');
@@ -456,6 +458,97 @@ function runCheck() {
     el.classList.remove('on') });
   if (cur >= 0) S[cur].el.classList.add('on'); return out }
 
+/* ───────── 마우스 올림 자세히 보기(5판 P7) ─────────
+   차트 점 · 막대 · 지도 나라 · 도식 마디 · 숫자 칸에 마우스를 올리거나 Tab 으로 옮기면 작은 카드(제목 · 값 · 전기 대비 · 사건 · 출처).
+   부품을 고치지 않고 장 자료에서 만듦: ① s.tips{이름: '제목|줄|줄'} ② x축(u.xLabels)을 그린 차트 → 투명 세로 칸 ③ data-key 항목 → 장 자료에서 같은 이름 항목의 설명 · 값
+   ④ data-count 숫자 → 값 · 최근 값들 · 기준일 · 출처. 카드는 장(1280×720) 밖으로 나가지 않고, ?still · ?check · 인쇄 · 모아 보기에서는 안 뜸 */
+var TIP = null, tipCur = null;
+function tipDec(arr) { var d = 0; (arr || []).forEach(function (v) { if (typeof v === 'number' && isFinite(v)) { var m = String(v).split('.')[1]; if (m) d = Math.max(d, Math.min(2, m.length)) } }); return d }
+function tipNum(v, dec, suf) { return v == null || !isFinite(v) ? '—' : nf(v, dec) + (suf || '') }
+function tipSigned(v, dec) { v = +(+v).toFixed(dec || 0); return (v > 0 ? '+' : v < 0 ? '−' : '±') + nf(Math.abs(v), dec) }
+function tipClean(s) { return String(s == null ? '' : s).replace(/\*\*|==/g, '').replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰⁽⁾]+\)?/g, '').trim() }
+function tipSuf(s) { var y = s.y || {}, u = y.suf || (y.unit && String(y.unit).length <= 3 ? y.unit : '') || (s.unit && String(s.unit).length <= 3 ? s.unit : ''); return u || '' }
+function tipSrc(s) { var f = s.foot || {}, o = []; if (f.asof) o.push('기준 ' + tipClean(f.asof)); if (f.source) o.push('출처 ' + tipClean(f.source).slice(0, 44)); return o }
+function tipSeries(s) { var L = Array.isArray(s.labels) ? s.labels : null; if (!L || L.length < 2) return null;
+  var ser = Array.isArray(s.series) ? s.series.filter(function (q) { return q && Array.isArray(q.data) && q.data.length === L.length }) : [];
+  if (!ser.length && Array.isArray(s.data) && s.data.length === L.length && s.data.every(function (v) { return v == null || typeof v === 'number' })) ser = [{ name: '', data: s.data }];
+  return ser.length ? { L: L, ser: ser } : null }
+function tipEvents(s, L, i) { var o = []; (Array.isArray(s.events) ? s.events : []).forEach(function (e) { if (!e) return; var at = e.at != null ? e.at : e.i != null ? e.i : e.x;
+  if (at === i || at === L[i] || (typeof at === 'string' && at === String(L[i]))) o.push('사건 ' + tipClean(e.text || e.label || e.name || e.t || '')) }); return o }
+function tipCol(s, D2, i) { var L = D2.L, suf = tipSuf(s), lines = [], one = D2.ser.length === 1;
+  D2.ser.forEach(function (q) { var dec = tipDec(q.data), v = q.data[i]; if (v == null) { lines.push((tipClean(q.name) ? tipClean(q.name) + ' ' : '') + '자료 없음'); return }
+    var t = (tipClean(q.name) ? tipClean(q.name) + ' ' : '') + tipNum(v, dec, suf), pv = null; for (var j = i - 1; j >= 0; j--) if (q.data[j] != null) { pv = q.data[j]; break }
+    if (pv != null) t += ' · 전기 대비 ' + tipSigned(v - pv, dec);
+    if (one && /^\d{4}\.\d{2}$/.test(String(L[i])) && i >= 12 && q.data[i - 12] != null) t += ' · 전년 대비 ' + tipSigned(v - q.data[i - 12], dec);
+    lines.push(t) });
+  return [tipClean(L[i])].concat(lines, tipEvents(s, L, i), tipSrc(s)).join('|') }
+/* 장 자료에서 이름이 key 인 항목을 찾아 그 항목의 다른 글 · 값을 줄로 */
+function tipItem(s, key) { var hit = null, NM = ['name', 'title', 'label', 'k', 'c', 'term', 'id', 'at'];
+  (function walk(o, d) { if (hit || !o || d > 6) return; if (Array.isArray(o)) { o.forEach(function (v) { walk(v, d + 1) }); return }
+    if (typeof o !== 'object') return; for (var n = 0; n < NM.length; n++) if (typeof o[NM[n]] === 'string' && tipClean(o[NM[n]]) === key) { hit = o; return }
+    Object.keys(o).forEach(function (k) { if (k !== 'foot' && k !== 'eyebrow' && k.charAt(0) !== '_') walk(o[k], d + 1) }) })(s, 0);
+  if (!hit) { var mp = s.values; if (mp && !Array.isArray(mp) && typeof mp === 'object' && typeof mp[key] === 'number') { var ks = Object.keys(mp).filter(function (k) { return typeof mp[k] === 'number' }).sort(function (a, b) { return mp[b] - mp[a] });
+      return [key, '값 ' + tipNum(mp[key], tipDec([mp[key]]), (s.scale && s.scale.unit) || s.unit || ''), '순위 ' + (ks.indexOf(key) + 1) + ' / ' + ks.length].concat(tipSrc(s)).join('|') } return null }
+  var lines = [], unit = hit.unit || s.unit || '';
+  ['text', 'desc', 'sub', 'detail', 'gloss', 'def', 'cap', 'meta'].forEach(function (k) { if (typeof hit[k] === 'string' && tipClean(hit[k]) && tipClean(hit[k]) !== key) lines.push(tipClean(hit[k]).slice(0, 90)) });
+  ['value', 'v', 'val', 'n'].forEach(function (k) { if (typeof hit[k] === 'number') lines.push('값 ' + tipNum(hit[k], hit.dec != null ? hit.dec : tipDec([hit[k]]), unit)) });
+  if (!lines.length) return null; return [key].concat(lines.slice(0, 4), tipSrc(s)).join('|') }
+function autoTips(el, s) {
+  var n = 0, dry = STILL || CHECK;
+  if (s.tips && typeof s.tips === 'object') el.querySelectorAll('[data-key]').forEach(function (e) { var t = s.tips[e.getAttribute('data-key')]; if (t) { e.setAttribute('data-tip', t); n++ } });
+  var D2 = tipSeries(s), n0 = n;
+  if (D2) el.querySelectorAll('svg').forEach(function (sv) { (sv._tipX || []).forEach(function (r) { if (r.n !== D2.L.length || r.n < 2) return; var ya = r.yAx || sv._tipY, half = Math.abs(r.X(1) - r.X(0)) / 2, top = ya ? ya.top - 6 : 0, bot = ya ? ya.bot + 2 : r.y - 14;
+    if (!(half > 0) || bot - top < 20) return; n += r.n; if (dry) return; var g = E('g', { 'class': 'tipcols' }, r.g), tab = r.n <= 36;
+    for (var i = 0; i < r.n; i++) { var c = E('rect', { x: (r.X(i) - half).toFixed(1), y: top.toFixed(1), width: (half * 2).toFixed(1), height: (bot - top).toFixed(1), 'class': 'tipcol', 'data-tip': tipCol(s, D2, i) }, g); if (tab || i >= r.n - 12) c.setAttribute('tabindex', '0') } }) });
+  if (D2 && n === n0) n += tipPathCols(el, s, D2);
+  el.querySelectorAll('[data-key]').forEach(function (e) { if (e.hasAttribute('data-tip')) { n++; return } var k = tipClean(e.getAttribute('data-key')); if (!k) return; var t = tipItem(s, k); if (t) { e.setAttribute('data-tip', t); n++ } });
+  el.querySelectorAll('[data-count]').forEach(function (e) { if (e.closest('[data-tip]')) return; var host = e.closest('[data-key]'), title = host ? tipClean(host.getAttribute('data-key')) : tipClean((s.eyebrow && (s.eyebrow.topic || s.eyebrow.group)) || '');
+    var lines = ['값 ' + tipClean(e.textContent)]; if (D2 && D2.ser.length === 1) { var q = D2.ser[0], dec = tipDec(q.data), rec = [], suf = tipSuf(s); for (var i = D2.L.length - 1; i >= 0 && rec.length < 6; i--) if (q.data[i] != null) rec.unshift(short2(D2.L[i]) + ' ' + tipNum(q.data[i], dec, suf)); if (rec.length > 1) lines.push('최근 ' + rec.join(' · ')) }
+    e.setAttribute('data-tip', [title || '숫자'].concat(lines, tipSrc(s)).join('|')); n++ });
+  if (!n) n += tipPairs(el, s);
+  if (!n) n += tipBigNums(el, s);
+  if (!dry) el.querySelectorAll('[data-tip]').forEach(function (e) { if (!e.hasAttribute('tabindex')) e.setAttribute('tabindex', '0') });
+  el._tips = n; return n }
+/* 대체 경로 : x축 기록이 없는 차트는 계열 선(path)의 꼭짓점에서 x 자리를 읽고, 그래도 없으면 큰 숫자 글자에 값 카드 */
+function tipPathCols(el, s, D2) { var best = null, ys = [];
+  el.querySelectorAll('.bd path').forEach(function (p) { if (best || p.getAttribute('fill') !== 'none' || +(p.getAttribute('stroke-width') || 0) < 1.5 || p.hasAttribute('data-gap')) return;
+    var d = p.getAttribute('d') || ''; if (/[^MLHV0-9.,\s\-e]/.test(d)) return; var tk = d.match(/[MLHV]|-?[\d.]+(?:e-?\d+)?/g) || [], pts = [], cmd = '', x = 0, y = 0, i = 0;
+    while (i < tk.length) { var t = tk[i]; if (/^[MLHV]$/.test(t)) { cmd = t; i++; continue } if (cmd === 'M' || cmd === 'L') { x = +tk[i]; y = +tk[i + 1]; i += 2; pts.push([x, y]); cmd = 'L' } else if (cmd === 'H') { x = +tk[i]; i++; pts.push([x, y]) } else if (cmd === 'V') { y = +tk[i]; i++; pts.push([x, y]) } else i++ }
+    var ix = []; D2.ser[0].data.forEach(function (v, k) { if (v != null) ix.push(k) }); if (pts.length === D2.L.length) ix = D2.L.map(function (_, k) { return k }); if (pts.length === ix.length) { best = { p: p, pts: pts, ix: ix }; pts.forEach(function (q) { ys.push(q[1]) }) } });
+  if (!best) return 0; var P2 = best.pts, top = Math.min.apply(null, ys) - 40, bot = Math.max.apply(null, ys) + 30, n = P2.length;
+  if (STILL || CHECK) return n; var g = E('g', { 'class': 'tipcols' }, best.p.parentNode);
+  for (var i = 0; i < n; i++) { var xa = i ? (P2[i - 1][0] + P2[i][0]) / 2 : P2[i][0] - (P2[1][0] - P2[0][0]) / 2, xb = i < n - 1 ? (P2[i][0] + P2[i + 1][0]) / 2 : P2[i][0] + (P2[i][0] - P2[i - 1][0]) / 2;
+    var c = E('rect', { x: xa.toFixed(1), y: top.toFixed(1), width: Math.max(1, xb - xa).toFixed(1), height: (bot - top).toFixed(1), 'class': 'tipcol', 'data-tip': tipCol(s, D2, best.ix[i]) }, g); if (n <= 36 || i >= n - 12) c.setAttribute('tabindex', '0') }
+  return n }
+function tipPairs(el, s) { var dt = Array.isArray(s.data) ? s.data : null; if (!dt || !dt.length || !dt.every(function (r) { return Array.isArray(r) && r.length >= 2 && typeof r[1] === 'number' })) return 0;
+  var srt = dt.slice().sort(function (a, b) { return b[1] - a[1] }), dec = s.dec != null ? s.dec : tipDec(dt.map(function (r) { return r[1] })), un = s.unit ? ' ' + s.unit : '', avg = dt.reduce(function (a, r) { return a + r[1] }, 0) / dt.length, n = 0;
+  el.querySelectorAll('.bd text').forEach(function (tx) { var nm = tx.textContent.trim(), row = null; dt.forEach(function (r) { if (String(r[0]) === nm) row = r }); if (!row) return;
+    var tip = [nm, '값 ' + tipNum(row[1], dec, un), '순위 ' + (srt.indexOf(row) + 1) + ' / ' + dt.length + ' · 평균 대비 ' + tipSigned(row[1] - avg, dec)].concat(tipSrc(s)).join('|'), ty = +tx.getAttribute('y'), svg = tx.ownerSVGElement;
+    tx.setAttribute('data-tip', tip); n++; if (!svg || isNaN(ty)) return;
+    svg.querySelectorAll('rect').forEach(function (r) { var y = +r.getAttribute('y'), h = +r.getAttribute('height'); if (!isNaN(y) && h > 4 && h < 60 && ty >= y - 4 && ty <= y + h + 8 && !r.hasAttribute('data-tip')) r.setAttribute('data-tip', tip) }) });
+  return n }
+function tipBigNums(el, s) { var n = 0, title = tipClean(s.label || (s.eyebrow && (s.eyebrow.topic || s.eyebrow.group)) || ''), src = tipSrc(s);
+  el.querySelectorAll('.bd text, .bd div, .bd span, .bd b').forEach(function (e) { if (e.closest('[data-tip]')) return; var own = Array.prototype.filter.call(e.childNodes, function (c) { return c.nodeType === 3 }).map(function (c) { return c.textContent }).join('').trim();
+    if (!/^[−\-+]?[\d][\d,.]*$/.test(own)) return; var fs = parseFloat(e.getAttribute('font-size') || (e.style && e.style.fontSize) || 0); if (fs < 34) return;
+    var host = e.closest('[data-key]'), t = host ? tipClean(host.getAttribute('data-key')) : title; e.setAttribute('data-tip', [t || '숫자', '값 ' + (typeof s.value === 'number' ? nf(s.value, s.dec || 0) + (s.unit || '') : own)].concat(src).join('|')); n++ });
+  return n }
+function short2(l) { var m = /^(\d{4})\.(\d{2})$/.exec(String(l)); return m ? m[1].slice(2) + '.' + m[2] : String(l) }
+function tipBox() { if (!TIP) { TIP = H('div', 'tip3', null, deckEl); TIP.setAttribute('role', 'tooltip') } return TIP }
+function tipShow(el, x, y) { var t = el.getAttribute('data-tip'); if (!t) return; var b = tipBox(); b.innerHTML = ''; tipCur = el;
+  t.split('|').forEach(function (s, i) { if (!s) return; var e = H(i ? 'span' : 'b', /^(출처|기준|사건)/.test(s) ? 's' : null, null, b); e.textContent = s });
+  b.classList.toggle('dk', !!(el.closest('.bg-deep,.bg-map'))); b.classList.add('on'); tipPlace(x, y) }
+function tipPlace(x, y) { var b = TIP; if (!b) return; var w = b.offsetWidth, h = b.offsetHeight, L = x + 16, Tt = y + 16;
+  if (L + w > 1272) L = x - 16 - w; if (Tt + h > 712) Tt = y - 16 - h; b.style.left = Math.round(Math.max(8, Math.min(1272 - w, L))) + 'px'; b.style.top = Math.round(Math.max(8, Math.min(712 - h, Tt))) + 'px' }
+function tipHide() { if (TIP) TIP.classList.remove('on'); tipCur = null }
+function tipXY(e) { var r = deckEl.getBoundingClientRect(); return [(e.clientX - r.left) / scaleK, (e.clientY - r.top) / scaleK] }
+function tipTarget(t) { var el = t && t.closest && t.closest('[data-tip]'); return el && cur >= 0 && S[cur].el.contains(el) && !document.getElementById('ov').classList.contains('on') ? el : null }
+function tipInit() { if (STILL || CHECK || PRES) return;
+  deckEl.addEventListener('pointerover', function (e) { var el = tipTarget(e.target); if (el) { var p = tipXY(e); tipShow(el, p[0], p[1]) } });
+  deckEl.addEventListener('pointermove', function (e) { if (tipCur) { var p = tipXY(e); tipPlace(p[0], p[1]) } });
+  deckEl.addEventListener('pointerout', function (e) { var el = tipTarget(e.target); if (el && !(e.relatedTarget && el.contains(e.relatedTarget))) tipHide() });
+  deckEl.addEventListener('focusin', function (e) { var el = tipTarget(e.target); if (!el) return; var r = el.getBoundingClientRect(), d = deckEl.getBoundingClientRect(); tipShow(el, (r.right - d.left) / scaleK, (r.top - d.top) / scaleK) });
+  deckEl.addEventListener('focusout', tipHide) }
+
 /* ───────── 시작 ───────── */
 function init() {
   var dd = document.getElementById('deck-data'); if (!dd) return; D = JSON.parse(dd.textContent); var sl = D.slides || [];
@@ -469,7 +562,7 @@ function init() {
   if (CHECK) { var r = runCheck(); var pre = H('pre', null, null, document.body); pre.id = 'ecom-check'; pre.textContent = JSON.stringify(r); go(start, 1, 'none'); return }
   if (PRES) { presenterUI(); cur = start; hud(); if (chan) chan.onmessage = function (ev) { if (ev.data && ev.data.i != null) { cur = ev.data.i; beatK = ev.data.k; hud() } }; return }
   if (chan) chan.onmessage = function (ev) { if (!ev.data) return; if (ev.data.cmd === 'next') next(); else if (ev.data.cmd === 'prev') prev() };
-  fit(); addEventListener('resize', fit); document.addEventListener('keydown', onKey);
+  fit(); addEventListener('resize', fit); document.addEventListener('keydown', onKey); tipInit();
   stage.addEventListener('click', function (e) { if (e.target.closest('a,button,input,.vote')) return; stage.focus(); next() });
   var tx = null; stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX }, { passive: true });
   stage.addEventListener('touchend', function (e) { if (tx == null) return; var d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) { if (d < 0) next(); else prev() } tx = null });

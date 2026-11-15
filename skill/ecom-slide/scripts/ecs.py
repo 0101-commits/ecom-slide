@@ -607,12 +607,14 @@ def part_handles(lib):
     return out
 
 
-def lint3(deck, lib):
+def lint3(deck, lib, extra=None):
     iss = []
     def add(i, item, sev, msg):
         iss.append({"slide": i, "item": item, "sev": sev, "msg": msg})
     kinds = known_kinds(lib)
     handles = part_handles(lib)
+    for f in extra or []:  # 회차 파생 부품의 kind 도 아는 것으로
+        kinds |= set(re.findall(r"ECOM\.parts\.([a-z][a-z0-9]*)\s*=", Path(f).read_text(encoding="utf-8")))
     m = deck.get("meta", {})
     sl = deck.get("slides", [])
     if not m.get("cover"):
@@ -646,7 +648,7 @@ def lint3(deck, lib):
         if run == 3 and k not in ("cover", "part", "end") and not s.get("appendix"):
             add(i, "같은 종류 연속", "확인할 것", f"{k} 3장째 — 2장까지 권고")
         for f, why in OLD_FIELDS.items():
-            if f in s and not (f == "title" and (k in ("cover", "part", "statement", "term", "further", "discuss", "headline", "label", "rankroll") or (k == "table" and s.get("layout") in ("grow", "marker", "years")))):
+            if f in s and not (f == "title" and (k in ("cover", "part", "statement", "term", "further", "discuss", "headline", "label", "rankroll", "body") or (k == "table" and s.get("layout") in ("grow", "marker", "years")))):
                 add(i, "판 2 칸", "고칠 것", f"`{f}` — {why}")
         txt = strings_of(s)
         alltxt = " ".join(t for _, t in txt)
@@ -697,8 +699,115 @@ def cmd_lint(a):
     deck = load(p / "deck.json")
     if not deck:
         say({"error": "deck.json 이 없어요"}, 1)
-    iss = lint3(deck, lib_dir()) if deck.get("schema") == 3 else lint(deck, lib_dir())
+    iss = lint3(deck, lib_dir(), derived_parts(p)) if deck.get("schema") == 3 else lint(deck, lib_dir())
+    if deck.get("schema") == 3:
+        iss += lint_var(deck, lib_dir(), a.name, len(derived_parts(p)))
     say({"ok": True, "fix": sum(1 for x in iss if x["sev"] == "고칠 것"), "confirm": sum(1 for x in iss if x["sev"] != "고칠 것"), "issues": iss})
+
+
+# ───────── 회차 기록(_history.json) · 파생 부품 후보함 ─────────
+CHART_K = {"line", "bar", "combo", "minis", "zoom", "slope", "rank", "race", "split", "bridge", "waffle", "donut", "heatmap", "table", "morph", "wipe"}  # 자료 차트는 같은 배치가 자연스러울 수 있어 「확인할 것」
+NO_VAR = {"cover", "part", "end", "term", "discuss", "further", "statement"}  # 변주 점검에서 빼는 장(자리 · 형식이 정해진 장)
+
+
+def deck_sig(deck):
+    """장마다 (kind, layout, bg) — 본문만"""
+    return [[s.get("kind"), s.get("layout") or "default", s.get("bg") or ("map" if s.get("kind") == "fullmap" else "")] for s in deck.get("slides", []) if not s.get("appendix")]
+
+
+def hist_path():
+    return root() / "sessions" / "_history.json"
+
+
+def hist_load():
+    h = load(hist_path(), {"version": 1, "sessions": {}})
+    h.setdefault("sessions", {})
+    return h
+
+
+def hist_put(name, deck):
+    h = hist_load()
+    m = deck.get("meta", {})
+    h["sessions"][name] = {"date": m.get("date", ""), "title": m.get("title", ""), "slides": deck_sig(deck)}
+    hist_path().write_text(json.dumps(h, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
+    return h
+
+
+def hist_prev(name, deck, n=2):
+    """이 회차보다 앞선(발표일 순) 회차 n개의 기록"""
+    h = hist_load()["sessions"]
+    d0 = (deck.get("meta") or {}).get("date", "9999")
+    prev = sorted(((v.get("date", ""), k) for k, v in h.items() if k != name and v.get("date", "") <= d0), reverse=True)[:n]
+    return [(k, h[k]) for _, k in prev]
+
+
+def derived_parts(p):
+    d = p / "parts"
+    return sorted(d.glob("*.js")) if d.is_dir() else []
+
+
+def put_candidates(name, files):
+    """파생 부품을 후보함(sessions/_candidates/<회차>/)에 모으고 목록(index.md)을 다시 씀 — 사람이 보고 고른 것만 ecom-slide 정식 부품으로"""
+    if not files:
+        return []
+    box = root() / "sessions" / "_candidates"
+    (box / name).mkdir(parents=True, exist_ok=True)
+    for f in files:
+        shutil.copy(f, box / name / f.name)
+    rows = ["# 파생 부품 후보함", "", "회차에서 ①손잡이 · ②재료로 못 그려 새로 쓴 부품. 사람이 갤러리로 보고 고른 것만 ecom-slide `style/parts/` 정식 부품으로 옮김.", "", "| 회차 | 파일 | kind |", "|---|---|---|"]
+    for d in sorted(x for x in box.iterdir() if x.is_dir()):
+        for f in sorted(d.glob("*.js")):
+            ks = sorted(set(re.findall(r"ECOM\.parts\.([a-z][a-z0-9]*)\s*=", f.read_text(encoding="utf-8"))))
+            rows.append(f"| {d.name} | {f.name} | {' · '.join(ks)} |")
+    (box / "index.md").write_text("\n".join(rows) + "\n", encoding="utf-8", newline="\n")
+    return [f.name for f in files]
+
+
+def lint_var(deck, lib, name=None, derived=0):
+    """덱 변주 규칙(5판 P8) : 같은 그림 반복 · 앞 2회차 그림 · 바탕 섞기 · 파생 부품 수"""
+    iss = []
+    def add(i, item, sev, msg):
+        iss.append({"slide": i, "item": item, "sev": sev, "msg": msg})
+    handles = part_handles(lib)
+    sl = deck.get("slides", [])
+    seen = {}
+    prev = hist_prev(name, deck) if name else []
+    used = {}
+    for nm, h in prev:
+        for k, lay, bg in h.get("slides", []):
+            used.setdefault((k, lay), nm)
+    body = 0
+    tinted = 0
+    for i, s in enumerate(sl, 1):
+        k = s.get("kind")
+        if s.get("appendix") or k in NO_VAR:
+            continue
+        body += 1
+        lay = s.get("layout") or "default"
+        if s.get("bg") in ("mint", "deep", "map") or k == "fullmap":
+            tinted += 1
+        alts = sorted((handles.get(k) or (set(), set()))[0] - {lay})
+        if (k, lay) in seen and alts:
+            add(i, "같은 그림", "확인할 것" if k in CHART_K else "고칠 것", f"{k} · {lay} 를 {seen[(k, lay)]}장에서 이미 씀 — 다른 배치로({' · '.join(alts[:6])})")
+        seen.setdefault((k, lay), i)
+        if (k, lay) in used and alts:
+            add(i, "앞 회차 그림", "확인할 것", f"{k} · {lay} 는 {used[(k, lay)]} 에서 씀 — 앞 2회차와 다른 배치 권고({' · '.join(alts[:6])})")
+    if body >= 8 and tinted / body < .1:
+        add(0, "바탕 섞기", "확인할 것", f"바탕 있는 장 {tinted}/{body} — 본문의 15~25%는 bg mint · deep · 전면 지도")
+    if derived > 3:
+        add(0, "파생 부품", "고칠 것", f"{derived}개 — 덱당 3개까지(나머지는 손잡이 · 재료로)")
+    return iss
+
+
+def cmd_history(a):
+    """sessions/*/deck.json 으로 _history.json 을 다시 씀(처음 한 번 · 기록이 빠졌을 때)"""
+    n = 0
+    for d in sorted((root() / "sessions").iterdir()):
+        dk = load(d / "deck.json") if d.is_dir() and not d.name.startswith("_") else None
+        if dk and dk.get("schema") == 3:
+            hist_put(d.name, dk)
+            n += 1
+    say({"ok": True, "sessions": n, "file": str(hist_path())})
 
 
 # ───────── build ─────────
@@ -736,12 +845,14 @@ def skeleton_of(lib, rid):
     return None
 
 
-def engine(lib, v3=True, brand=True):
+def engine(lib, v3=True, brand=True, extra=None):
     """엔진 3판 = style/deck.css · deck.js + style/parts/*.js(이름순) + 로고 · Kick-off 그림(brand=False 면 뺌 — 공개 저장소 파일용). 2판 데크(schema 없음)는 style/v2/ 로."""
     st = lib / "style"
     if not v3:
         return (st / "v2" / "deck.css").read_text(encoding="utf-8"), (st / "v2" / "deck.js").read_text(encoding="utf-8"), None
     js = (st / "deck.js").read_text(encoding="utf-8") + "\n" + "\n".join(f.read_text(encoding="utf-8") for f in sorted((st / "parts").glob("*.js")))
+    if extra:  # 회차 파생 부품(덱당 3개까지) — 기존 부품 뒤에 붙여 같은 이름이면 덮어씀
+        js += "\n" + "\n".join(f"/* 파생 부품 {Path(f).name} */\n" + Path(f).read_text(encoding="utf-8") for f in extra)
     logo = {}
     if not brand:
         return (st / "deck.css").read_text(encoding="utf-8"), js, logo
@@ -778,9 +889,9 @@ def kick_art(d):
     return out or None
 
 
-def page_html(deck, lib, nofont=False, extra_head="", title=None, brand=True):
+def page_html(deck, lib, nofont=False, extra_head="", title=None, brand=True, extra_parts=None):
     v3 = deck.get("schema") == 3
-    css, js, logo = engine(lib, v3, brand)
+    css, js, logo = engine(lib, v3, brand, extra_parts)
     if v3:  # 지도 장이 있으면 그 범위 나라 윤곽 + d3-geo(내장, 오프라인)를 넣음
         import copy
         import geo_pack
@@ -822,11 +933,15 @@ def cmd_build(a):
                 s["skel"] = sk
             else:
                 miss.append(s["skeleton"])
-    page = page_html(deck, lib, a.nofont)
+    extra = derived_parts(p) if deck.get("schema") == 3 else []
+    page = page_html(deck, lib, a.nofont, extra_parts=extra)
     out = p / f"ECOM_{a.name}.html"
     out.write_text(page, encoding="utf-8")
+    if deck.get("schema") == 3:
+        hist_put(a.name, deck)
+    cand = put_candidates(a.name, extra)
     say({"ok": True, "file": str(out), "kb": round(out.stat().st_size / 1024), "slides": len(deck.get("slides", [])),
-         "engine": 3 if deck.get("schema") == 3 else 2, "font": "@font-face" in page, "missing_skeletons": miss})
+         "engine": 3 if deck.get("schema") == 3 else 2, "font": "@font-face" in page, "missing_skeletons": miss, "derived": cand})
 
 
 # ───────── check ─────────
@@ -842,7 +957,7 @@ def run_browser(br, url, extra, timeout=180):
 DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 걸침", "고칠 것"), ("hidden", "상자-자료 가림", "고칠 것"),
         ("farLabel", "이름표 거리", "고칠 것"), ("gap", "선 끊김(결측)", "고칠 것"), ("outAxis", "축 밖 값", "고칠 것"),
         ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
-        ("deco", "장식 도형", "고칠 것"), ("error", "점검 오류", "확인할 것"))
+        ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"))
 
 
 def screen_check(br, page, timeout=600):
@@ -881,7 +996,9 @@ def cmd_check(a):
     if not deck or not out.exists():
         say({"error": "deck.json · 발표 파일이 없어요 — build 먼저"}, 1)
     v3 = deck.get("schema") == 3
-    iss = lint3(deck, lib) if v3 else lint(deck, lib)
+    iss = lint3(deck, lib, derived_parts(p)) if v3 else lint(deck, lib)
+    if v3:
+        iss += lint_var(deck, lib, a.name, len(derived_parts(p)))
     br = browser()
     screen = None
     if br:
@@ -943,6 +1060,7 @@ def main():
     x.add_argument("--n", type=int, default=12)
     x = sp.add_parser("table"); x.add_argument("name")
     x = sp.add_parser("lint"); x.add_argument("name")
+    sp.add_parser("history")
     x = sp.add_parser("build"); x.add_argument("name"); x.add_argument("--nofont", action="store_true")
     x = sp.add_parser("check"); x.add_argument("name"); x.add_argument("--shots", default="")
     a = ap.parse_args()

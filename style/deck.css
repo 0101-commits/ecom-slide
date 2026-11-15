@@ -225,3 +225,12 @@ body.still .fm-run,body.pres .fm-run{animation:none}
 .sl .lens-in>*{position:absolute}
 .sl .lens-t{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);background:var(--g);color:#fff;font-size:12.5px;font-weight:700;padding:3px 10px;border-radius:10px;white-space:nowrap}
 
+
+/* 마우스 올림 카드(5판 P7) — 흰 바탕 · 초록 테 1px · 최대 260px · 13px 이상, 장 밖으로 안 나감 */
+.tip3{position:absolute;z-index:30;max-width:260px;background:#fff;border:1px solid var(--g);border-radius:8px;padding:8px 11px;font-size:13px;line-height:1.45;color:#1D2521;box-shadow:0 4px 14px rgba(0,60,40,.14);pointer-events:none;opacity:0;transition:opacity .12s;display:flex;flex-direction:column;gap:2px}
+.tip3.on{opacity:1}.tip3 b{font-size:13.5px;color:var(--gdk)}.tip3 span{font-variant-numeric:tabular-nums}.tip3 .s{color:#6B7570;font-size:12.5px}
+.tip3.dk{background:#0E4635;border-color:#8FD9B6;color:#fff}.tip3.dk b{color:#CDEFE0}.tip3.dk .s{color:rgba(255,255,255,.7)}
+.tipcol{fill:transparent;cursor:crosshair;outline:none}.tipcol:hover,.tipcol:focus{fill:rgba(0,116,79,.07)}.bg-deep .tipcol:hover,.bg-deep .tipcol:focus,.bg-map .tipcol:hover{fill:rgba(255,255,255,.09)}
+[data-tip]:focus{outline:2px solid var(--g);outline-offset:2px}.tipcol:focus{outline:none}
+body.still .tip3,.tip3:empty{display:none}
+@media print{.tip3{display:none!important}}

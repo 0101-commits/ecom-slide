@@ -44,6 +44,7 @@ function build(bd, s, ctx, grid, mode) {
   /* 칸 */
   cells.forEach(function (c) { var id = c[0], x = gx + c[2] * (TS + GP), y = gy + c[1] * (TS + GP), v = val(id), bg = fillOf(id), fg = v == null ? P.mute : (bars ? P.ink : ink(bg, dk));
     var g = E('g', { 'data-at': v == null ? 300 : tAt(id), 'data-fx': 'pop', 'data-ms': 380, 'data-key': nm(id) }, svg), isK = s.key === id;
+    g.setAttribute('data-tip', [nm(id), v == null ? '자료 없음' : (bars ? ((s.labels || ['앞', '뒤'])[0] + ' ' + fmt(v[0]) + ' → ' + (s.labels || ['앞', '뒤'])[1] + ' ' + fmt(v[1])) : '값 ' + fmt(v)), v == null ? '' : '낮은 순 ' + ((rank[id] || 0) + 1) + ' / ' + ids.length].filter(Boolean).join('|'));
     E('rect', { x: x, y: y, width: TS, height: TS, rx: us ? 6 : 10, fill: bg, stroke: isK ? P.ink : (v == null ? P.line : (bars ? P.line : 'none')), 'stroke-width': isK ? 3 : 1 }, g);
     T(g, x + TS / 2, y + (us ? (bars ? 15 : 23) : 24), id, { 'text-anchor': 'middle', 'font-size': us ? (bars ? 12.5 : 15) : 17, 'font-weight': 700, fill: fg });
     if (v == null) return;
