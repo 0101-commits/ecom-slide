@@ -162,6 +162,7 @@ body{overflow:hidden}
 .sl.pt .pg div.on{border-color:var(--gon);color:#fff}
 /* 장 넘김 */
 .wipe3{position:absolute;inset:0;background:var(--gdk);transform:scaleX(0);transform-origin:0 50%;z-index:20;pointer-events:none}
+.tr3{position:absolute;inset:0;z-index:20;pointer-events:none}
 .lwipe3{position:absolute;top:0;bottom:0;width:4px;background:var(--g);z-index:20;pointer-events:none;box-shadow:0 0 0 6px rgba(0,116,79,.12)}
 .fly3{position:absolute;z-index:21;font-weight:700;white-space:nowrap;pointer-events:none;font-family:var(--font);letter-spacing:-.02em}
 /* 개요 · 발표자 · 알림 */

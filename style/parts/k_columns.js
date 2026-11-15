@@ -2,7 +2,7 @@
    top{title,sub} · cols[{title,sub,hi,value:{v,dec,unit,label,sign},points[],chart:{type,data,first,last,dec,unit,title}(아래 작은 차트),note,noteLabel}] · summary('글, **굵게**') · sumLabel('요약') */
 (function () {
 'use strict';
-var h = ECOM.h, C = ECOM.C, E = h.E, K = ECOM.kx;
+var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T, K = ECOM.kx;
 function columnsDefault(bd, s, ctx) {
   var cols = (s.cols || []).slice(0, 4), N = cols.length, top = s.top || null, gap = 16, cw = (1168 - (N - 1) * gap) / N, y0 = top ? 104 : 0, y1 = s.summary ? 512 - 70 : 512, svg = K.svg(ctx);
   if (top) { var tw = Math.min(760, Math.max(420, h.textW(top.title || '', 19, 1) + 120));
@@ -112,7 +112,48 @@ LAY.iconcards = function (bd, s, ctx) {
     D(bd, x, y0, cw, y1 - y0, html, 'display:flex;flex-direction:column;align-items:center;text-align:center;padding:20px 18px 16px;border-radius:16px;background:' + S.CARD + ';border:' + (hi ? '2px solid ' + P.main : '1px solid ' + S.BD), { 'data-at': ta, 'data-fx': 'rise', 'data-ms': 420, 'data-key': c.title || '' }) });
   bar(bd, s, ctx, y1 + 10) };
 
+/* dots 점무리 : cols[0] · cols[1](title · sub · value{v,dec,unit,label})의 값을 점으로 쌓아 두 쪽 크기를 비교. 점 하나 = s.dots.per(값 단위) · s.dots.unit(점 이름, 예 '20만 명') · 아래 요약 띠(summary) */
+LAY.dots = function (bd, s, ctx) {
+  var S = setup(ctx), P = S.P, svg = K.svg(ctx), C2 = (s.cols || []).slice(0, 2), per = +(s.dots || {}).per || 1, ns = C2.map(function (c) { return Math.max(1, Math.round(((c.value || {}).v || 0) / per)) }), mx = Math.max.apply(null, ns), y1 = s.summary ? 512 - 62 : 512, PW = 520, y0 = 118, H = y1 - y0 - 58, p = Math.sqrt(PW * H / mx), cols, rows;
+  for (; ;) { cols = Math.floor((PW - 24) / p); rows = Math.ceil(mx / cols); if (rows * p <= H || p < 8) break; p -= .5 }
+  var rd = p * .37, colr = [P.main, P.cmp], dec0 = (C2[0].value || {}).dec || 0, ratio = ns[0] ? ns[1] / ns[0] : 0;
+  C2.forEach(function (c, k) { var v = c.value || {}, x = k ? 1168 - PW : 0, col = colr[k], at = 120 + k * 80;
+    E('rect', { x: x, y: 0, width: PW, height: y1, rx: 18, fill: P.paper }, svg);
+    var hg = E('g', { 'data-key': c.title || '', 'data-at': at, 'data-fx': 'rise', 'data-ms': 420 }, svg);
+    E('circle', { cx: x + 32, cy: 34, r: 9, fill: col }, hg); T(hg, x + 52, 43, c.title || '', { 'font-size': 26, 'font-weight': 700, fill: P.ink });
+    var vt = h.nf(v.v, v.dec || 0), nw = h.textW(vt, 50, 1); T(hg, x + 24, 96, vt, { 'font-size': 50, 'font-weight': 700, fill: k ? P.ink : P.main, 'data-fx': 'count', 'data-count': +v.v, 'data-dec': v.dec || 0, 'data-ms': 1100 });
+    if (v.unit) T(hg, x + 24 + nw + 8, 96, v.unit, { 'font-size': 20, 'font-weight': 700, fill: P.sub });
+    if (c.sub) T(hg, x + PW - 24, 96, c.sub, { 'text-anchor': 'end', 'font-size': 14, fill: P.mute });
+    var gx = x + (PW - cols * p) / 2 + p / 2, gy = y1 - 36 - p / 2;
+    for (var r = 0; r * cols < ns[k]; r++) { var g = E('g', { 'data-at': 300 + r * 90, 'data-fx': 'rise', 'data-ms': 360 }, svg); for (var j = 0; j < cols && r * cols + j < ns[k]; j++) E('circle', { cx: gx + j * p, cy: gy - r * p, r: rd, fill: col }, g) } });
+  var cg = E('g', { 'data-at': 300 + rows * 90 + 200, 'data-fx': 'pop', 'data-ms': 420 }, svg), mid = 584;
+  E('circle', { cx: mid, cy: 210, r: 54, fill: P.dark }, cg); T(cg, mid, 214, h.nf(ratio, ratio >= 10 ? 0 : 1), { 'text-anchor': 'middle', 'font-size': 32, 'font-weight': 700, fill: S.ON, 'data-fx': 'count', 'data-count': +ratio.toFixed(ratio >= 10 ? 0 : 1), 'data-dec': ratio >= 10 ? 0 : 1, 'data-suf': '배', 'data-ms': 900 });
+  T(cg, mid, 242, '큰 쪽 ÷ 작은 쪽', { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 700, fill: S.ON, 'fill-opacity': .85 });
+  T(svg, 24, y1 - 12, '● 점 하나 = ' + ((s.dots || {}).unit || String(per)) + ' · 점이 많을수록 큼', { 'font-size': 12.5, 'font-weight': 600, fill: P.mute, 'data-at': 1800, 'data-fx': 'fade' });
+  bar(bd, s, ctx, y1 + 10) };
+
+/* shrink 줄어드는 점 격자 : 10×10 점 격자(전체 = s.shrink.total, 기본 100점)에서 비교할 몫만 진하게 남고 나머지는 작고 흐려짐. cols[0] · cols[1] value.v = 점 수(전체 중). 오른쪽 카드 = 두 몫의 이름 · 점 수 · 풀이 */
+LAY.shrink = function (bd, s, ctx) {
+  var S = setup(ctx), P = S.P, svg = K.svg(ctx), C2 = (s.cols || []).slice(0, 2), sh = s.shrink || {}, tot = +sh.total || 100, nA = Math.round((C2[0].value || {}).v || 0), nB = Math.round((C2[1].value || {}).v || 0), side = 10, gx = 24, gy = 16, y1 = s.summary ? 512 - 62 : 512, p = Math.min(44, (y1 - gy - 30) / 10);
+  var colr = [P.main, P.cmp], faint = P.g18, dots = [], init = P.g65;
+  var gg = E('g', { 'data-at': 0, 'data-fx': 'fade', 'data-ms': 400 }, svg);
+  for (var i = 0; i < tot; i++) { var role = i < nA ? 0 : i >= tot - nB ? 1 : 2, cx = gx + (i % side) * p + p / 2, cy = gy + Math.floor(i / side) * p + p / 2, r = role === 2 ? 9 : 17;
+    var c = E('circle', { cx: cx, cy: cy, r: r, fill: role === 2 ? faint : colr[role] }, gg); c._role = role; c._r = r; dots.push(c) }
+  T(svg, gx, y1 - 4, '● 점 하나 = ' + (sh.unit || '전체의 1%') + ' · 진한 점 = 비교할 몫 · 작고 흐린 점 = 나머지', { 'font-size': 12.5, 'font-weight': 600, fill: P.mute, 'data-at': 1800, 'data-fx': 'fade' });
+  var cx0 = 520, cw = 1168 - cx0, ch = (y1 - 40 - 14) / 2;
+  C2.forEach(function (c, k) { var v = c.value || {}, y = k * (ch + 14), at = 1300 + k * 450, col = colr[k], g = E('g', { 'data-key': c.title || '', 'data-at': at, 'data-fx': 'rise', 'data-ms': 500 }, svg);
+    E('rect', { x: cx0, y: y, width: cw, height: ch, rx: 18, fill: P.paper }, g); E('circle', { cx: cx0 + 36, cy: y + 38, r: 11, fill: col }, g); T(g, cx0 + 58, y + 47, c.title || '', { 'font-size': 26, 'font-weight': 700, fill: P.ink });
+    var vt = h.nf(v.v, v.dec || 0), nw = h.textW(vt, 64, 1); T(g, cx0 + 28, y + 118, vt, { 'font-size': 64, 'font-weight': 700, fill: k ? P.ink : P.main, 'data-fx': 'count', 'data-count': +v.v, 'data-dec': v.dec || 0, 'data-ms': 1000 });
+    if (v.unit) T(g, cx0 + 28 + nw + 8, y + 118, v.unit, { 'font-size': 22, 'font-weight': 700, fill: P.sub });
+    h.wrap(c.sub || '', 15, cw - 56, 0).slice(0, 2).forEach(function (t, j) { T(g, cx0 + 28, y + 150 + j * 21, t, { 'font-size': 15, fill: P.sub }) }) });
+  ctx.root._hook = function (root) { if (h.RM()) return 0; var kk = 0;
+    dots.forEach(function (c) { var to = c.getAttribute('fill'), d = 700 + (c._role === 2 ? kk++ * 8 : 0);
+      c.style.transformBox = 'fill-box'; c.style.transformOrigin = '50% 50%'; var sc = (c._role === 2 ? 17 : 17) / c._r;
+      h.A(c, [{ fill: init, transform: 'scale(' + sc + ')' }, { fill: to, transform: 'scale(1)' }], 700, h.EIN, d, 'both') });
+    return 700 + 700 + kk * 8 };
+  bar(bd, s, ctx, y1 + 10) };
+
 ECOM.parts.columns = function (bd, s, ctx) { var f = s.layout && LAY[s.layout]; return f ? f(bd, s, ctx) : columnsDefault(bd, s, ctx) };
-ECOM.parts.columns.layouts = ['default', 'venn', 'rows', 'iconcards'];
-ECOM.parts.columns.dark = ['venn', 'iconcards'];
+ECOM.parts.columns.layouts = ['default', 'venn', 'rows', 'iconcards', 'dots', 'shrink'];
+ECOM.parts.columns.dark = ['venn', 'iconcards', 'dots', 'shrink'];
 })();

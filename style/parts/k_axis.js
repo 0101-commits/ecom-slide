@@ -89,6 +89,31 @@ LAY.cards = function (bd, s, ctx) { var P = ctx.P, K = ECOM.kx, L = s.left || {}
   var vd = K.D(bd, 'kx', 584 - 42, ty + H / 2 - 42, 84, 84, 'vs', { 'data-b': 2, 'data-fx': 'pop', 'data-ms': 420 }); vd.style.cssText += ';border-radius:50%;background:#fff;border:4px solid ' + P.dark + ';color:' + P.dark + ';display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;letter-spacing:-.02em';
   ctx.root.setAttribute('data-gap', 380); ctx.root.setAttribute('data-stg', 70) };
 
+/* gap 격차 눈금 : 공통 눈금자 위에 두 값을 삼각 표시로 얹고, 사이 구간을 칠해 격차를 크게 보임. 양쪽 위 카드 = 두 값의 이름 · 값 · 풀이
+   칸 gap{a:{title,value,sub},b:{…},min,max,step,unit,dec(눈금 소수),vdec(값 소수),label('격차'),gapText(직접 쓸 격차 글),bar(아래 띠 한 줄)} — 눈금은 min~max 한 줄 */
+LAY.gap = function (bd, s, ctx) { var P = ctx.P, ON = ctx.dark ? P.bg : '#fff', svg = ctx.svg(512), G = s.gap || {}, A = G.a || {}, B = G.b || {}, mn = G.min != null ? G.min : 0, mx = G.max, st = G.step || (mx - mn) / 5, u = G.unit || '', dec = G.dec || 0;
+  var X0 = 70, X1 = 1098, X = function (v) { return X0 + (X1 - X0) * (v - mn) / (mx - mn) }, RY = 268, xa = X(A.value), xb = X(B.value), lo = Math.min(xa, xb), hi = Math.max(xa, xb), gv = Math.abs(B.value - A.value), cA = P.main, cB = P.cmp;
+  E('rect', { x: X0, y: RY, width: X1 - X0, height: 26, rx: 5, fill: P.g18, 'data-at': 0, 'data-fx': 'wipe', 'data-ms': 700 }, svg);
+  var tk = E('g', { 'data-at': 200, 'data-fx': 'fade', 'data-ms': 500 }, svg);
+  for (var v = mn; v <= mx + st / 1e6; v += st) { var x = X(v); E('line', { x1: x, x2: x, y1: RY, y2: RY + 34, stroke: P.axis, 'stroke-width': 1.5 }, tk); T(tk, x, RY + 54, h.nf(v, dec) + (v === mn ? u : ''), { 'text-anchor': 'middle', 'font-size': 14, fill: P.mute }) }
+  E('rect', { x: lo, y: RY, width: hi - lo, height: 26, rx: 3, fill: P.g65, 'data-at': 1200, 'data-fx': 'growx', 'data-o': (xa <= xb ? '0%' : '100%') + ' 50%', 'data-ms': 800 }, svg);
+  var cw = 400, ch = 188;
+  [[A, xa, cA, 0, 500], [B, xb, cB, 1, 900]].forEach(function (a) { var o = a[0], x = a[1], c = a[2], k = a[3], at = a[4], cx = k ? 1168 - cw : 0, bx = cx + cw / 2;
+    var tri = E('path', { d: 'M' + (x - 12) + ' ' + (RY - 28) + ' H' + (x + 12) + ' L' + x + ' ' + (RY - 5) + ' Z', fill: c, 'data-key': o.title || '', 'data-at': k ? 1000 : at, 'data-fx': k ? 'slide' : 'pop', 'data-dx': k ? xa - xb : 0, 'data-dy': 0, 'data-ms': 800 }, svg);
+    E('path', { d: 'M' + x + ' ' + (RY - 30) + ' V' + (ch + 24) + ' H' + bx + ' V' + (ch + 2), fill: 'none', stroke: c, 'stroke-width': 2, 'data-at': at + 200, 'data-fx': 'draw', 'data-ms': 600 }, svg);
+    var g = E('g', { 'data-key': o.title || '', 'data-at': at, 'data-fx': 'rise', 'data-ms': 520 }, svg);
+    E('rect', { x: cx, y: 0, width: cw, height: ch, rx: 16, fill: P.paper, stroke: P.line, 'stroke-width': 1.5 }, g); E('rect', { x: cx + 22, y: 24, width: 16, height: 16, rx: 4, fill: c }, g);
+    T(g, cx + 48, 38, o.title || '', { 'font-size': fit2(o.title || '', 24, 16, cw - 72), 'font-weight': 700, fill: P.ink });
+    var vd = G.vdec != null ? G.vdec : dec, vt = h.nf(o.value, vd), nw = h.textW(vt, 62, 1); T(g, cx + 22, 112, vt, { 'font-size': 62, 'font-weight': 700, fill: c === P.cmp ? P.ink : P.main, 'data-fx': 'count', 'data-count': +o.value, 'data-dec': vd, 'data-ms': 1000 }); if (u) T(g, cx + 22 + nw + 8, 112, u, { 'font-size': 22, 'font-weight': 700, fill: P.sub });
+    h.wrap(o.sub || '', 14.5, cw - 44, 0).slice(0, 2).forEach(function (t, j) { T(g, cx + 22, 148 + j * 20, t, { 'font-size': 14.5, fill: P.sub }) }) });
+  var by = RY + 76, gg = E('g', { 'data-at': 1900, 'data-fx': 'fade', 'data-ms': 500 }, svg);
+  E('path', { d: 'M' + lo + ' ' + (by - 9) + ' V' + by + ' H' + hi + ' V' + (by - 9), fill: 'none', stroke: P.dark, 'stroke-width': 3, 'stroke-linejoin': 'round' }, gg);
+  var gt = G.gapText || (h.nf(gv, G.vdec != null ? G.vdec : dec) + u), mid = Math.max(130, Math.min(1038, (lo + hi) / 2)); T(gg, mid, by + 46, gt, { 'text-anchor': 'middle', 'font-size': 50, 'font-weight': 700, fill: P.dark });
+  T(gg, mid, by + 70, G.label || '두 값의 격차', { 'text-anchor': 'middle', 'font-size': 15, 'font-weight': 700, fill: P.mute });
+  if (G.bar) { var nb = K.D(bd, 'kx', 0, 456, 1168, 52, '', { 'data-at': 2400, 'data-fx': 'rise', 'data-ms': 500 }); nb.style.cssText += ';display:flex;align-items:center;padding:0 24px;border-radius:12px;background:' + P.dark + ';color:' + ON + ';font-size:17px;font-weight:700;line-height:1.4'; nb.innerHTML = '<span>' + h.md(G.bar).replace(/<b>/g, '<b style="color:' + ON + '">') + '</span>' }
+  T(svg, 0, 448, '▼ = 눈금 위 두 값의 자리 · 눈금 위 진한 구간 = 격차', { 'font-size': 12.5, 'font-weight': 600, fill: P.mute, 'data-at': 2000, 'data-fx': 'fade' }) };
+function fit2(t, z, mn, w) { while (z > mn && h.textW(t, z, 1) > w) z -= .5; return z }
+
 function badge(b, right, col) { if (b === 'none') return ''; var tri = right ? '<path d="M120 0 H6 L120 94 Z" fill="' + col + '"/>' : '<path d="M0 0 H114 L0 94 Z" fill="' + col + '"/>';
   var ix = right ? 86 : 34, iy = 32, g;
   if (!b || b === 'up' || b === 'down') { var up = b !== 'down', x0 = ix - 13, x1 = ix + 13, y0 = up ? iy + 13 : iy - 13, y1 = up ? iy - 13 : iy + 13;
@@ -134,5 +159,6 @@ ECOM.parts.axis = function (bd, s, ctx) { if (s.layout && LAY[s.layout]) return 
   root._beat = function (k) { var b = k > 0 && s.beats && s.beats[k - 1], sp = b ? (b.spot === 'right' ? 1 : b.spot === 'left' ? 0 : null) : null;
     grp.forEach(function (g, i) { g.forEach(function (e) { e.classList.toggle('k-dim', sp != null && i !== sp) }) }) };
   root.setAttribute('data-gap', 380); root.setAttribute('data-stg', 70) };
-ECOM.parts.axis.layouts = ['default', 'scale', 'bars', 'overlay', 'cards'];
+ECOM.parts.axis.layouts = ['default', 'scale', 'bars', 'overlay', 'cards', 'gap'];
+ECOM.parts.axis.dark = ['gap'];
 })();

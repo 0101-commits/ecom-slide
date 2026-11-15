@@ -154,7 +154,25 @@ NEW.funnel = function (bd, s, ctx) {
   if (hv) cap(svg, P, '▼ = 앞 단계에서 줄어든 몫', dX, 506); else cap(svg, P, '깔때기 폭 = 단계가 지날수록 좁아짐', 0, 506);
   beats(ctx.root, s, q.grp) };
 
+/* glass 잔 쌓기 : 층마다 한 줄 선반 위에 와인잔이 놓임(기본 = 위 층 1잔 → 아래 층일수록 늘어난 샴페인 탑, layers[].n 으로 잔 수를 직접 정하면 거꾸로도 됨).
+   잔 속 색 = 그 층의 색, 오른쪽에 층 이름 · 풀이. 아래 층부터 차례로 올라옴 */
+NEW.glass = function (bd, s, ctx) {
+  var L = (s.layers || []).slice(0, 5), N = L.length, q = prep(ctx, s, N), P = q.P, svg = q.svg, rh = 486 / N, gh = Math.min(rh - 16, 134), gw = gh * .72, cx0 = 350, tx = 760, tw = 1168 - tx;
+  L.forEach(function (o, i) { var n = o.n != null ? Math.max(1, Math.min(6, Math.round(+o.n))) : i + 1, yb = i * rh + rh - 20, yc = i * rh + rh / 2, f = q.R[i], at = 250 + (N - 1 - i) * 520, top = yb - gh, bh = gh * .56;
+    var sp = Math.min(gw * 1.6, 600 / n), sw = (n - 1) * sp + gw + 150;
+    E('ellipse', { cx: cx0, cy: yb + 3, rx: sw / 2, ry: 6, fill: P.g18, 'data-at': at, 'data-fx': 'wipe', 'data-ms': 420 }, svg); E('line', { x1: 0, x2: tx - 40, y1: yb + 9, y2: yb + 9, stroke: P.line, 'data-at': at, 'data-fx': 'wipe', 'data-ms': 420 }, svg);
+    for (var k = 0; k < n; k++) { var cx = cx0 + (k - (n - 1) / 2) * sp, x1 = cx - gw / 2, x2 = cx + gw / 2, ya = top + bh * .26, g = E('g', { 'data-key': o.label || '', 'data-at': at + 120 + k * 90, 'data-fx': 'rise', 'data-ms': 420 }, svg);
+      E('path', { d: 'M' + x1 + ' ' + (top + bh * .3) + ' H' + x2 + ' V' + ya + ' Q' + x2 + ' ' + (top + bh) + ' ' + cx + ' ' + (top + bh) + ' Q' + x1 + ' ' + (top + bh) + ' ' + x1 + ' ' + ya + ' Z', fill: f.f }, g);
+      E('path', { d: 'M' + x1 + ' ' + top + ' V' + ya + ' Q' + x1 + ' ' + (top + bh) + ' ' + cx + ' ' + (top + bh) + ' Q' + x2 + ' ' + (top + bh) + ' ' + x2 + ' ' + ya + ' V' + top, fill: 'none', stroke: P.g65, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }, g);
+      E('path', { d: 'M' + cx + ' ' + (top + bh) + ' V' + (yb - 4) + ' M' + (cx - gw * .34) + ' ' + (yb - 1) + ' Q' + cx + ' ' + (yb - 8) + ' ' + (cx + gw * .34) + ' ' + (yb - 1), fill: 'none', stroke: P.g65, 'stroke-width': 2.4, 'stroke-linecap': 'round' }, g); q.grp[i].push(g) }
+    var tg = E('g', { 'data-key': o.label || '', 'data-at': at + 300, 'data-fx': 'right', 'data-ms': 420 }, svg), its = [{ s: o.label, size: 25, bold: 1, fill: P.ink }, { s: o.sub, size: 16, fill: P.main, bold: 1, gap: 3 }, { s: o.desc, size: 17, fill: P.sub, gap: 5 }].concat(noteItems(o, P));
+    E('line', { x1: cx0 + sw / 2 + 10, x2: tx - 34, y1: yc, y2: yc, stroke: P.g40, 'stroke-width': 1.3, 'stroke-dasharray': '2 4' }, tg); E('rect', { x: tx - 24, y: yc - 9, width: 18, height: 18, rx: 5, fill: f.f }, tg);
+    stk(tg, tx, i * rh + 6, tw, rh - 12, its, 'mid'); q.grp[i].push(tg);
+    if (i) E('line', { x1: tx, x2: 1168, y1: i * rh, y2: i * rh, stroke: P.line }, svg) });
+  cap(svg, P, '잔 속 색 = 층(오른쪽 네모와 같은 색) · 잔 수 = 그 층의 몫', 0, 506);
+  beats(ctx.root, s, q.grp) };
+
 ECOM.parts.pyramid = function (bd, s, ctx) { var f = NEW[s.layout]; return f ? f(bd, s, ctx) : basePyramid(bd, s, ctx) };
-ECOM.parts.pyramid.layouts = ['default', 'stairs', 'rings', 'bars', 'blocks', 'funnel'];
-ECOM.parts.pyramid.dark = ['stairs', 'rings', 'bars', 'blocks', 'funnel'];
+ECOM.parts.pyramid.layouts = ['default', 'stairs', 'rings', 'bars', 'blocks', 'funnel', 'glass'];
+ECOM.parts.pyramid.dark = ['stairs', 'rings', 'bars', 'blocks', 'funnel', 'glass'];
 })();

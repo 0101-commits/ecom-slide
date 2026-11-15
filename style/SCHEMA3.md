@@ -140,3 +140,32 @@
 
 ### 회사 로고 칸 `ECOM.coLogo(p,x,y,w,h,이름)`
 비공개 `style/brand/logos/<이름>.png` 가 있으면 그림, 없으면 글자 칸(첫 글자 동그라미 + 이름). 로고 그림은 공개 저장소에 넣지 않음(보도 자료 · IR · 저작권 없는 공용 그림만 비공개 보관).
+
+## 5판 영상 문법 부품 · 배치 (목업 V101~V249)
+영상 레퍼런스 120편 장면 문법(형광펜 · 헤드라인 · 숫자판 · 지도 배지 · 순위표 · 그림 풀이 …)을 ECOM 색으로 다시 그린 것. 칸 자세한 설명은 각 부품 파일 머리 주석. 움직임은 600~800ms(형광 · 선 긋기 700~900, 숫자 굴림 900~1200), 기본 DOM = 끝 모습이라 `?still` · 모아 보기 · 인쇄에서 그대로 보임. 장 위 짧은 설명 한 줄은 `cap`(`note` 는 발표자 메모, `links` 는 부록 고리라 부품 자료로 쓰지 않음).
+
+| kind | 배치 | 쓸 때 | 목업 |
+|---|---|---|---|
+| `clip` 문서 발췌 | doc · focus · pair · marks | 결정문 · 보고서 · 조문 한 줄을 형광으로 짚음(문장 안 `==구절==`) | V101~V108 |
+| `headline` 헤드라인 | card · stack · type | 기사 제목 카드(`title[2줄]`, `**핵심어**`) · 시간 순 쌓기 · 단어 타이핑 | V109~V116 |
+| `odo` 숫자판 | single · twin · tag · years | 큰 숫자 하나 · 두 값 · 그때와 지금 가격표 · 연도별 값 | V117~V122 |
+| `pile` 단위 쌓기 | bricks · grid · two | 양을 벽돌 · 100칸 · 덩어리 넓이로 | V123~V127 |
+| `pills` 알약 칩 | row · flip | 달마다 상태(기준 넘음/못 넘음) · 바뀜 하나 크게 | V128~V131 |
+| `part` 간지 | chip · num · giant · strike · ruler · dots | 장 넘김 간지(`ECOM.chapter`, `p_chapter.js`) | V132~V141 |
+| `label` 노랑 라벨 | term · facts | 용어 풀이 · 연혁 · 사실 3~4개 | V142~V145 |
+| `mapbadge` 지도 배지 | link · ring · cut · elbow | 나라 사이 관계 · 공급처 · 끊김(X) · 품목(`nodes` · `edges`) | V151~V159 |
+| `mapval` 지도 값 | badge · callout · radiate | 나라별 숫자 · 큰 값 말풍선 · 한 나라에서 뻗는 가지 | V160~V166 |
+| `mapspread` 번지는 지도 | years · rings · fan | 연도별 확대 · 사건 지점 · 수출처(`steps[{year,iso}]`) | V167~V174 |
+| `tilemap` 칸 지도 | us · kr · bars | 미국 주 · 한국 시도 값(지도 자료 없음) | V175~V181 |
+| `relay` 이어달리기 | pan · steps | 단계가 이어져 결과에 닿음 | V182~V185 |
+| `chainfire` 연쇄 점화 | line · net | 충격이 시간 차로 번짐 | V186~V189 |
+| `cycle` · `hub` · `flow` | vicious · burst · tags · twoway · choke | 악순환 · 중심에서 터지는 몫 · 질문 태그 · 두 갈래 · 병목 | V190~V199 |
+| `rankroll` 순위표 | bars · scroll · two | 한 줄씩 채움 · 길게 올라가다 짚은 행 · 두 열 | V201~V208 |
+| `table` | grow · marker · years | 행 덧붙임 · 한 행 형광 · 세 해 표 | V209~V215 |
+| `line` | fan · estimate · drop · solid | 전망 범위 부채 · 추정 음영 · 하락 화살 · 단색 바탕 | V216~V223 |
+| `bar` · `donut` | single · hstack · pick · fill | 막대 하나 · 가로 누적 · 한 막대 짚기 · 도넛 채우기 | V224~V232 |
+| `anatomy` 그림 풀이 | callout · layers · explode | 칩 · 배 · 건물 그림 지시선 · 층 단면 · 조각 몫 | V233~V239 |
+| `pyramid` · `timeline` · `axis` · `columns` | glass · cards · gap · dots · shrink | 잔 쌓기 · 위아래 날짜 카드 · 두 값 격차 · 점무리 비교 | V240~V249 |
+
+### 장 넘김 `transition`(장 칸) — panel · circle · blocks · tear
+그 장으로 넘어올 때 색 판 두 장 밀기 · 원이 덮었다 줄기 · 계단 블록 · 종이 찢긴 가장자리로 덮기(목업 V146~V149). 장(章)이 바뀌는 곳에만, 덱 하나에 3~4번까지. 움직임 줄이기 · `?still` 에서는 바로 넘어감.

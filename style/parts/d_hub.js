@@ -2,7 +2,9 @@
    center{label,value,dec,unit,sub1,sub2,carry} · nodes[4]{title,value,dec,unit,s1,s2,color,mini}
    mini : {type:'bars',labels,data,dec} | {type:'negbars',labels,data,dec} | {type:'line',data,first,last,marks:[{i,text,pos}],lo,hi,color}
           | {type:'lines',series:[{data,color,name}],first,last,lo,hi}
-   layout(없으면 default = 위 그림, 같은 칸 그대로) : grid 2×2 맞붙은 네 칸 + 가운데 원(연결선 없음) · branch 맨 위 막대에서 가지가 갈라져 아래 네 칸 카드(위 → 아래) */
+   layout(없으면 default = 위 그림, 같은 칸 그대로) : grid 2×2 맞붙은 네 칸 + 가운데 원(연결선 없음) · branch 맨 위 막대에서 가지가 갈라져 아래 네 칸 카드(위 → 아래)
+   burst 가운데 원에서 값 크기대로 원이 하나씩 터져 나옴 {center{label,value,dec,unit,sub} · nodes[4~7]{title,value,dec,unit,size,tone:main|warn|cmp,text} · legend[{tone,text}]}
+   tags 가운데 망 둘레로 질문 태그가 차례로 쳐짐 {center{label,sub} · tags[5~6]{q,kind:a|b|c} · kinds{a,b,c} 이름 · note} */
 (function () {
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
@@ -86,8 +88,63 @@ NEW.branch = function (bd, s, ctx) {
     var dy = o.s1 ? sline(g, x0 + 24, CY + 138, o.s1, CWd - 44, 13, C.sub) : 0, dy2 = o.s2 ? sline(g, x0 + 24, CY + 138 + dy + 3, o.s2, CWd - 44, 13, C.mute) : 0;
     var my = CY + 138 + dy + dy2 + 14; mini(g, o.mini, x0 + 24, my, CWd - 48, 512 - 10 - my) });
   ctx.root.setAttribute('data-gap', 300); ctx.root.setAttribute('data-stg', 110) };
+/* burst 터져 나오는 원 : 가운데 원 → 원이 중심에서 튀어나와 자리에 앉음(원 넓이 = 값 크기). 이름은 원 옆, 값은 원 안 */
+NEW.burst = function (bd, s, ctx) {
+  var P = ctx.P, svg = ctx.svg(512), c0 = s.center || {}, nodes = (s.nodes || []).slice(0, 7), N = nodes.length, cx = 584, cy = 254, RX = N > 5 ? 410 : 390, RY = 168, onC = ctx.dark ? P.bg : '#fff', items = [];
+  if (!N) return;
+  var mx = Math.max.apply(null, nodes.map(function (o) { return Math.abs(o.size != null ? o.size : o.value) || 1 })), TN = { main: P.main, warn: P.warn, cmp: P.cmp };
+  var rays = E('g', {}, svg), ring = E('g', {}, svg);
+  var hub = E('g', { 'data-at': 0, 'data-fx': 'pop', 'data-ms': 460, 'data-carry-host': c0.carry || 'hub' }, svg); E('circle', { cx: cx, cy: cy, r: 84, fill: ctx.dark ? P.main : P.dark }, hub);
+  var hc = ctx.dark ? P.bg : '#fff', tl = h.wrap(c0.label || '', 15.5, 130, 1).slice(0, 2), y0 = cy - (c0.value != null ? 26 : 8) - (tl.length - 1) * 9;
+  tl.forEach(function (l, j) { T(hub, cx, y0 + j * 19, l, { 'text-anchor': 'middle', 'font-size': 15.5, 'font-weight': 700, fill: hc, 'fill-opacity': .92 }) });
+  if (c0.value != null) T(hub, cx, cy + 20, h.nf(c0.value, c0.dec || 0) + (c0.unit || ''), { 'text-anchor': 'middle', 'font-size': 34, 'font-weight': 800, fill: hc });
+  if (c0.sub) h.wrap(c0.sub, 12.5, 124).slice(0, 2).forEach(function (l, j) { T(hub, cx, cy + 44 + j * 16, l, { 'text-anchor': 'middle', 'font-size': 12.5, fill: hc, 'fill-opacity': .82 }) });
+  var STEP = Math.min(560, Math.round(2900 / N));
+  nodes.forEach(function (o, i) { var a = -Math.PI / 2 + i * 2 * Math.PI / N, r = 54 + 28 * Math.sqrt((Math.abs(o.size != null ? o.size : o.value) || 1) / mx), bx = cx + RX * Math.cos(a), by = cy + RY * Math.sin(a), col = TN[o.tone] || P.main, t = 450 + i * STEP;
+    var g = E('g', { 'data-key': o.title || '' }, ring), dx = bx - cx, dy = by - cy, L = Math.sqrt(dx * dx + dy * dy), ux = dx / L, uy = dy / L, a1 = 90, a2 = L - r - 4;
+    if (a2 - a1 > 16) { var ray = E('path', { d: 'M' + (cx + ux * a1).toFixed(1) + ' ' + (cy + uy * a1).toFixed(1) + ' L' + (cx + ux * a2).toFixed(1) + ' ' + (cy + uy * a2).toFixed(1), fill: 'none', stroke: col, 'stroke-width': 2.4, 'stroke-linecap': 'round', 'stroke-dasharray': '1 7' }, rays); items.push({ el: ray, at: t, ms: 360, kf: [{ opacity: 0 }, { opacity: 1 }] }) }
+    var bg = E('g', { style: 'transform-origin:' + bx.toFixed(1) + 'px ' + by.toFixed(1) + 'px' }, g); E('circle', { cx: bx, cy: by, r: r, fill: col }, bg);
+    var vs = h.nf(o.value, o.dec || 0) + (o.unit || ''), fs = 25; while (fs > 13 && h.textW(vs, fs, 1) > 2 * r - 16) fs -= .5; T(bg, bx, by + fs * .36, vs, { 'text-anchor': 'middle', 'font-size': fs, 'font-weight': 800, fill: onC });
+    items.push({ el: bg, at: t, ms: 640, ease: 'cubic-bezier(.2,.9,.25,1.15)', kf: [{ opacity: 0, transform: 'translate(' + (-dx).toFixed(1) + 'px,' + (-dy).toFixed(1) + 'px) scale(.18)' }, { opacity: 1, transform: 'translate(0px,0px) scale(1)' }] });
+    var right = bx >= cx - 4, lx = right ? bx + r + 14 : bx - r - 14, an = right ? 'start' : 'end', lab = E('g', {}, g), ll = h.wrap(o.title || '', 17, 150, 1).slice(0, 2), tx = o.text ? h.wrap(o.text, 14, 150).slice(0, 2) : [], hh = ll.length * 21 + tx.length * 18, ty0 = by - hh / 2 + 16;
+    ll.forEach(function (l, j) { T(lab, lx, ty0 + j * 21, l, { 'text-anchor': an, 'font-size': 17, 'font-weight': 700, fill: P.ink }) });
+    tx.forEach(function (l, j) { T(lab, lx, ty0 + ll.length * 21 + j * 18, l, { 'text-anchor': an, 'font-size': 14, fill: P.sub }) });
+    items.push({ el: lab, at: t + 260, ms: 420, kf: [{ opacity: 0 }, { opacity: 1 }] }) });
+  var lg = E('g', {}, svg), lx0 = 4; (s.legend || []).forEach(function (q) { E('circle', { cx: lx0 + 8, cy: 496, r: 8, fill: TN[q.tone] || P.main }, lg); T(lg, lx0 + 22, 500.5, q.text, { 'font-size': 12.5, fill: P.sub }); lx0 += 44 + h.textW(q.text, 12.5, 0) });
+  T(lg, lx0 + 4, 500.5, '원 넓이 = 값 크기', { 'font-size': 12.5, fill: P.mute });
+  ctx.root._hook = function () { if (h.RM()) return 0; var e = 0; items.forEach(function (it) { if (!it.el.animate) return; var a = it.el.animate(it.kf, { duration: it.ms, delay: it.at, easing: it.ease || 'cubic-bezier(.4,0,.2,1)', fill: 'both' }); a._fx = 1; e = Math.max(e, it.at + it.ms) }); return e };
+  ctx.root.setAttribute('data-gap', 300) };
+
+/* tags 질문 태그 : 가운데 망(점 · 선) 둘레에 질문 칸이 차례로 켜지고 글자가 쳐짐 → 망의 한 점과 이어짐. 질문 색 = 종류(kinds) */
+NEW.tags = function (bd, s, ctx) {
+  var P = ctx.P, svg = ctx.svg(512), c0 = s.center || {}, tg = (s.tags || []).slice(0, 6), kinds = s.kinds || {}, cx = 584, cy = 244, items = [], KC = { a: P.main, b: P.warn, c: P.cmp }, ws = ctx.dark ? P.bg : '#fff';
+  var out = [], inn = [], used = {}; for (var i = 0; i < 12; i++) { var th = i * Math.PI / 6 + Math.PI / 12; out.push([cx + 196 * Math.cos(th), cy + 168 * Math.sin(th)]) }
+  for (var i2 = 0; i2 < 6; i2++) { var th2 = i2 * Math.PI / 3; inn.push([cx + 100 * Math.cos(th2), cy + 84 * Math.sin(th2)]) }
+  var ng = E('g', {}, svg), ln0 = function (p, q) { E('line', { x1: p[0].toFixed(1), y1: p[1].toFixed(1), x2: q[0].toFixed(1), y2: q[1].toFixed(1), stroke: P.g40, 'stroke-width': 1.6 }, ng) };
+  out.forEach(function (p, i) { ln0(p, out[(i + 1) % 12]); inn.map(function (q, j) { return [Math.hypot(p[0] - q[0], p[1] - q[1]), j] }).sort(function (u, v) { return u[0] - v[0] }).slice(0, 2).forEach(function (u) { ln0(p, inn[u[1]]) }) });
+  inn.forEach(function (p, i) { ln0(p, inn[(i + 1) % 6]) });
+  out.forEach(function (p) { E('circle', { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: 6, fill: P.g65 }, ng) }); inn.forEach(function (p) { E('circle', { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: 5, fill: P.main }, ng) });
+  var pts = out;
+  var cg = E('g', { 'data-at': 0, 'data-fx': 'pop', 'data-ms': 420 }, svg), cw = Math.max(170, h.textW(c0.label || '', 21, 1) + 48), cl = ctx.dark ? P.main : P.dark;
+  E('rect', { x: cx - cw / 2, y: cy - 36, width: cw, height: c0.sub ? 82 : 58, rx: 12, fill: cl }, cg); T(cg, cx, cy - 6, c0.label || '', { 'text-anchor': 'middle', 'font-size': 21, 'font-weight': 800, fill: ws });
+  if (c0.sub) T(cg, cx, cy + 25, c0.sub, { 'text-anchor': 'middle', 'font-size': 13.5, fill: ws, 'fill-opacity': .85 });
+  var SP = [[18, 40], [18, 176], [18, 316], [0, 84], [0, 228], [0, 372]], order = [0, 3, 1, 4, 2, 5], STEP = 520;
+  tg.forEach(function (q, i) { var slot = SP[order[i]], left = order[i] < 3, col = KC[q.kind] || P.main, ln = h.wrap(q.q || '', 17, 296, 1).slice(0, 2), w = Math.min(356, Math.max.apply(null, ln.map(function (l) { return h.textW(l, 17, 1) })) + 64), hh = 28 + ln.length * 22, x = left ? slot[0] : 1168 - 18 - w, y = slot[1], t = 400 + i * STEP;
+    var g = E('g', { 'data-key': q.q || '' }, svg), pg = E('g', { style: 'transform-box:fill-box;transform-origin:' + (left ? '0% 50%' : '100% 50%') }, g);
+    E('rect', { x: x, y: y, width: w, height: hh, rx: 10, fill: ctx.dark ? P.paper : '#fff', stroke: col, 'stroke-width': 2 }, pg); E('circle', { cx: x + 20, cy: y + hh / 2, r: 6, fill: col }, pg);
+    var tx = E('g', {}, pg); ln.forEach(function (l, j) { T(tx, x + 40, y + 26 + j * 22, l, { 'font-size': 17, 'font-weight': 700, fill: P.ink }) });
+    var ex = left ? x + w : x, ey = y + hh / 2, best = null, bd2 = 1e9, bi = -1; pts.forEach(function (p, pi) { var d2 = Math.hypot(p[0] - ex, p[1] - ey) + (used[pi] ? 900 : 0); if (d2 < bd2) { bd2 = d2; best = p; bi = pi } }); used[bi] = 1;
+    var lk = E('path', { d: 'M' + ex + ' ' + ey + ' L' + best[0].toFixed(1) + ' ' + best[1].toFixed(1), fill: 'none', stroke: col, 'stroke-width': 2, pathLength: 1, 'stroke-dasharray': 1 }, g), dot = E('circle', { cx: best[0].toFixed(1), cy: best[1].toFixed(1), r: 8, fill: 'none', stroke: col, 'stroke-width': 2.4 }, g);
+    items.push({ el: pg, at: t, ms: 360, ease: 'cubic-bezier(.2,.8,.2,1)', kf: [{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'scale(1)' }] });
+    items.push({ el: tx, at: t + 260, ms: 480, ease: 'steps(14)', kf: [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }] });
+    items.push({ el: lk, at: t + 700, ms: 360, kf: [{ strokeDashoffset: 1, opacity: 0 }, { strokeDashoffset: .97, opacity: 1, offset: .03 }, { strokeDashoffset: 0, opacity: 1 }] }); items.push({ el: dot, at: t + 1000, ms: 300, kf: [{ opacity: 0 }, { opacity: 1 }] }) });
+  var lg = E('g', {}, svg), lx0 = 4; ['a', 'b', 'c'].forEach(function (k) { if (!kinds[k]) return; E('circle', { cx: lx0 + 8, cy: 496, r: 7, fill: KC[k] }, lg); T(lg, lx0 + 22, 500.5, kinds[k], { 'font-size': 12.5, fill: P.sub }); lx0 += 44 + h.textW(kinds[k], 12.5, 0) });
+  if (s.cap) T(svg, 1164, 500.5, s.cap, { 'text-anchor': 'end', 'font-size': 12.5, fill: P.mute });
+  ctx.root._hook = function () { if (h.RM()) return 0; var e = 0; items.forEach(function (it) { if (!it.el.animate) return; var a = it.el.animate(it.kf, { duration: it.ms, delay: it.at, easing: it.ease || 'cubic-bezier(.4,0,.2,1)', fill: 'both' }); a._fx = 1; e = Math.max(e, it.at + it.ms) }); return e };
+  ctx.root.setAttribute('data-gap', 300) };
 function fit2(s, size, w) { while (size > 13.5 && h.textW(s || '', size, 1) > w) size -= .5; return size }
 
 ECOM.parts.hub = function (bd, s, ctx) { if (s.layout === 'map' && ECOM.gm && ECOM.gm.ok(s)) return ECOM.gm.hub(bd, s, ctx); var f = NEW[s.layout]; return f ? f(bd, s, ctx) : baseHub(bd, s, ctx) };
-ECOM.parts.hub.layouts = ['default', 'grid', 'branch', 'map'];
+ECOM.parts.hub.layouts = ['default', 'grid', 'branch', 'map', 'burst', 'tags'];
+ECOM.parts.hub.dark = ['burst', 'tags'];
 })();

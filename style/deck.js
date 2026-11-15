@@ -185,7 +185,7 @@ function nBeats(i) { var s = S[i].s; return (s.beats && s.beats.length) || S[i].
 /* ───────── 장 넘김 8종 ─────────
    push M1 머리 고정 · 본문 밀기 | wipe M2 초록 면 닦기 | sheet M3 아래에서 올라오기 | carry M4 같은 차트 이어 넘기기
    fade M5 겹쳐 사라짐 | num M6 숫자 이어받기 | line M7 초록 선 닦기 | open M8 가운데서 열기 | none 바로 */
-var NAMES = { push: 'M1 본문 밀기', wipe: 'M2 초록 면 닦기', sheet: 'M3 아래에서 올라오기', carry: 'M4 같은 차트 이어 넘기기', fade: 'M5 겹쳐 사라짐', num: 'M6 숫자 이어받기', line: 'M7 초록 선 닦기', open: 'M8 가운데서 열기', none: '바로' };
+var NAMES = { push: 'M1 본문 밀기', wipe: 'M2 초록 면 닦기', sheet: 'M3 아래에서 올라오기', carry: 'M4 같은 차트 이어 넘기기', fade: 'M5 겹쳐 사라짐', num: 'M6 숫자 이어받기', line: 'M7 초록 선 닦기', open: 'M8 가운데서 열기', panel: 'M9 색 판 밀기', circle: 'M10 원으로 덮기', blocks: 'M11 계단 블록', tear: 'M12 종이 찢김', none: '바로' };
 ECOM.transitions = NAMES;
 function carryPair(a, b) { var m = {}; a.querySelectorAll('[data-carry]').forEach(function (e) { m[e.getAttribute('data-carry')] = e });
   var hit = null; b.querySelectorAll('[data-carry]').forEach(function (e) { if (!hit && m[e.getAttribute('data-carry')]) hit = [m[e.getAttribute('data-carry')], e] }); return hit }
@@ -212,7 +212,7 @@ function go(to, dir, how) {
   if (a) finish(a); prep(b);
   var fired = false;
   function done(skip) {
-    if (fired) return; fired = true; trans = null; deckEl.querySelectorAll('.wipe3,.lwipe3,.fly3').forEach(function (e) { e.remove() });
+    if (fired) return; fired = true; trans = null; deckEl.querySelectorAll('.wipe3,.lwipe3,.fly3,.tr3').forEach(function (e) { e.remove() });
     if (a) { a.classList.remove('on'); a.style.cssText = ''; a.querySelectorAll('.mv,.ch').forEach(function (e) { e.style.visibility = '' });
       a.getAnimations({ subtree: true }).forEach(function (x) { if (!(window.CSSAnimation && x instanceof CSSAnimation)) x.cancel() }) }
     b.style.cssText = ''; b.classList.add('on'); enter(to, skip) }
@@ -231,6 +231,21 @@ function go(to, dir, how) {
     A(b, [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)' }], 560, ESTD); A(ln, [{ left: '-4px' }, { left: '1280px' }], 560, ESTD).onfinish = function () { ln.remove(); done() }; return }
   if (t === 'open') { b.style.zIndex = 2; A(b, [{ clipPath: 'inset(0 50% 0 50%)', transform: 'scale(.985)' }, { clipPath: 'inset(0 0% 0 0%)', transform: 'scale(1)' }], 480, EIN).onfinish = function () { done() };
     A(a, [{ opacity: 1 }, { opacity: .4 }], 480, 'linear'); return }
+  /* 5판 장 넘김(영상 레퍼런스) — 판이 덮었다 걷히며 다음 장, 끝난 뒤 쌓기 시작 */
+  if (t === 'panel' || t === 'circle' || t === 'blocks') { b.classList.remove('on'); var lay = [], E2 = 'cubic-bezier(.65,0,.35,1)';
+    var swap = function () { a.classList.remove('on'); b.classList.add('on') }, out = function (an) { an.onfinish = function () { lay.forEach(function (e) { e.remove() }); done() } };
+    if (t === 'panel') { [C.main, C.dark].forEach(function (c) { lay.push(H('div', 'tr3', null, deckEl, 'background:' + c + ';transform:translateX(-101%)')) });
+      A(lay[0], [{ transform: 'translateX(-101%)' }, { transform: 'translateX(0)' }], 380, E2); A(lay[1], [{ transform: 'translateX(-101%)' }, { transform: 'translateX(0)' }], 380, E2, 80).onfinish = function () { swap();
+        A(lay[1], [{ transform: 'translateX(0)' }, { transform: 'translateX(101%)' }], 380, E2); out(A(lay[0], [{ transform: 'translateX(0)' }, { transform: 'translateX(101%)' }], 380, E2, 80)) }; return }
+    if (t === 'circle') { lay.push(H('div', 'tr3', null, deckEl, 'background:' + C.main + ';clip-path:circle(0% at 50% 50%)'));
+      A(lay[0], [{ clipPath: 'circle(0% at 50% 50%)' }, { clipPath: 'circle(75% at 50% 50%)' }], 420, E2).onfinish = function () { swap();
+        out(A(lay[0], [{ clipPath: 'circle(75% at 50% 50%)' }, { clipPath: 'circle(0% at 50% 50%)' }], 400, E2)) }; return }
+    for (var k = 0; k < 6; k++) lay.push(H('div', 'tr3', null, deckEl, 'background:' + (k % 2 ? C.dark : C.main) + ';left:' + (k * 1280 / 6).toFixed(1) + 'px;width:' + (1280 / 6 + 1).toFixed(1) + 'px;right:auto;transform:translateY(-101%)'));
+    var last; lay.forEach(function (e, k) { last = A(e, [{ transform: 'translateY(-101%)' }, { transform: 'translateY(0)' }], 340, E2, k * 55) });
+    last.onfinish = function () { swap(); var l2; lay.forEach(function (e, k) { l2 = A(e, [{ transform: 'translateY(0)' }, { transform: 'translateY(101%)' }], 340, E2, k * 55) }); out(l2) }; return }
+  if (t === 'tear') { b.style.zIndex = 2; var Z = [0, 22, 6, 30, 10, 26, 2, 18];
+    var tp = function (x) { var p = [x + 'px 0px', '1320px 0px', '1320px 720px']; for (var i = 16; i >= 0; i--) p.push((x + Z[i % 8]) + 'px ' + (i * 45) + 'px'); return 'polygon(' + p.join(',') + ')' };
+    A(a, [{ opacity: 1 }, { opacity: .55 }], 620, 'linear'); A(b, [{ clipPath: tp(1320) }, { clipPath: tp(-40) }], 640, 'cubic-bezier(.65,0,.35,1)').onfinish = function () { done() }; return }
   if (t === 'num') { var pr = carryPair(a, b); if (pr) { var sEl = pr[0], tEl = pr[1], rs = rectIn(sEl), rt = rectIn(tEl);
       var fsS = parseFloat(getComputedStyle(sEl).fontSize) || 16, fsT = parseFloat(getComputedStyle(tEl).fontSize) || 16, fill = getComputedStyle(tEl).fill, colT = (fill && fill !== 'none' && fill.indexOf('url') < 0) ? fill : getComputedStyle(tEl).color;
       var f = H('div', 'fly3', null, deckEl, 'left:' + (rs.x + rs.w / 2) + 'px;top:' + (rs.y + rs.h / 2) + 'px;font-size:' + fsS + 'px;color:' + C.dark + ';transform:translate(-50%,-50%)'); f.textContent = sEl.textContent;

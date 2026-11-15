@@ -646,7 +646,7 @@ def lint3(deck, lib):
         if run == 3 and k not in ("cover", "part", "end") and not s.get("appendix"):
             add(i, "같은 종류 연속", "확인할 것", f"{k} 3장째 — 2장까지 권고")
         for f, why in OLD_FIELDS.items():
-            if f in s and not (f == "title" and k in ("cover", "part", "statement", "term", "further", "discuss")):
+            if f in s and not (f == "title" and (k in ("cover", "part", "statement", "term", "further", "discuss", "headline", "label", "rankroll") or (k == "table" and s.get("layout") in ("grow", "marker", "years")))):
                 add(i, "판 2 칸", "고칠 것", f"`{f}` — {why}")
         txt = strings_of(s)
         alltxt = " ".join(t for _, t in txt)

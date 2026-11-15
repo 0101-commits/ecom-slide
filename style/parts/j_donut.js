@@ -19,7 +19,30 @@ function mini(svg, x, y, w, ht, cf, t0) { var g = h.at(svg, t0, { 'data-fx': 'fa
   L.forEach(function (l, i) { T(g, px + sl * (i + .5), py + ph + 20, l, { 'text-anchor': 'middle', 'font-size': 12.5, fill: C.mute }) });
   var lx = px; ser.forEach(function (q, j) { if (!q.name) return; var c = h.col(q.color || (j ? 'cmp' : 'main')), t = q.name + (unit ? ', ' + unit : ''); E('rect', { x: lx, y: py + ph + 32, width: 12, height: 10, rx: 2, fill: c }, g); T(g, lx + 17, py + ph + 42, t, { 'font-size': 12.5, fill: C.sub }); lx += 34 + h.textW(t, 12.5) });
   return g }
+/* 5판 P5 H : fill — 한 고리를 시계 방향으로 채움(첫 조각 = 강조) + 강조 조각에서 뻗은 큰 값 라벨 · 오른쪽 조각 목록 (짙은 바탕 됨)
+   rings[{label,value,sub,color}] 합이 100 아래면 나머지는 「그 밖」(rest) · centerText[줄] · rest(이름) */
+function fillRing(bd, s, ctx) { var P = ctx.P, R = (s.rings || []).slice(0, 4), unit = s.unit == null ? '%' : s.unit, dec = s.dec != null ? s.dec : 1, svg = ctx.svg(512), deep = ctx.dark, bgc = deep ? P.bg : '#FFFFFF';
+  var sum = 0; R.forEach(function (q) { sum += +q.value }); var rest = Math.max(0, 100 - sum); if (rest > .05) R.push({ label: s.rest || '그 밖', value: +rest.toFixed(dec), rest: 1 });
+  var cx = 320, cy = 256, r = 186, sw = 88, T0 = 300, pal = ['main', 'cmp', 'g40', 'g65'], cum = 0, segs = [];
+  E('circle', { cx: cx, cy: cy, r: r, fill: 'none', stroke: P.light, 'stroke-width': sw }, h.lv(svg, 1));
+  R.forEach(function (q, i) { var v = +q.value, a0 = -90 + 3.6 * cum, a1 = a0 + 3.6 * v, col = q.rest ? P.light : pc(P, q.color || pal[i % pal.length]);
+    if (!q.rest) E('path', { d: arc(cx, cy, r, a0, a1 - (v >= 99.9 ? .02 : 0)), fill: 'none', stroke: col, 'stroke-width': sw, 'stroke-linecap': 'butt', 'data-key': q.label, 'data-at': T0 + cum * 12, 'data-fx': 'draw', 'data-ms': Math.max(240, v * 12) }, svg);
+    segs.push({ q: q, col: col, mid: (a0 + a1) / 2, v: v }); cum += v });
+  var sp = h.at(svg, T0 + 1250, { 'data-fx': 'fade', 'data-ms': 300 }); cum = 0; segs.forEach(function (g) { var a = (-90 + 3.6 * cum) * Math.PI / 180; cum += g.v;
+    E('line', { x1: cx + (r - sw / 2 - 1) * Math.cos(a), y1: cy + (r - sw / 2 - 1) * Math.sin(a), x2: cx + (r + sw / 2 + 1) * Math.cos(a), y2: cy + (r + sw / 2 + 1) * Math.sin(a), stroke: bgc, 'stroke-width': 3 }, sp) });
+  (s.centerText || []).forEach(function (t, k, A) { T(h.lv(svg, 1), cx, cy + (k - (A.length - 1) / 2) * 24 + 5, t, { 'text-anchor': 'middle', 'font-size': k ? 15 : 18, 'font-weight': k ? 400 : 700, fill: k ? P.mute : P.sub }) });
+  var px = 660, n = segs.length, heroH = 168, oh = 92, y0 = 256 - (heroH + oh * (n - 1)) / 2, hy = y0 + 70, g0 = segs[0];
+  var hm = g0.mid * Math.PI / 180, p0 = [cx + (r + sw / 2 + 6) * Math.cos(hm), cy + (r + sw / 2 + 6) * Math.sin(hm)], p1 = [p0[0] + 30 * Math.cos(hm), Math.max(12, p0[1] + 30 * Math.sin(hm))];
+  E('path', { d: 'M' + p0[0] + ' ' + p0[1] + ' L' + p1[0] + ' ' + p1[1] + ' H' + (px - 26) + ' V' + hy + ' H' + (px - 12), fill: 'none', stroke: P.main, 'stroke-width': 2 }, h.at(svg, T0 + 900, { 'data-fx': 'fade', 'data-ms': 400 }));
+  segs.forEach(function (g, i) { var q = g.q, y = i ? y0 + heroH + (i - 1) * oh : y0, big = i === 0, fs = big ? 100 : 42, ty = big ? y + 118 : y + 72, gg = h.at(svg, T0 + 1100 + i * 200, { 'data-fx': 'right', 'data-ms': 520, 'data-key': q.label }); if (big) gg.setAttribute('data-at', T0 + 1000);
+    E('rect', { x: px, y: y + (big ? 6 : 4), width: big ? 22 : 18, height: big ? 22 : 18, rx: 3, fill: g.col, stroke: q.rest ? P.axis : 'none' }, gg); T(gg, px + (big ? 34 : 28), y + (big ? 24 : 19), q.label, { 'font-size': big ? 24 : 20, 'font-weight': 700, fill: P.ink });
+    var vv = h.nf(g.v, dec); T(gg, px, ty, vv, { 'font-size': fs, 'font-weight': 700, fill: big ? P.dark : P.sub, 'letter-spacing': '-0.02em', 'data-fx': 'count', 'data-count': g.v, 'data-dec': dec });
+    var vw = h.textW(vv, fs, 1) * .97 + 6; T(gg, px + vw, ty, unit, { 'font-size': fs * .45, 'font-weight': 700, fill: big ? P.dark : P.sub });
+    if (q.sub) T(gg, big ? px : px + vw + fs * .45 + 28, big ? ty + 30 : ty - 2, q.sub, { 'font-size': big ? 18 : 16, fill: P.mute }) });
+  ctx.root.setAttribute('data-gap', 300) }
+function pc(P, c) { return P[c] || h.col(c) }
 ECOM.parts.donut = function (bd, s, ctx) {
+  if (s.layout === 'fill') return fillRing(bd, s, ctx);
   var root = ctx.root, R = (s.rings || []).slice(0, 4), k = R.length; if (!k) return;
   var unit = s.unit == null ? '%' : s.unit, dec = s.dec != null ? s.dec : (s.decimals != null ? s.decimals : 1), half = !!s.half, hero = s.hero == null ? 0 : s.hero, svg = ctx.svg(512);
   var side = s.side, SW = side ? 400 : 0, RW = 1168 - (side ? SW + 40 : 0), rt = s.ringTitle, top = rt ? 34 : 6, cw = RW / k, T0 = 400, strip = R.some(function (q) { return q.strip }), subH = R.some(function (q) { return q.sub2 }) ? 50 : 30;
@@ -48,4 +71,5 @@ ECOM.parts.donut = function (bd, s, ctx) {
   if (side) mini(svg, 1168 - SW, top, SW, 512 - top - 4, side, T0 + k * 260 + 900);
   root.setAttribute('data-gap', 300);
 };
+ECOM.parts.donut.layouts = ['default', 'fill']; ECOM.parts.donut.dark = ['fill'];
 })();

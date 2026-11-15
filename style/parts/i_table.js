@@ -47,7 +47,70 @@ function heat(bd, s, ctx) {
     var q = st[j]; return '<td style="border-bottom:0;vertical-align:bottom;padding:4px 14px 0"><div style="height:12px;border-radius:3px;background:linear-gradient(90deg,' + RA + ',' + RB + ');border:1px solid ' + P.line + '"></div><div style="display:flex;justify-content:space-between;font-size:12.5px;color:' + P.mute + ';margin-top:4px"><span>' + h.nf(q.lo, q.dec) + '</span><span>' + h.nf(q.hi, q.dec) + '</span></div></td>' }).join('') + '</tr></tfoot></table>'
     + (arrow ? '<p style="margin:10px 0 0;font-size:13.5px;color:' + P.mute + '" data-b="3">화살표(→) 칸은 끝 값을 기준으로 칠함</p>' : '');
   w.innerHTML = html; ctx.root.setAttribute('data-stg', 80) }
-var LAY = { heat: heat }, baseFn = base;
+/* ── 영상 장면 배치(5판 P5) : 끝 모습이 기본 DOM, 덧붙기 · 긋기 · 자라기는 _hook 안에서만 ──
+   grow   : 행이 하나씩 덧붙고 강조 칸이 마지막에 튐 · 칸 title · cols[{t,w}] · rows[[칸…]] · marks[[행,열]…] · legend · after
+   marker : 한 행의 이름 칸에 노랑 형광이 그어지고 행 띠가 깔림 · 칸 title · cols · rows · marker{row,col} · legend · after
+   years  : 해 열이 왼쪽부터 채워지고 한 줄(bar.row)의 막대가 길어짐 · 칸 title · cols[항목,해…] · rows · bar{row,max,unit} · legend · after */
+var YEL = '#FFE066', H = h.H;
+if (!document.getElementById('i-table-css')) { var tst = document.createElement('style'); tst.id = 'i-table-css';
+  tst.textContent = '.tg-ttl{display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:800;letter-spacing:-.01em;border-radius:12px;box-sizing:border-box;margin:0 auto}'
+    + '.tg-r{display:grid;align-items:center;box-sizing:border-box;border-bottom:1px solid rgba(128,140,134,.32);background:rgba(128,140,134,.055);font-size:22px;font-variant-numeric:tabular-nums;position:relative}'
+    + '.tg-r>span{padding:0 14px;text-align:center;position:relative;z-index:1}.tg-r>span:first-child{text-align:left;font-weight:700}'
+    + '.tg-r.hd{font-size:16px;font-weight:700;border-bottom:2px solid currentColor}'
+    + '.tg-m{background:linear-gradient(' + YEL + ',' + YEL + ') no-repeat 0 62%/100% 62%;font-weight:800;padding:0 4px;margin:0 -4px;border-radius:3px;-webkit-box-decoration-break:clone;box-decoration-break:clone}'
+    + '.tg-lg{display:flex;gap:22px;align-items:center;font-size:13.5px;font-weight:600}.tg-lg i{display:inline-block;width:24px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:8px}'
+    + '.tg-af{font-size:20px;font-weight:700;text-align:center;line-height:1.4}'; document.head.appendChild(tst) }
+function tgHook(ctx, items) { ctx.root._hook = function () { if (h.RM()) return 0; var end = 0;
+  items.forEach(function (it) { if (!it.el || !it.el.animate) return; var a = it.el.animate(it.kf, { duration: it.ms, delay: it.at, easing: it.ease || 'cubic-bezier(.4,0,.2,1)', fill: 'both' }); a._fx = 1; end = Math.max(end, it.at + it.ms) }); return end } }
+/* 틀 : 제목 알약 + 머리 줄 + 행 + 아래 범례 · 맺음 줄. 열 너비 w(px) 없으면 1fr */
+function tgBuild(bd, s, ctx, extra) { var P = ctx.P, cols = s.cols || [], rows = s.rows || [], n = rows.length, items = [];
+  var gt = 'grid-template-columns:' + cols.map(function (c) { return c.w ? h.num(c.w) + 'px' : '1fr' }).join(' ');
+  var ttl = s.title ? 62 : 0, hd = 54, ft = 44 + (s.after ? 36 : 0), rh = Math.min(86, Math.floor((512 - ttl - hd - ft) / Math.max(1, n)));
+  var y = 0, tt = null;
+  if (s.title) { tt = H('div', 'tg-ttl', h.md(s.title), bd, 'position:absolute;left:50%;transform:translateX(-50%);top:0;height:50px;padding:0 34px;background:' + (ctx.dark ? P.g18 : P.dark) + ';color:' + (ctx.dark ? '#fff' : '#fff')); y = ttl }
+  var box = H('div', null, null, bd, 'position:absolute;left:0;right:0;top:' + y + 'px;color:' + P.ink);
+  var hr = H('div', 'tg-r hd', cols.map(function (c, j) { return '<span' + (j ? '' : ' style="font-weight:700"') + '>' + h.esc(c.t) + '</span>' }).join(''), box, gt + ';height:' + hd + 'px;color:' + P.sub);
+  var rr = rows.map(function (r, i) { var cells = r.c || r, e = H('div', 'tg-r', cells.map(function (v) { return '<span>' + h.md(v) + '</span>' }).join(''), box, gt + ';height:' + rh + 'px'); e.setAttribute('data-key', String(cells[0] && cells[0].t || cells[0])); return e });
+  var fy = y + hd + n * rh + 14;
+  if (s.legend) H('div', 'tg-lg', '<span style="color:' + P.sub + '"><i style="background:' + (s.legend[0] === '#B4461E' ? P.warn : s.legend[0]) + (s.legend[2] ? ';border:1px solid ' + s.legend[2] : '') + '"></i>' + h.esc(s.legend[1]) + '</span>', bd, 'position:absolute;left:0;top:' + fy + 'px');
+  var af = s.after ? H('div', 'tg-af', h.md(s.after), bd, 'position:absolute;left:0;right:0;top:' + (fy + 30) + 'px;color:' + P.ink) : null;
+  ctx.root.setAttribute('data-stg', 80);
+  return { box: box, hr: hr, rows: rr, af: af, tt: tt, P: P, rh: rh, items: items, fy: fy } }
+function grow(bd, s, ctx) { var T = tgBuild(bd, s, ctx), P = T.P, items = T.items, n = T.rows.length;
+  if (T.tt) items.push({ el: T.tt, at: 0, ms: 450, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  items.push({ el: T.hr, at: 150, ms: 450, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  T.rows.forEach(function (e, i) { items.push({ el: e, at: 500 + i * 430, ms: 500, kf: [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'translateY(0)' }] }) });
+  var t1 = 500 + n * 430 + 100, wr = ctx.dark ? '#5A2E1E' : P.warn;
+  (s.marks || []).forEach(function (m, q) { var e = T.rows[m[0]]; if (!e) return; var c = e.children[m[1]]; if (!c) return;
+    c.style.cssText += ';background:' + P.warn + ';color:' + (ctx.dark ? '#1D2521' : '#fff') + ';font-weight:800;border-radius:8px;margin:6px 8px;padding:0 6px;display:flex;align-items:center;justify-content:center';
+    items.push({ el: c, at: t1 + q * 250, ms: 450, ease: 'cubic-bezier(.2,.7,.2,1)', kf: [{ transform: 'scale(.6)', opacity: .2 }, { transform: 'scale(1)', opacity: 1 }] }) });
+  if (T.af) items.push({ el: T.af, at: t1 + 500, ms: 500, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  tgHook(ctx, items) }
+function marker(bd, s, ctx) { var T = tgBuild(bd, s, ctx), P = T.P, items = T.items, m = s.marker || {}, e = T.rows[m.row];
+  if (T.tt) items.push({ el: T.tt, at: 0, ms: 450, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  T.rows.forEach(function (r, i) { if (i !== m.row) r.style.color = ctx.dark ? P.sub : P.mute });
+  if (e) { var bandc = ctx.dark ? '#F2C46B' : '#FFF3B0', band = H('i', null, null, e, 'position:absolute;left:0;right:0;top:3px;bottom:3px;background:' + bandc + ';border-radius:6px;z-index:0');
+    e.style.color = '#1D2521'; var c = e.children[m.col == null ? 0 : m.col]; c.innerHTML = '<mark class="tg-m" style="color:#1D2521' + (ctx.dark ? ';background:none' : '') + '">' + c.innerHTML + '</mark>';
+    for (var q = 0; q < e.children.length; q++) e.children[q].style.fontWeight = '800';
+    items.push({ el: band, at: 500, ms: 700, kf: [{ transform: 'scaleX(0)', transformOrigin: '0 50%' }, { transform: 'scaleX(1)', transformOrigin: '0 50%' }] });
+    items.push({ el: c.firstChild, at: 900, ms: 800, kf: [{ backgroundSize: '0% 62%' }, { backgroundSize: '100% 62%' }] }) }
+  if (T.af) items.push({ el: T.af, at: 1900, ms: 500, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  tgHook(ctx, items) }
+function years(bd, s, ctx) { var T = tgBuild(bd, s, ctx), P = T.P, items = T.items, cols = s.cols || [], bar = s.bar || {}, hl = s.hl, rows = s.rows || [], mxv = 0;
+  if (T.tt) items.push({ el: T.tt, at: 0, ms: 450, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  rows.forEach(function (r, i) { if (i === bar.row) (r.c || r).slice(1).forEach(function (v) { mxv = Math.max(mxv, Math.abs(parseFloat(String(v).replace(/\*\*/g, '').replace(/[,−]/g, function (z) { return z === '−' ? '-' : '' }).replace(/[^0-9.\-]/g, '')) || 0)) }) });
+  mxv = bar.max || mxv || 1;
+  [T.hr].concat(T.rows).forEach(function (e, ri) { var i = ri - 1; var lab = e.children[0];
+    if (i === hl && lab) lab.style.cssText += ';background:' + P.warn + ';color:' + (ctx.dark ? '#1D2521' : '#fff') + ';border-radius:8px;margin:6px 0;padding:0 14px;display:flex;align-items:center;font-weight:800';
+    for (var j = 1; j < e.children.length; j++) { var c = e.children[j]; items.push({ el: c, at: 400 + (j - 1) * 800, ms: 500, kf: [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }] });
+      if (i === bar.row) { var v = Math.abs(parseFloat(String(((rows[i].c || rows[i])[j])).replace(/\*\*/g, '').replace(/−/g, '-').replace(/[^0-9.\-]/g, '')) || 0), bw = Math.min(1, v / mxv);
+        c.style.flexDirection = 'column'; c.style.display = 'flex'; c.style.justifyContent = 'center'; c.style.gap = '6px';
+        c.insertAdjacentHTML('beforeend', '<u style="display:block;height:14px;border-radius:4px;background:' + (j === cols.length - 1 ? P.main : P.g40) + ';width:' + (bw * 100).toFixed(1) + '%;align-self:flex-start;text-decoration:none"></u>');
+        items.push({ el: c.lastChild, at: 400 + (j - 1) * 800 + 450, ms: 700, kf: [{ transform: 'scaleX(0)', transformOrigin: '0 50%' }, { transform: 'scaleX(1)', transformOrigin: '0 50%' }] }) } } });
+  if (T.af) items.push({ el: T.af, at: 400 + (cols.length - 1) * 800 + 700, ms: 500, kf: [{ opacity: 0 }, { opacity: 1 }] });
+  tgHook(ctx, items) }
+var LAY = { heat: heat, grow: grow, marker: marker, years: years }, baseFn = base;
 ECOM.parts.table = function (bd, s, ctx) { var f = LAY[s.layout]; return f ? f(bd, s, ctx) : baseFn(bd, s, ctx) };
-ECOM.parts.table.layouts = ['default', 'bars', 'heat'];
+ECOM.parts.table.layouts = ['default', 'bars', 'heat', 'grow', 'marker', 'years'];
+ECOM.parts.table.dark = ['grow', 'marker', 'years'];
 })();

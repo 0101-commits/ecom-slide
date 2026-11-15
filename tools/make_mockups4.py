@@ -30,6 +30,7 @@ assert not dup, f"번호 겹침 {dup}"
 FAM = {"F01": "선 · 시계열", "F02": "두 지표 · 이중축", "F03": "막대 · 크기 비교", "F04": "예상 vs 실제 · 발표", "F05": "인과 사슬 · 흐름도", "F06": "돈 · 물자 흐름",
        "F07": "지도", "F08": "사건 타임라인 · 일정", "F09": "역사 사례 비유", "F10": "제도 · 용어 · 구조", "F11": "기업 · 산업 비교", "F12": "가치사슬 · 공급망",
        "F13": "시나리오 · 조건 분기", "F14": "인물 · 발언", "F15": "나라 비교", "F16": "구성 분해", "F17": "찬반 · 쟁점", "F18": "순위 · 숫자", "F19": "채권 · 금리 구조", "F20": "건강 · 제약"}
+FAM["p5"] = "영상 문법(5판)"
 GOT = datetime.now().strftime("%Y.%m.%d")
 lib = {"version": 5, "v5": len(v5), "got": GOT, "count": len(kept) + len(new), "kept": len(kept), "new": len(new), "families": FAM, "missing": miss, "mockups": kept + new}
 (LIB / "mockups.json").write_text(json.dumps(lib, ensure_ascii=False), encoding="utf-8")
@@ -39,7 +40,7 @@ def example(m):
     return "예시" in json.dumps([m["slide"].get("eyebrow"), m["slide"].get("foot")], ensure_ascii=False)
 
 
-rows = ["# 목업 색인(5판)", "", f"총 {lib['count']}종 = 3판에서 남김 {len(kept)} + 4판 새 목업 {len(new) - len(v5)} + 5판 변형 · 재료 {len(v5)}(V 번호 · 같은 자료 다른 배치 = layout) · 만든 날 {GOT} · 만든 도구 `tools/make_mockups4.py`",
+rows = ["# 목업 색인(5판)", "", f"총 {lib['count']}종 = 3판에서 남김 {len(kept)} + 4판 새 목업 {len(new) - len(v5)} + 5판 {len(v5)}(V001~V058 변형 · 재료 = 같은 자료 다른 배치 layout · V101~ 영상 문법 새 부품 · 배치 · 장 넘김) · 만든 날 {GOT} · 만든 도구 `tools/make_mockups4.py`",
         "새 목업 숫자는 공개 통계 스냅샷(`data/snap4` · `data/snap`)에서 계산하고, 공개 통계가 없는 장은 「예시 값」으로 표시하고 이름을 익명으로 둠.", "",
         "| 번호 | 계열 | kind | 모양 | 주제 | 숫자 |", "|---|---|---|---|---|---|"]
 LAY = {m["id"]: m.get("layout") for m in v5}

@@ -215,7 +215,8 @@ def normalize(s, lib):
     walk(s)
 
 
-GEO_LAY = {"map": ("region", "bubbles", "lanes"), "kpi": ("map",), "hub": ("map",), "discuss": ("map",)}
+GEO_LAY = {"map": ("region", "bubbles", "lanes"), "kpi": ("map",), "hub": ("map",), "discuss": ("map",),
+           "mapbadge": ("*",), "mapval": ("*",), "mapspread": ("*",)}  # "*" = 배치와 상관없이 늘 지도
 
 
 def derive(s, lib):
@@ -276,7 +277,8 @@ def add_geo(deck, lib):
     used = False
     for s in deck.get("slides", []):
         g = s.get("geo") if isinstance(s.get("geo"), dict) else None
-        lay = s.get("layout") in GEO_LAY.get(s.get("kind"), ())
+        gl = GEO_LAY.get(s.get("kind"), ())
+        lay = "*" in gl or s.get("layout") in gl
         if s.get("kind") != "fullmap" and not g and not lay:
             continue
         if lay and not (g and g.get("region")):
