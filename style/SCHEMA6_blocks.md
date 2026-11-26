@@ -74,13 +74,16 @@
 | `warehouse` | 창고(박공 지붕) | `x y w d h rh` |
 | `truck` | 화물차 | `x y tone` |
 | `turbine` | 풍력 발전기 | `x y h blade` |
+| `field` · `greenhouse` · `silo` · `tractor` | 밭 · 온실 · 저장고 · 트랙터 | `x y w d rows crop soil` · `x y w d h rh` · `x y r h` · `x y` |
+| `hospital` · `ambulance` | 병원(붉은 십자) · 구급차 | `x y w d h floors` · `x y` |
+| `tower` · `house` · `tree` · `road` · `car` | 고층 건물 · 집(박공) · 나무 · 도로 · 승용차 | `x y w d floors` · `x y w d h rh roof` · `x y s` · `x y len w dir` · `x y tone` |
 
 - 재료마다 `tag`(흰 이름 칸 + 세로 지시선), `pin`(번호)을 붙일 수 있다.
 - 블록 칸: `u`(칸 크기 px) · `oxp` `oyp`(원점, 본문 칸 안 px) · `panel:false`(흰 바탕) · `gridlines`(옅은 바닥 격자) · `callouts[{at[a, b, z], x, w, t, v, s, tone}]`(위쪽 숫자 칸 + 지시선).
 - `bleed:true`: 장 전체(1280×720)에 깔고 헤드메시지와 각주 자리는 흰색으로 서서히 흐림(`fadeTop` `fadeBot` = 본문 칸 기준 y 구간, 기본 [-30, 50] · [470, 520]).
 - 도면(`plan`) 재료: `walls[[x0, y0, x1, y1, 8|5]]`(짙은 초록 벽) · `windows[[x0, y0, x1, y1]]`(세 줄) · `doors[{x, y, r, a0, a1}]` · `furniture[{k:"bed|sofa|table|tv|counter|toilet", x, y, w, h, n, bx, by}]` · `rooms[{x, y, t, s, small}]`(방 이름 + 면적). 치수 글 16px.
 - 인체(`body` 화면 종류): 지시선은 직각(가로 → 세로 → 가로), 설명 칸은 테두리 없는 옅은 면.
-- 시험: `style/demo6_scene.json` 4장(견본 공급 경로 · 같은 장 장 전체 배치 · 제조업 수출 경로 개념도 · 견본 84㎡ 평면도).
+- 시험: `style/demo6_scene.json` 4장(견본 공급 경로 · 같은 장 장 전체 배치 · 제조업 수출 경로 개념도 · 견본 84㎡ 평면도 · 농산물이 도시에 이르는 경로 개념도).
 
 ## 아이콘과 색 틀
 
@@ -88,6 +91,6 @@
 - Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
 - `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
 - 지도와 인체는 엔진의 기존 화면 종류(`fullmap` · `map` · `body` 등)를 쓴다.
-- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림 재료는 산업 · 물류 장면 위주(농업 · 의료 · 도시 생활 장면 재료는 더 만들 몫).
+- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림 재료는 산업 · 물류 · 농업 · 의료 · 도시 장면.
 
 그림형 시험 덱: `style/demo6_picture.json`(판 4 그림형 명세 15장). 시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).

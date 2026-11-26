@@ -430,6 +430,43 @@ function isoMore(K0, g, P, u) { var box = K0.box, cyl = K0.cyl, poly = K0.poly, 
       [-90, 30, 150].forEach(function (deg) { var r = deg * Math.PI / 180; line([H, [H[0] + Math.cos(r) * L, H[1] + Math.sin(r) * L]], '#FFFFFF', 7); line([H, [H[0] + Math.cos(r) * L, H[1] + Math.sin(r) * L]], '#B9CCC4', 1.5) });
       E('circle', { cx: H[0], cy: H[1], r: 5, fill: '#55625C' }, g); return [H[0], H[1] - L] } } }
 
+/* 장면 재료 3차 — 농업(field · greenhouse · silo · tractor) · 의료(hospital · ambulance) · 도시(tower · house · tree · road · car) */
+function isoMore2(K0, g, P, u) { var box = K0.box, cyl = K0.cyl, poly = K0.poly, line = K0.line, winL = K0.winL, winR = K0.winR;
+  function gable(x, y, w, d, h, rh, tone, roof) { var c3 = PAL5[tone || 'w'], r3 = PAL5[roof || 'm']; box(x, y, w, d, h, tone || 'w');
+    poly([P(x, y, h), P(x + w, y, h), P(x + w, y + d / 2, h + rh), P(x, y + d / 2, h + rh)], r3[0], null, r3[1]);
+    poly([P(x, y + d, h), P(x + w, y + d, h), P(x + w, y + d / 2, h + rh), P(x, y + d / 2, h + rh)], r3[1], null, r3[2]); poly([P(x + w, y, h), P(x + w, y + d, h), P(x + w, y + d / 2, h + rh)], c3[2]) }
+  return {
+    field: function (it) { var x = it.x || 0, y = it.y || 0, w = it.w || 4, d = it.d || 3, n = it.rows || 7, c = it.crop || '#57B090';
+      poly([P(x, y), P(x + w, y), P(x + w, y + d), P(x, y + d)], it.soil || '#E9DFC8', null, '#D9CBA8');
+      for (var i = 0; i < n; i++) { var b = y + (i + .5) * d / n; line([P(x + .15, b), P(x + w - .15, b)], c, Math.max(4, u * d / n * .42)) } return P(x + w / 2, y + d / 2) },
+    greenhouse: function (it) { var x = it.x || 0, y = it.y || 0, w = it.w || 2.6, d = it.d || 1.2, h = it.h || .55, rh = it.rh || .45;
+      poly([P(x, y + d, 0), P(x + w, y + d, 0), P(x + w, y + d, h), P(x, y + d, h)], '#EAF6F1', null, '#99C7B9'); poly([P(x + w, y, 0), P(x + w, y + d, 0), P(x + w, y + d, h), P(x + w, y, h)], '#D3EDE3', null, '#99C7B9');
+      poly([P(x, y, h), P(x + w, y, h), P(x + w, y + d / 2, h + rh), P(x, y + d / 2, h + rh)], '#F3FBF8', null, '#99C7B9'); poly([P(x, y + d, h), P(x + w, y + d, h), P(x + w, y + d / 2, h + rh), P(x, y + d / 2, h + rh)], '#E1F3EC', null, '#99C7B9');
+      poly([P(x + w, y, h), P(x + w, y + d, h), P(x + w, y + d / 2, h + rh)], '#D3EDE3', null, '#99C7B9');
+      for (var i = 1; i < 6; i++) { var a = x + w * i / 6; line([P(a, y + d, 0), P(a, y + d, h), P(a, y + d / 2, h + rh)], '#99C7B9', 1.5) } return P(x + w / 2, y + d / 2, h + rh) },
+    silo: function (it) { var x = it.x || 0, y = it.y || 0, r = it.r || .45, h = it.h || 2.2, T0 = P(x, y, h), ra = r * u * 1.2247;
+      cyl(x, y, r, h, it.tone || 's', 0, 3); E('path', { d: 'M' + (T0[0] - ra) + ',' + T0[1] + ' A' + ra + ',' + ra * .8 + ' 0 0 1 ' + (T0[0] + ra) + ',' + T0[1] + ' Z', fill: '#DCE7E2', stroke: '#B9CCC4', 'stroke-width': 1.5 }, g); return [T0[0], T0[1] - ra * .8] },
+    tractor: function (it) { var x = it.x || 0, y = it.y || 0; box(x, y, 1.0, .6, .38, 'r', .22); box(x + .1, y + .05, .45, .5, .45, 'r', .6, false); winL(x + .16, x + .5, y + .55, .7, .98, '#DCE7E2');
+      [[x + .2, .32], [x + .85, .22]].forEach(function (q) { var c = P(q[0], y + .6, q[1]); E('circle', { cx: c[0], cy: c[1], r: q[1] * u * .9, fill: '#343E3A', stroke: '#55625C', 'stroke-width': 3 }, g) }); return P(x + .5, y + .3, 1.05) },
+    hospital: function (it) { var x = it.x || 0, y = it.y || 0, w = it.w || 2.4, d = it.d || 1.6, h = it.h || 2.2, fl = it.floors || 4;
+      box(x, y, w, d, h, 'w'); for (var f = 0; f < fl; f++) { var z1 = h * (f + .3) / fl, z2 = h * (f + .72) / fl; for (var i = 0; i < 4; i++) { var a1 = x + .18 + i * (w - .36) / 4; winL(a1, a1 + (w - .36) / 4 * .62, y + d, z1, z2, '#C9D9FA') } for (var j = 0; j < 2; j++) { var b1 = y + .16 + j * (d - .32) / 2; winR(x + w, b1, b1 + (d - .32) / 2 * .62, z1, z2, '#A5BAD4') } }
+      var cc = P(x + w / 2, y + d / 2, h), s = u * .26; E('rect', { x: cc[0] - s * 1.6, y: cc[1] - s * 1.6 - 26, width: s * 3.2, height: s * 3.2, rx: 4, fill: '#FFFFFF', stroke: '#DCE7E2' }, g);
+      E('rect', { x: cc[0] - s * .4, y: cc[1] - s * 1.2 - 26, width: s * .8, height: s * 2.4, fill: '#D9534F' }, g); E('rect', { x: cc[0] - s * 1.2, y: cc[1] - s * .4 - 26, width: s * 2.4, height: s * .8, fill: '#D9534F' }, g); return [cc[0], cc[1] - s * 1.6 - 26] },
+    ambulance: function (it) { var x = it.x || 0, y = it.y || 0; box(x, y, 1.5, .62, .66, 'w', .16); box(x + 1.55, y, .5, .62, .5, 'w', .16, false);
+      poly([P(x, y + .62, .42), P(x + 1.5, y + .62, .42), P(x + 1.5, y + .62, .52), P(x, y + .62, .52)], '#D9534F'); winL(x + 1.68, x + 1.98, y + .62, .42, .6, '#A5BAD4');
+      [x + .3, x + 1.2, x + 1.8].forEach(function (a) { var q = P(a, y + .62, .14); E('ellipse', { cx: q[0], cy: q[1], rx: 4.5, ry: 3.5, fill: '#343E3A' }, g) }); return P(x + .75, y + .3, .82) },
+    tower: function (it) { var x = it.x || 0, y = it.y || 0, w = it.w || 1.2, d = it.d || 1.2, fl = it.floors || 10, h = it.h || fl * .32; box(x, y, w, d, h, it.tone || 'w');
+      for (var f = 0; f < fl; f++) { var z1 = h * (f + .25) / fl, z2 = h * (f + .7) / fl; for (var i = 0; i < 3; i++) { var a1 = x + .12 + i * (w - .24) / 3; winL(a1, a1 + (w - .24) / 3 * .6, y + d, z1, z2, C.g40) } for (var j = 0; j < 3; j++) { var b1 = y + .12 + j * (d - .24) / 3; winR(x + w, b1, b1 + (d - .24) / 3 * .6, z1, z2, C.g65) } }
+      return P(x + w / 2, y + d / 2, h) },
+    house: function (it) { var x = it.x || 0, y = it.y || 0, w = it.w || 1.2, d = it.d || 1.0, h = it.h || .6; gable(x, y, w, d, h, it.rh || .45, it.tone || 'w', it.roof || 'r'); winL(x + .2, x + .5, y + d, .25, .48, C.g65); winR(x + w, y + .3, y + .7, .25, .5, C.g40); return P(x + w / 2, y + d / 2, h + (it.rh || .45)) },
+    tree: function (it) { var x = it.x || 0, y = it.y || 0, s = it.s || 1, B = P(x, y), r = .36 * u * s, top = P(x, y, .9 * s);
+      E('ellipse', { cx: B[0] + 6, cy: B[1] + 3, rx: r * .9, ry: r * .45, fill: C.dark, opacity: .13 }, g); line([B, P(x, y, .45 * s)], '#8A6A4A', 4, { cap: 'butt' });
+      E('circle', { cx: top[0], cy: top[1], r: r, fill: '#57B090' }, g); E('circle', { cx: top[0] - r * .3, cy: top[1] - r * .3, r: r * .45, fill: '#7FC4A8' }, g); return [top[0], top[1] - r] },
+    road: function (it) { var x = it.x || 0, y = it.y || 0, L = it.len || 10, along = it.dir !== 'b', W = it.w || 1;
+      if (along) { poly([P(x, y), P(x + L, y), P(x + L, y + W), P(x, y + W)], '#DDE3E0'); line([P(x, y + W / 2), P(x + L, y + W / 2)], '#FFFFFF', 3, { dash: '10 10', cap: 'butt' }) }
+      else { poly([P(x, y), P(x + W, y), P(x + W, y + L), P(x, y + L)], '#DDE3E0'); line([P(x + W / 2, y), P(x + W / 2, y + L)], '#FFFFFF', 3, { dash: '10 10', cap: 'butt' }) } return P(x + (along ? L / 2 : W / 2), y + (along ? W / 2 : L / 2)) },
+    car: function (it) { var x = it.x || 0, y = it.y || 0; box(x, y, .9, .45, .28, it.tone || 'g', .1); box(x + .18, y + .04, .5, .38, .22, it.tone || 'g', .38, false); winL(x + .22, x + .64, y + .42, .42, .56, '#DCE7E2'); return P(x + .45, y + .22, .6) } } }
+
 /* iso : 등각 모형 — items[{k:'box|cyl|plate|flow|guide', x, y, z, w, d, h, r, tone, tag, fig, pin, ptone, foot, side, lines[], grid, t, pts[], dash, tone_, ord, op}] · u(한 칸 크기 28) · ox · oy(원점 비율) · panel · texts[] · list
    무광 3면 색 : 윗면 밝게, 왼면 중간, 오른면 짙게 */
 var ISO = { strong: ['g65', 'g', 'gdk'], soft: ['g08', 'g18', 'g40'], mid: ['g18', 'g40', 'g65'], plain: ['white', 'line', 'gray'], warn: ['warn08', 'warn40', 'warn'], ground: ['well', 'light', 'gray'], ghost: ['white', 'well', 'light'] };
@@ -446,15 +483,15 @@ function iso(svg, z, b, t0) { var bleed = !!(b.bleed && CTX); if (bleed) svg = b
   var g0 = grp(svg, t0, null, 'fade'); if (b.panel !== false) K(g0).rect(x, y, pw, ph, 'card');
   var cpi = 'bic' + (++plid), cpe = E('clipPath', { id: cpi }, E('defs', {}, g0)); E('rect', bleed ? { x: -56, y: -144, width: 1280, height: 720 } : { x: x, y: y, width: pw, height: ph }, cpe);
   if (b.gridlines) { var gl0 = E('g', { 'clip-path': 'url(#' + cpi + ')' }, g0); for (var gi = -60; gi <= 60; gi += (b.gridstep || 2)) { var A1 = P(gi, -60), A2 = P(gi, 60), B1 = P(-60, gi), B2 = P(60, gi); E('line', { x1: A1[0], y1: A1[1], x2: A2[0], y2: A2[1], stroke: '#E3ECE7', 'stroke-width': 1.5 }, gl0); E('line', { x1: B1[0], y1: B1[1], x2: B2[0], y2: B2[1], stroke: '#E3ECE7', 'stroke-width': 1.5 }, gl0) } }
-  function key(it) { if (it.k === 'water') return -950 + (it.ord || 0); if (it.k === 'plate') return -999 + (it.ord || 0); if (it.k === 'route') return -450 + (it.ord || 0); if (it.k === 'rail') return -470 + (it.ord || 0); if (it.k === 'flow') return -500 + (it.ord || 0); return it.ord != null ? it.ord : (it.x || 0) + (it.y || 0) + ((it.w || it.r || 1) + (it.d || it.r || 1)) / 2 }
+  function key(it) { if (it.k === 'water') return -950 + (it.ord || 0); if (it.k === 'plate') return -999 + (it.ord || 0); if (it.k === 'route') return -450 + (it.ord || 0); if (it.k === 'rail') return -470 + (it.ord || 0); if (it.k === 'road') return -480 + (it.ord || 0); if (it.k === 'field') return -490 + (it.ord || 0); if (it.k === 'flow') return -500 + (it.ord || 0); return it.ord != null ? it.ord : (it.x || 0) + (it.y || 0) + ((it.w || it.r || 1) + (it.d || it.r || 1)) / 2 }
   var items = (b.items || []).slice().sort(function (p, q) { return key(p) - key(q) || (p.z || 0) - (q.z || 0) }), lab = [], gI = grp(svg, t0 + 200, null, 'fade');
-  var gM = E('g', { 'clip-path': 'url(#' + cpi + ')' }, gI), KT = isoKit(gM, P, u), KM = isoMore(KT, gM, P, u); Object.keys(KM).forEach(function (q) { KT[q] = KM[q] });
+  var gM = E('g', { 'clip-path': 'url(#' + cpi + ')' }, gI), KT = isoKit(gM, P, u), KM = isoMore(KT, gM, P, u), KM2 = isoMore2(KT, gM, P, u); Object.keys(KM).forEach(function (q) { KT[q] = KM[q] }); Object.keys(KM2).forEach(function (q) { KT[q] = KM2[q] });
   items.forEach(function (it) { var mk = it.k || 'box', an = null;
     if (mk === 'text') { var qt = P(it.x || 0, it.y || 0, it.z || 0); lab.push(['txt', qt[0] + (it.dx || 0), qt[1] + (it.dy || 0), it.t, it.fs || 18, 700, it.fill || 'gdk', 'middle']); return }
     if (mk === 'prism') an = (KT.prism(it.pts, it.h || 1, it.tone || 'w', it.z || 0, it.shadow), P(it.pts[0][0], it.pts[0][1], (it.z || 0) + (it.h || 1)));
     else if (mk === 'box' && PAL5[it.tone]) { KT.box(it.x || 0, it.y || 0, it.w || 1, it.d || 1, it.h || 1, it.tone, it.z || 0, it.shadow); an = P((it.x || 0) + (it.w || 1) / 2, (it.y || 0) + (it.d || 1) / 2, (it.z || 0) + (it.h || 1)) }
     else if (mk === 'cyl' && PAL5[it.tone]) { KT.cyl(it.x || 0, it.y || 0, it.r || .5, it.h || 1, it.tone, it.z || 0, it.rings, it.shadow); an = P(it.x || 0, it.y || 0, (it.z || 0) + (it.h || 1)) }
-    else if (KT[mk] && /^(derrick|ship|building|sphere|station|water|route|factory|cooling|crane|containers|rail|train|warehouse|truck|turbine)$/.test(mk)) an = KT[mk](it);
+    else if (KT[mk] && /^(derrick|ship|building|sphere|station|water|route|factory|cooling|crane|containers|rail|train|warehouse|truck|turbine|field|greenhouse|silo|tractor|hospital|ambulance|tower|house|tree|road|car)$/.test(mk)) an = KT[mk](it);
     if (an || mk === 'water' || mk === 'route' || mk === 'prism' || (PAL5[it.tone] && (mk === 'box' || mk === 'cyl'))) { if (an && it.tag) lab.push(['tagbox', an[0] + (it.tdx || 0), an[1] + (it.tdy || 0), it.tag]); if (an && it.pin != null) lab.push(['pin', an[0], an[1] + 18, it.pin, it.ptone || 'gdk']); return }
     var k = mk, pal = ISO[it.tone || 'plain'] || ISO.plain, top = pal[0], left = pal[1], right = pal[2], a = it.x || 0, c = it.y || 0, e = it.z || 0, hi, cen, foot;
     if (k === 'plate') { var w = it.w, d = it.d; poly(gI, [P(a, c, e), P(a + w, c, e), P(a + w, c + d, e), P(a, c + d, e)], top, it.edge || left);
