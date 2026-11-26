@@ -186,6 +186,20 @@ function buildSlide(x) {
   el.querySelectorAll('.lk a').forEach(function (a) { a.addEventListener('click', function (ev) { ev.stopPropagation();
     if (a.getAttribute('data-back')) { back(); return } var j = S.findIndex(function (y) { return y.apx && y.s.appendix === a.getAttribute('data-to') }); if (j >= 0) { origin = cur; go(j, 1) } }) });
   return el }
+/* 6판 : 대표 숫자(48~62px)는 장에 1곳 — 숫자가 든 글이 2곳 이상이면 모두 큰 숫자 36px. 장을 붙인 뒤 계산된 크기로 셈(CSS 로 정한 크기 포함).
+   숫자판 자릿수(clip-path 묶음 안) · 숫자 없는 글(신문 제목, 단위)은 세지 않음. 62px 넘는 글(표지 · 대문 · 숫자판)은 그대로 */
+function heroList(el) { var big = [];
+  el.querySelectorAll('text,div,span,b,strong,em,i,p,h1,h2,h3,h4').forEach(function (e) { var own = e.namespaceURI === NS ? (e.closest('[clip-path]') ? '' : e.textContent) : Array.prototype.map.call(e.childNodes, function (n) { return n.nodeType === 3 ? n.textContent : '' }).join('');
+    if (!/\d/.test(own)) return; var f = parseFloat(getComputedStyle(e).fontSize); if (f >= 48 && f <= 62) big.push(e) });
+  return big }
+function unitApart(e) { var f = parseFloat(getComputedStyle(e).fontSize) || 52, sib = e.parentNode ? Array.prototype.filter.call(e.parentNode.children, function (o) { return o !== e }) : [];
+  function unitish(o) { var s = (o.textContent || '').trim(); return s && s.length <= 6 && !/\d/.test(s) }
+  if (e.namespaceURI === NS) { var ex = parseFloat(e.getAttribute('x')) || 0, ey = parseFloat(e.getAttribute('y')) || 0;
+    return sib.some(function (o) { return o.tagName === 'text' && unitish(o) && (parseFloat(o.getAttribute('x')) || 0) > ex && Math.abs((parseFloat(o.getAttribute('y')) || 0) - ey) <= f }) }
+  return sib.some(function (o) { return unitish(o) && getComputedStyle(o).position === 'absolute' }) || (getComputedStyle(e).position === 'absolute' && sib.some(unitish)) }
+function heroOne(el) { if (!el) return; var big = heroList(el);
+  if (big.some(unitApart)) return;   /* 단위를 숫자 폭으로 따로 놓은 부품 — 줄이면 사이가 벌어짐 */
+  if (big.length > 1) big.forEach(function (e) { if (e.namespaceURI === NS) e.setAttribute('font-size', 36); else e.style.fontSize = '36px' }) }
 /* 결측 이음 : 차트 선(칠 없음 · 굵기 2 이상 · 점선 아님 · M/L/H/V 만)이 빈 달로 끊긴 곳을 같은 색 연한 점선으로 이음(data-gap).
    차트 위 「자료 없음」 글은 두지 않고 설명은 각주 · 마우스 올림 카드에. 세로 눈금처럼 가로로 안 나아가는 선은 건드리지 않음 */
 function bridgeGaps(root) { root.querySelectorAll('.bd path').forEach(function (p) {
@@ -496,7 +510,7 @@ function runCheck() {
       if (/map|shot|img|photo|pict|body|plan|iso|clip/.test(x.s.kind || '') && big < .35) rec.qPic = ['가장 큰 그림이 본문 칸의 ' + Math.round(big * 100) + '%'];
       if (blur.length) rec.qBlur = blur.slice(0, 4) })();
     var offF = Object.keys(hz).filter(function (v) { return +v <= 62 && SPEC.fs.indexOf(+v) < 0 }), offW = Object.keys(wz).filter(function (v) { return +v <= 8.5 && SPEC.sw.indexOf(+v) < 0 }), nHero = Object.keys(hz).reduce(function (a, v) { return a + (+v >= 48 && +v <= 62 ? hz[v] : 0) }, 0);
-    if (offF.length) rec.specFs = offF.map(function (v) { return v + 'px ' + hz[v] + '곳' }); if (offW.length) rec.specSw = offW.map(function (v) { return v + 'px ' + wz[v] + '곳' }); if (nHero > 1) rec.specHero = ['48~62px 글 ' + nHero + '곳'];
+    if (offF.length) rec.specFs = offF.map(function (v) { return v + 'px ' + hz[v] + '곳' }); if (offW.length) rec.specSw = offW.map(function (v) { return v + 'px ' + wz[v] + '곳' }); var hl = heroList(el); if (hl.length > 1) rec.specHero = ['숫자 든 48~62px 글 ' + hl.length + '곳 : ' + hl.slice(0, 4).map(function (e) { return e.textContent.trim().slice(0, 12) }).join(' / ')];
     el.classList.remove('on') });
   if (cur >= 0) S[cur].el.classList.add('on'); return out }
 
@@ -598,7 +612,7 @@ function init() {
   stage = document.getElementById('stage'); deckEl = document.getElementById('deck'); if (STILL || CHECK) document.body.classList.add('still');
   var main = sl.filter(function (s) { return !s.appendix }), apx = sl.filter(function (s) { return s.appendix });
   main.concat(apx).forEach(function (s, i) { S.push({ s: s, i: i, apx: !!s.appendix, page: s.appendix ? null : i + 1 }) });
-  S.forEach(function (x) { deckEl.appendChild(buildSlide(x)) });
+  S.forEach(function (x) { deckEl.appendChild(buildSlide(x)); heroOne(x.el) });
   var m = /#(\d+)/.exec(location.hash), start = m ? Math.min(S.length, Math.max(1, +m[1])) - 1 : 0;
   try { chan = new BroadcastChannel('ecom-' + ((D.meta && D.meta.session) || 'deck')) } catch (e) { chan = null }
   if (CHECK) { var r = runCheck(); var pre = H('pre', null, null, document.body); pre.id = 'ecom-check'; pre.textContent = JSON.stringify(r); go(start, 1, 'none'); return }

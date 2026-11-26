@@ -90,7 +90,7 @@ function legend(svg, k, items, at) { if (!items || !items.length) return; var W 
     else if (it.k === 'x') { E('circle', { cx: x + 8, cy: cy, r: 8, fill: c }, g); E('path', { d: 'M' + (x + 4.5) + ' ' + (cy - 3.5) + 'l7 7M' + (x + 11.5) + ' ' + (cy - 3.5) + 'l-7 7', stroke: '#fff', 'stroke-width': 2, 'stroke-linecap': 'round' }, g) }
     else E('line', { x1: x, x2: x + 26, y1: cy, y2: cy, stroke: c, 'stroke-width': 3.4, 'stroke-linecap': 'round' }, g);
     T(g, x + ws[i][0] + 4, cy + 4.5, it.t, { 'font-size': 13, fill: k.sub }); x += ws[i][1] }) }
-function note(svg, k, o, at) { if (!o) return; var w = o.w || 330, ls = h.wrap(o.text || '', 14, w - 32), hh = 20 + (o.title ? 26 : 0) + ls.length * 21 + 8, pz = o.pos || 'tr', x = /r/.test(pz) ? 1168 - w - 16 : 16, y = /b/.test(pz) ? 512 - hh - 16 : 16;
+function note(svg, k, o, at) { if (!o || typeof o !== 'object' || !(o.text || o.title)) return;   /* 글 없는 메모(목업 설명 글)는 빈 칸을 그리지 않음 */ var w = o.w || 330, ls = h.wrap(o.text || '', 14, w - 32), hh = 20 + (o.title ? 26 : 0) + ls.length * 21 + 8, pz = o.pos || 'tr', x = /r/.test(pz) ? 1168 - w - 16 : 16, y = /b/.test(pz) ? 512 - hh - 16 : 16;
   var g = E('g', { 'data-at': at, 'data-fx': 'slide', 'data-dy': 8, 'data-key': o.title || '풀이' }, svg); E('rect', { x: x, y: y, width: w, height: hh, rx: 10, fill: k.card, stroke: k.line }, g);
   var yy = y + 28; if (o.title) { T(g, x + 16, yy, o.title, { 'font-size': 14.5, 'font-weight': 800, fill: k.acc }); yy += 26 }
   ls.forEach(function (ln, i) { T(g, x + 16, yy + i * 21, ln, { 'font-size': 14, fill: k.ink }) }) }

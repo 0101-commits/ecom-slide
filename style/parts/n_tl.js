@@ -233,7 +233,7 @@ ECOM.parts.tlbill = function (bd, s, ctx) {
    cards[{date,title,text,stat:{label,value}}] · chart{from,to(일 번호),pts[[d,v]],y{min,max,ticks},title,ticks[{d,label}],marks[{d,v}]} */
 ECOM.parts.tlcards = function (bd, s, ctx) {
   var svg = ctx.svg(512), cs = s.cards || [], n = cs.length, gap = 26, cw = (1168 - gap * (n - 1)) / n, chh = 222, ch = s.chart, X = h.lin(ch.from, ch.to, 70, 1130), cy0 = 312, cy1 = 470, Y = h.lin(ch.y.min, ch.y.max, cy1, cy0);
-  var gc = G(svg, 0, 'fade', 300); box(gc, 0, 268, 1168, 244, '#F6F8F7', { rx: 10 }); tx(gc, 16, 292, ch.title, 14.5, { w: 700, fill: C.dark });
+  var gc = G(svg, 0, 'fade', 300); box(gc, 0, 268, 1168, 244, '#F6F8F7', { rx: 10 });
   ch.y.ticks.forEach(function (v) { E('line', { x1: 70, x2: 1130, y1: Y(v), y2: Y(v), stroke: C.grid, 'stroke-dasharray': '3 4' }, gc); tx(gc, 62, Y(v) + 4.5, v + '', 12.5, { a: 'end', fill: C.mute }) });
   ch.ticks.forEach(function (q) { tx(gc, X(q.d), 498, q.label, 12.5, { a: 'middle', fill: C.mute }) });
   E('path', { d: linePath(ch.pts, X, Y), fill: 'none', stroke: C.cmp, 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'data-at': 200, 'data-fx': 'draw', 'data-ms': 2200 }, svg);
@@ -245,5 +245,7 @@ ECOM.parts.tlcards = function (bd, s, ctx) {
     E('line', { x1: x + 16, x2: x + cw - 16, y1: chh - 52, y2: chh - 52, stroke: C.line }, g); tx(g, x + 16, chh - 31, c.stat.label, 12.5, { fill: C.mute }); tx(g, x + 16, chh - 10, c.stat.value, 17, { w: 700, fill: C.dark });
     var p = 'M' + (x + cw / 2) + ' ' + (chh + 2) + 'C' + (x + cw / 2) + ' ' + (chh + 40) + ',' + mx + ' ' + (my - 50) + ',' + mx + ' ' + (my - 8);
     E('path', { d: p, fill: 'none', stroke: C.g40, 'stroke-width': 1.8, 'stroke-dasharray': '4 3', 'data-at': t + 300, 'data-fx': 'draw', 'data-ms': 500 }, svg);
-    var gm = G(svg, t + 600, 'pop', 300); E('circle', { cx: mx, cy: my, r: 6.5, fill: '#fff', stroke: C.main, 'stroke-width': 3 }, gm); tx(gm, mx, my + 22, String(i + 1), 12.5, { a: 'middle', w: 700, fill: C.main, halo: 1 }) }) };
+    var gm = G(svg, t + 600, 'pop', 300); E('circle', { cx: mx, cy: my, r: 6.5, fill: '#fff', stroke: C.main, 'stroke-width': 3 }, gm); tx(gm, mx, my + 22, String(i + 1), 12.5, { a: 'middle', w: 700, fill: C.main, halo: 1 }) });
+  /* 차트 제목은 이음 점선 위에(흰 테두리 글) */
+  tx(G(svg, 0, 'fade', 300), 16, 292, ch.title, 14.5, { w: 700, fill: C.dark, halo: 1 }) };
 })();
