@@ -729,7 +729,8 @@ FREE = re.compile(r"상관[^\d]{0,14}[+−-]?\d+\.\d{2}(?:[^\d]{0,10}[+−-]?\d+
 def strings_of(o, out=None, key=""):
     out = [] if out is None else out
     if isinstance(o, str):
-        out.append((key, o))
+        if not o.startswith("data:") and key not in ("img", "href", "src"):  # 그림 자료 안 글자는 글이 아님
+            out.append((key, o))
     elif isinstance(o, dict):
         for k, v in o.items():
             strings_of(v, out, k)

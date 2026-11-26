@@ -631,7 +631,8 @@ function section(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], L 
     link(g, Math.abs(cy[i] - ly[i]) < 1 ? [[ex0, cy[i]], [lx, cy[i]]] : [[ex0, cy[i]], [mid, cy[i]], [mid, ly[i]], [lx, ly[i]]], q.minus ? 'warn' : 'g65', { sw: 1.5, r: 6 });
     k.rect(lx, ly[i] - lh / 2, lw, lh, hot ? 'gdk' : q.minus ? 'warn08' : 'card');
     k.stack(lx, ly[i] - lh / 2, lw, lh, [[(q.minus ? '− ' : i < n - 1 || n === 1 ? '' : '') + q.t, 18, 700, hot ? 'white' : q.minus ? 'warn' : 'ink'], [q.s, 16, 400, hot ? 'gon' : 'sub']], { pad: 16, align: 'start', gap: 4 }) });
-  if (tot) { var g2 = grp(svg, t0 + n * 320 + 200, tot.t, 'fade'), top = ys[n - 1] - dy, bx = x0 - 22;
+  if (tot) { var g2 = grp(svg, t0 + n * 320 + 200, tot.t, 'fade'), pTop = yb, mH = 0, bx = x0 - 22; L.forEach(function (q, i) { if (q.minus) mH += th[i]; else pTop = Math.min(pTop, ys[i]) }); var top = pTop + mH;
+    if (mH) E('line', { x1: bx, x2: x0 + sw + dx, y1: top, y2: top, stroke: C.dark, 'stroke-width': 1.5, 'stroke-dasharray': '6 5' }, g2);
     E('line', { x1: bx, x2: bx, y1: top, y2: yb, stroke: C.dark, 'stroke-width': 3 }, g2); [top, yb].forEach(function (yy) { E('line', { x1: bx, x2: bx + 12, y1: yy, y2: yy, stroke: C.dark, 'stroke-width': 3 }, g2) });
     var my = (top + yb) / 2; T(g2, bx - 16, my - 14, tot.t, { 'font-size': 18, 'font-weight': 700, fill: C.ink, 'text-anchor': 'end' });
     T(g2, bx - 16, my + 28, (tot.fig != null ? tot.fig : tot.v) + unit, { 'font-size': 36, 'font-weight': 800, fill: C.dark, 'text-anchor': 'end' }) } }
