@@ -155,11 +155,12 @@ function footHTML(s) { var f = s.foot || {}, out = [], n = f.notes || [];
 function pageOf(i) { var x = S[i]; return x.apx ? x.s.appendix : String(x.page) }
 function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
-  var bg = /^(mint|deep|map)$/.test(s.bg || '') ? s.bg : (kind === 'fullmap' ? 'map' : '');
+  /* 6판 : 모든 장 흰 바탕. 예전 bg deep · mint 는 흰 바탕으로 그림, 전면 지도(bg map)는 밝은 지도 + 헤드 · 각주 자리 흰 흐림 */
+  var bg = (s.bg === 'map' || kind === 'fullmap') ? 'map' : '';
   /* 짙은 바탕은 그 배치가 짙은 색표를 아는 때만(ECOM.parts.<kind>.dark = ['배치', …]) — 모르면 흰 바탕으로 그리고 점검에 남김 */
   if ((bg === 'deep' || bg === 'map') && !(part && part.dark && part.dark.indexOf(s.layout || 'default') >= 0)) { x.bgOff = bg; bg = '' }
   if (bg) el.classList.add('bg-' + bg);
-  var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx, bg: bg, dark: bg === 'deep' || bg === 'map', P: (bg === 'deep' || bg === 'map') ? ECOM.Cd : C };
+  var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx, bg: bg, dark: false, P: C };
   /* 전면 층(bg map 등) : 장 전체 1280×720 을 덮는 판 — 꼬리표 · 헤드메시지 · 각주는 그 위 */
   ctx.full = function () { var f = el.querySelector('.fl'); if (!f) { f = document.createElement('div'); f.className = 'fl'; el.insertBefore(f, el.firstChild) } return f };
   ctx.svg = function (h, bd) { var v = E('svg', { class: 'cv', viewBox: '0 0 1168 ' + (h || 512), width: 1168, height: h || 512 }); (bd || ctx.bd).appendChild(v); return v };
@@ -476,6 +477,20 @@ function runCheck() {
     el.querySelectorAll('rect,path,line,polyline,polygon,circle,ellipse').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (cs.stroke && cs.stroke !== 'none') { var w = parseFloat(cs.strokeWidth); if (w > 0) inc(wz, w) }
       if (e.tagName === 'rect') { var r = parseFloat(e.getAttribute('rx')); if (r > 0) inc(rz, r) } });
     rec.fsz = hz; rec.swz = wz; rec.rxz = rz;
+    /* 6판 품질 점검 4항목 : 칸 수(본문 칸 안 칸이 5개 넘음) · 흰 테두리 칸(흰 면 + 테두리) · 그림 크기(그림 장인데 가장 큰 그림이 본문 칸의 35% 밑) · 선명도(그림을 원본보다 크게 늘림) */
+    (function () { var bdE = el.querySelector('.bd'); if (!bdE) return; var BB = toS(bdE.getBoundingClientRect()), bA = Math.max(1, (BB.r - BB.l) * (BB.b - BB.t)), cards = [], wb = [], big = 0, blur = [];
+      function lum(c) { var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return -1; var v = m[1].split(',').map(parseFloat); if (v.length > 3 && v[3] < .5) return -1; return (v[0] * .299 + v[1] * .587 + v[2] * .114) / 255 }
+      bdE.querySelectorAll('div').forEach(function (e) { if (!visible(e)) return; var q = toS(e.getBoundingClientRect()), w = q.r - q.l, hh = q.b - q.t; if (w < 80 || hh < 50 || w * hh > bA * .9) return;
+        var cs = getComputedStyle(e), bgL = lum(cs.backgroundColor), bw = Math.max(parseFloat(cs.borderTopWidth) || 0, parseFloat(cs.borderLeftWidth) || 0) * (cs.borderTopStyle === 'none' && cs.borderLeftStyle === 'none' ? 0 : 1);
+        if (bgL < 0 && !bw) return; cards.push(e); if (bgL >= .97 && bw > 0) wb.push(q) });
+      var top = cards.filter(function (e) { return !cards.some(function (o) { return o !== e && o.contains(e) }) });
+      bdE.querySelectorAll('rect').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (!cs.stroke || cs.stroke === 'none' || !(parseFloat(cs.strokeWidth) > 0)) return; var q = toS(e.getBoundingClientRect()); if (q.r - q.l < 60 || q.b - q.t < 40) return; if (lum(cs.fill) >= .97) wb.push(q) });
+      el.querySelectorAll('.bd svg,.bd img,.bd canvas,.fl svg,.fl img').forEach(function (e) { if (!visible(e)) return; var q = toS(e.getBoundingClientRect()); big = Math.max(big, (q.r - q.l) * (q.b - q.t) / bA);
+        if (e.tagName === 'IMG' && e.naturalWidth && e.naturalWidth < (q.r - q.l) * .95) blur.push(e.naturalWidth + 'px 원본을 ' + Math.round(q.r - q.l) + 'px 로') });
+      if (top.length > 5) rec.qCards = ['칸 ' + top.length + '개'];
+      if (wb.length) rec.qWhite = wb.slice(0, 4).map(function (q) { return Math.round(q.l) + ',' + Math.round(q.t) + ' ' + Math.round(q.r - q.l) + '×' + Math.round(q.b - q.t) });
+      if (/map|shot|img|photo|pict|body|plan|iso|clip/.test(x.s.kind || '') && big < .35) rec.qPic = ['가장 큰 그림이 본문 칸의 ' + Math.round(big * 100) + '%'];
+      if (blur.length) rec.qBlur = blur.slice(0, 4) })();
     var offF = Object.keys(hz).filter(function (v) { return +v <= 62 && SPEC.fs.indexOf(+v) < 0 }), offW = Object.keys(wz).filter(function (v) { return +v <= 8.5 && SPEC.sw.indexOf(+v) < 0 }), nHero = Object.keys(hz).reduce(function (a, v) { return a + (+v >= 48 && +v <= 62 ? hz[v] : 0) }, 0);
     if (offF.length) rec.specFs = offF.map(function (v) { return v + 'px ' + hz[v] + '곳' }); if (offW.length) rec.specSw = offW.map(function (v) { return v + 'px ' + wz[v] + '곳' }); if (nHero > 1) rec.specHero = ['48~62px 글 ' + nHero + '곳'];
     el.classList.remove('on') });

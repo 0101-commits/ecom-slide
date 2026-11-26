@@ -201,18 +201,18 @@ body.still .sl .kt i,body.pres .sl .kt i{animation:none}
 /* 바탕 손잡이(5판) : mint 연초록 · deep 짙은 초록 · map 전면 지도(부품이 ctx.full() 에 그림) */
 .sl.bg-mint{background:#E9F3EE}
 .sl.bg-deep{background:#003D2B}
-.sl.bg-map{background:#0B2427}
-.sl.bg-deep .tag,.sl.bg-map .tag{color:#8FD9B6}
-.sl.bg-deep .tag span,.sl.bg-map .tag span{color:rgba(255,255,255,.86)}
-.sl.bg-deep .tag em,.sl.bg-map .tag em{color:rgba(255,255,255,.6)}
-.sl.bg-deep .hm,.sl.bg-map .hm{color:#fff}
-.sl.bg-deep .hm b,.sl.bg-map .hm b{color:#8FD9B6}
-.sl.bg-deep .fn,.sl.bg-map .fn,.sl.bg-deep .lg,.sl.bg-map .lg{color:rgba(255,255,255,.66)}
+.sl.bg-map{background:#fff}
+.sl.bg-deep .tag,.sl.bg-deep-off .tag{color:#8FD9B6}
+.sl.bg-deep .tag span,.sl.bg-deep-off .tag span{color:rgba(255,255,255,.86)}
+.sl.bg-deep .tag em,.sl.bg-deep-off .tag em{color:rgba(255,255,255,.6)}
+.sl.bg-deep .hm,.sl.bg-deep-off .hm{color:#fff}
+.sl.bg-deep .hm b,.sl.bg-deep-off .hm b{color:#8FD9B6}
+.sl.bg-deep .fn,.sl.bg-deep .lg{color:rgba(255,255,255,.66)}
 .sl .fl{position:absolute;inset:0;overflow:hidden;z-index:0}
 .sl.bg-map .tag,.sl.bg-map .hm,.sl.bg-map .fn,.sl.bg-map .lg,.sl.bg-map .lk,.sl.bg-map .bd{z-index:2}
 .sl.bg-map .fl::before,.sl.bg-map .fl::after{content:'';position:absolute;left:0;right:0;pointer-events:none;z-index:3}
-.sl.bg-map .fl::before{top:0;height:170px;background:linear-gradient(rgba(5,22,24,.86),rgba(5,22,24,.55) 60%,rgba(5,22,24,0))}
-.sl.bg-map .fl::after{bottom:0;height:90px;background:linear-gradient(rgba(5,22,24,0),rgba(5,22,24,.8))}
+.sl.bg-map .fl::before{top:0;height:200px;background:linear-gradient(#fff,rgba(255,255,255,.92) 50%,rgba(255,255,255,0))}
+.sl.bg-map .fl::after{bottom:0;height:72px;background:linear-gradient(rgba(255,255,255,0),rgba(255,255,255,.9) 70%,#fff)}
 /* 전면 지도(fullmap) 흐르는 점선 — 움직임 줄이기 · ?still · 발표자 창이면 멈춤 */
 .fm-run{animation:fmrun 1.4s linear infinite}
 @keyframes fmrun{to{stroke-dashoffset:-44}}

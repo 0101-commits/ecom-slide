@@ -15,14 +15,14 @@
 (function () {
 'use strict';
 var h = ECOM.h, E = h.E, T = h.T;
-var LAND = '#0B2427', BORDER = '#1D4A4E', COAST = '#8FD3D0', INK = '#0E1513', SUB = '#C9DAD5';
+var LAND = '#E3ECE7', BORDER = '#FFFFFF', COAST = '#CDE3DA', INK = '#0E1513', SUB = '#6B7570';   /* 6판 밝은 지도 */
 var TONE = { red: ['#8A2F3C', '#D0614F'], green: ['#1F9467', '#7FE0B5'], gold: ['#C98F35', '#F0C27A'], teal: ['#2F7F86', '#8FD3D0'],
-  korea: ['#3FBF8A', '#B7F2D7'], white: ['#EAF4F1', '#FFFFFF'], gray: ['#3B5C5E', '#7FA3A3'], blue: ['#7D8FD1', '#B9C4F0'] };
+  korea: ['#3FBF8A', '#B7F2D7'], white: ['#C9D1CD', '#9AA3A0'], gray: ['#3B5C5E', '#7FA3A3'], blue: ['#7D8FD1', '#B9C4F0'] };
 function hex(c) { return [1, 3, 5].map(function (i) { return parseInt(c.slice(i, i + 2), 16) }) }
 /* 색 줄 : stops = ['#..', …] 고르게 놓고 0~1 사이 섞음(d3-scale 없이) */
 function ramp(stops) { var S = stops.map(hex); return function (t) { t = Math.max(0, Math.min(1, t)); var k = Math.min(S.length - 2, Math.floor(t * (S.length - 1))), u = t * (S.length - 1) - k;
   return '#' + [0, 1, 2].map(function (j) { var v = Math.round(S[k][j] + (S[k + 1][j] - S[k][j]) * u); return (v < 16 ? '0' : '') + v.toString(16) }).join('') } }
-var RS = { lane: ['#F2F7F5', 2.6, '2 9'], pipe: ['#B7F2D7', 4.5, ''], ship: ['#FFE2B0', 3, '2 8'] };
+var RS = { lane: ['#3E4743', 3, '2 9'], pipe: ['#005136', 5, ''], ship: ['#C98F35', 3, '2 8'] };
 var uid = 0;
 
 function decG(g, dd) { var m = Math.pow(10, dd); return g.map(function (poly) { return poly.map(function (r) { var o = [], x = 0, y = 0; for (var i = 0; i + 1 < r.length; i += 2) { x += r[i]; y += r[i + 1]; o.push([x / m, y / m]) } return o }) }) }
@@ -35,10 +35,10 @@ function bbPts(bb) { return { type: 'MultiPoint', coordinates: [bb[0], [bb[1][0]
 function clamp(p, box) { return [Math.max(box[0], Math.min(box[2], p[0])), Math.max(box[1], Math.min(box[3], p[1]))] }
 
 function defs(s, id) { var d = E('defs', {}, s);
-  var rg = E('radialGradient', { id: id + 'sea', cx: '55%', cy: '48%', r: '78%' }, d); E('stop', { offset: 0, 'stop-color': '#3E9DAA' }, rg); E('stop', { offset: 1, 'stop-color': '#1F6772' }, rg);
+  var rg = E('radialGradient', { id: id + 'sea', cx: '55%', cy: '48%', r: '78%' }, d); E('stop', { offset: 0, 'stop-color': '#FFFFFF' }, rg); E('stop', { offset: 1, 'stop-color': '#FFFFFF' }, rg);
   var fl = E('filter', { id: id + 'tex', x: 0, y: 0, width: '100%', height: '100%' }, d); E('feTurbulence', { type: 'fractalNoise', baseFrequency: '.012 .02', numOctaves: 3, seed: 7 }, fl);
   E('feColorMatrix', { type: 'matrix', values: '0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .08 0' }, fl);
-  var bg = E('radialGradient', { id: id + 'sp', cx: '62%', cy: '58%', r: '75%' }, d); E('stop', { offset: 0, 'stop-color': '#0E3236' }, bg); E('stop', { offset: 1, 'stop-color': '#030E10' }, bg);
+  var bg = E('radialGradient', { id: id + 'sp', cx: '62%', cy: '58%', r: '75%' }, d); E('stop', { offset: 0, 'stop-color': '#FFFFFF' }, bg); E('stop', { offset: 1, 'stop-color': '#EEF3F0' }, bg);
   var at = E('radialGradient', { id: id + 'atm', cx: '50%', cy: '50%', r: '50%' }, d); E('stop', { offset: '86%', 'stop-color': '#8FE3C0', 'stop-opacity': 0 }, at); E('stop', { offset: '93%', 'stop-color': '#8FE3C0', 'stop-opacity': .22 }, at); E('stop', { offset: '100%', 'stop-color': '#8FE3C0', 'stop-opacity': 0 }, at);
   return d }
 
@@ -54,14 +54,14 @@ function Tagger(p) { var boxes = []; return function (x, y, t, o) { o = o || {};
 function legend(s, items, at) { if (!items.length) return; var g = E('g', { class: 'fm-leg', 'data-at': at, 'data-fx': 'fade' }, s), x = 56, y = 640;
   items.forEach(function (it) { var w;
     if (it.k === 'dash' || it.k === 'line') { E('line', { x1: x, x2: x + 26, y1: y - 5, y2: y - 5, stroke: it.c, 'stroke-width': it.k === 'line' ? 5 : 2.6, 'stroke-dasharray': it.k === 'line' ? null : '2 6', 'stroke-linecap': 'round' }, g); w = 34 }
-    else if (it.k === 'dot') { E('circle', { cx: x + 7, cy: y - 5, r: 6, fill: it.c, stroke: '#06181A' }, g); w = 20 }
-    else if (it.k === 'ring') { E('circle', { cx: x + 8, cy: y - 5, r: 7, fill: 'none', stroke: '#fff', 'stroke-width': 1.6, 'stroke-dasharray': '3 3' }, g); w = 22 }
+    else if (it.k === 'dot') { E('circle', { cx: x + 7, cy: y - 5, r: 6, fill: it.c, stroke: '#FFFFFF' }, g); w = 20 }
+    else if (it.k === 'ring') { E('circle', { cx: x + 8, cy: y - 5, r: 7, fill: 'none', stroke: '#1D2521', 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }, g); w = 22 }
     else { E('rect', { x: x, y: y - 12, width: 14, height: 14, rx: 2, fill: it.c, stroke: it.s || 'none' }, g); w = 20 }
-    T(g, x + w, y, it.t, { 'font-size': 13, fill: '#D5E3DE' }); x += w + h.textW(it.t, 13) + 24 }) }
+    T(g, x + w, y, it.t, { 'font-size': 13, fill: '#3E4743' }); x += w + h.textW(it.t, 13) + 24 }) }
 
 function card(s, o, dflt) { if (!o) return null; var at = o.at || dflt, x = at[0], y = at[1], W = o.w || 250, H = o.bar ? 150 : 130;
   var g = E('g', { class: 'fm-card', 'data-at': 2700, 'data-fx': 'slide', 'data-dx': 16 }, s);
-  E('rect', { x: x, y: y, width: W, height: H, rx: 10, fill: 'rgba(4,22,24,.78)', stroke: 'rgba(143,227,192,.5)' }, g);
+  E('rect', { x: x, y: y, width: W, height: H, rx: 10, fill: '#005136', stroke: 'none', style: 'filter:drop-shadow(0 4px 10px rgba(0,40,28,.18))' }, g);
   if (o.title) T(g, x + 18, y + 30, o.title, { 'font-size': 13, fill: '#B7CCC6' });
   var v = o.value, big = typeof v === 'object' && v ? h.nf(v.v, v.dec || 0) : String(v == null ? '' : v);
   var tv = T(g, x + 18, y + 80, big, { 'font-size': 40, 'font-weight': 800, fill: '#fff' });
@@ -102,9 +102,9 @@ function zoomLike(s, S, ctx, choro) {
       tagger(p[0], p[1], k + ' ' + h.nf(V[k], V[k] % 1 ? Math.max(1, sc.dec || 0) : (sc.dec || 0)) + (sc.unit || ''), { fs: big ? 16 : 13, bg: big ? '#fff' : '#F4F6F5', attr: { 'data-at': 2200 + j * 100, 'data-fx': 'slide', 'data-dy': 6, 'data-key': k } }) });
     var lg = E('g', { class: 'fm-leg', 'data-at': 2000, 'data-fx': 'fade' }, s), gid = id + 'sc', gd = E('linearGradient', { id: gid, x1: 0, x2: 1, y1: 0, y2: 0 }, s.querySelector('defs'));
     [0, .5, 1].forEach(function (o) { E('stop', { offset: o, 'stop-color': col(lo + (hi - lo) * o) }, gd) });
-    T(lg, 56, 618, sc.title || '', { 'font-size': 13, fill: '#D5E3DE' }); E('rect', { x: 56, y: 628, width: 260, height: 12, rx: 6, fill: 'url(#' + gid + ')' }, lg);
-    [0, .5, 1].forEach(function (o) { T(lg, 56 + o * 260, 658, h.nf(lo + (hi - lo) * o, sc.dec || 0) + (sc.unit || ''), { 'text-anchor': o === 0 ? 'start' : (o === 1 ? 'end' : 'middle'), 'font-size': 12.5, fill: '#B7CCC6' }) });
-    E('rect', { x: 340, y: 628, width: 14, height: 12, rx: 2, fill: LAND, stroke: '#3B6C70' }, lg); T(lg, 360, 639, '자료 없음', { 'font-size': 12.5, fill: '#B7CCC6' });
+    T(lg, 56, 618, sc.title || '', { 'font-size': 13, fill: '#3E4743' }); E('rect', { x: 56, y: 628, width: 260, height: 12, rx: 6, fill: 'url(#' + gid + ')' }, lg);
+    [0, .5, 1].forEach(function (o) { T(lg, 56 + o * 260, 658, h.nf(lo + (hi - lo) * o, sc.dec || 0) + (sc.unit || ''), { 'text-anchor': o === 0 ? 'start' : (o === 1 ? 'end' : 'middle'), 'font-size': 12.5, fill: '#6B7570' }) });
+    E('rect', { x: 340, y: 628, width: 14, height: 12, rx: 2, fill: LAND, stroke: '#C9D1CD' }, lg); T(lg, 360, 639, '자료 없음', { 'font-size': 12.5, fill: '#6B7570' });
   }
   (S.paint || []).forEach(function (pt, j) { var f = byName(L, pt.c); if (!f || !D[f.id]) return; var t = TONE[pt.tone] || TONE.red;
     E('path', { d: D[f.id], fill: t[0], stroke: t[1], 'stroke-width': 1.4, 'data-key': pt.c, 'data-tip': pt.tip || (pt.c + '|' + (pt.label || '')), 'data-at': 1500 + j * 250, 'data-fx': 'fade', 'data-ms': 600 }, cam);
@@ -135,7 +135,7 @@ function globe(s, S, ctx) {
   var A = [-fr[0], -fr[1] * .92], B = G.end || [-(to[0] - 21), -to[1] * .62];
   var proj = d3.geoOrthographic().scale(R).translate([cx, cy]).clipAngle(90), path = d3.geoPath(proj), grat = d3.geoGraticule().step([20, 20])();
   defs(s, id); E('rect', { width: 1280, height: 720, fill: 'url(#' + id + 'sp)' }, s); E('circle', { cx: cx, cy: cy, r: R * 1.16, fill: 'url(#' + id + 'atm)' }, s);
-  var sea = E('path', { fill: 'url(#' + id + 'sea)' }, s), gr = E('path', { fill: 'none', stroke: 'rgba(220,240,236,.10)', 'stroke-width': .7 }, s);
+  var sea = E('path', { fill: 'url(#' + id + 'sea)' }, s), gr = E('path', { fill: 'none', stroke: 'rgba(0,81,54,.08)', 'stroke-width': .7 }, s);
   var glow = E('g', { opacity: .5 }, s), land = E('g', {}, s), paintG = E('g', { 'data-at': 500, 'data-fx': 'fade', 'data-ms': 700 }, s), bord = E('path', { fill: 'none', stroke: BORDER, 'stroke-width': .6 }, s), leg = [];
   var LS = L.map(function (f) { return [f, E('path', { fill: LAND }, land), E('path', { fill: 'none', stroke: COAST, 'stroke-width': 2.4 }, glow)] });
   var PS = (S.paint || []).map(function (pt) { var f = byName(L, pt.c), t = TONE[pt.tone] || TONE.gold; if (pt.label && !leg.some(function (x) { return x.t === pt.label })) leg.push({ k: 'box', c: t[0], t: pt.label });
