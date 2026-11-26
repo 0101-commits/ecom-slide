@@ -152,14 +152,14 @@ body{overflow:hidden}
 .sl.cv-e .dt{position:absolute;left:72px;top:540px;font-size:18px;color:var(--mute)}
 .sl.cv-e .bar{position:absolute;left:0;right:0;bottom:0;height:14px;background:var(--gdk)}
 /* 간지 */
-.sl.pt{background:var(--gdk);color:#fff}
-.sl.pt .no{position:absolute;left:72px;top:250px;font-size:20px;font-weight:600;letter-spacing:.16em;color:var(--gon)}
+.sl.pt{background:#fff;color:var(--ink)}
+.sl.pt .no{position:absolute;left:72px;top:250px;font-size:20px;font-weight:600;letter-spacing:.16em;color:#00744F}
 .sl.pt .nm{position:absolute;left:72px;top:286px;right:72px;font-size:92px;font-weight:600;letter-spacing:-.04em;line-height:1.08}
-.sl.pt .ds{position:absolute;left:72px;top:420px;right:72px;font-size:26px;color:rgba(255,255,255,.78);line-height:1.5}
+.sl.pt .ds{position:absolute;left:72px;top:420px;right:72px;font-size:26px;color:var(--sub);line-height:1.5}
 .sl.pt .lgw{position:absolute;right:56px;bottom:22px;height:24px}
-.sl.pt .pg{position:absolute;left:72px;right:72px;bottom:90px;display:flex;gap:14px;font-size:16px;color:rgba(255,255,255,.5);font-weight:600}
-.sl.pt .pg div{flex:1;border-top:3px solid rgba(255,255,255,.2);padding-top:10px}
-.sl.pt .pg div.on{border-color:var(--gon);color:#fff}
+.sl.pt .pg{position:absolute;left:72px;right:72px;bottom:90px;display:flex;gap:14px;font-size:16px;color:var(--mute);font-weight:600}
+.sl.pt .pg div{flex:1;border-top:3px solid var(--line);padding-top:10px}
+.sl.pt .pg div.on{border-color:#00744F;color:var(--ink)}
 /* 장 넘김 */
 .wipe3{position:absolute;inset:0;background:var(--gdk);transform:scaleX(0);transform-origin:0 50%;z-index:20;pointer-events:none}
 .tr3{position:absolute;inset:0;z-index:20;pointer-events:none}

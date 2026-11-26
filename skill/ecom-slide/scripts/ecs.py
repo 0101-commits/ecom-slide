@@ -811,8 +811,9 @@ def lint_var(deck, lib, name=None, derived=0):
         seen.setdefault((k, lay), i)
         if (k, lay) in used and alts:
             add(i, "앞 회차 그림", "확인할 것", f"{k} · {lay} 는 {used[(k, lay)]} 에서 씀 — 앞 2회차와 다른 배치 권고({' · '.join(alts[:6])})")
-    if body >= 8 and tinted / body < .1:
-        add(0, "바탕 섞기", "확인할 것", f"바탕 있는 장 {tinted}/{body} — 본문의 15~25%는 bg mint · deep · 전면 지도")
+    old_bg = [j for j, x in enumerate(deck.get("slides", []), 1) if x.get("bg") in ("mint", "deep")]
+    if old_bg:  # 6판 : 모든 장 흰 바탕 — bg mint · deep 은 흰 바탕으로 그려짐(전면 지도 bg map 만 남음)
+        add(0, "바탕", "확인할 것", f"bg mint · deep 장 {len(old_bg)}개({', '.join(map(str, old_bg[:8]))}) — 6판은 흰 바탕으로 그림, bg 를 빼도 됨")
     if derived > 3:
         add(0, "파생 부품", "고칠 것", f"{derived}개 — 덱당 3개까지(나머지는 손잡이 · 재료로)")
     return iss
@@ -978,7 +979,7 @@ DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 
         ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
         ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"),
         ("specFs", "글자 단계 밖", "확인할 것"), ("specSw", "선 굵기 밖", "확인할 것"), ("specHero", "대표 숫자 여러 곳", "확인할 것"),
-        ("qCards", "칸 수 많음", "확인할 것"), ("qWhite", "흰 테두리 칸", "확인할 것"), ("qPic", "그림 크기", "확인할 것"), ("qBlur", "그림 선명도", "고칠 것"))
+        ("qCards", "칸 수 많음", "확인할 것"), ("qWhite", "흰 테두리 칸", "확인할 것"), ("qPic", "그림 크기", "확인할 것"), ("qBlur", "그림 선명도", "고칠 것"), ("lowC", "밝은 바탕 위 밝은 글", "고칠 것"))
 
 
 def screen_check(br, page, timeout=600):

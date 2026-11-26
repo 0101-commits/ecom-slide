@@ -62,5 +62,5 @@ ECOM.parts.end = function (el, s, ctx) { var A = art() && art().end, foot = '<di
 /* 간지 : {no:'PART 01', name, desc, parts:[이름], idx} */
 ECOM.parts.part = function (el, s, ctx) { if (s.layout && s.layout !== 'default' && ECOM.chapter) return ECOM.chapter(el, s, ctx); el.classList.add('pt');
   el.innerHTML = '<div class="no mv">' + esc(s.no || '') + '</div><div class="nm mv">' + md(s.name || '') + '</div>' + (s.desc ? '<div class="ds mv">' + md(s.desc) + '</div>' : '')
-    + (s.parts ? '<div class="pg">' + s.parts.map(function (p, i) { return '<div class="' + (i === s.idx ? 'on' : '') + '">' + esc(p) + '</div>' }).join('') + '</div>' : '') + ECOM.logo(true, 'lgw') };
+    + (s.parts ? '<div class="pg">' + s.parts.map(function (p, i) { return '<div class="' + (i === s.idx ? 'on' : '') + '">' + esc(p) + '</div>' }).join('') + '</div>' : '') + ECOM.logo(false, 'lgw') };
 })();
