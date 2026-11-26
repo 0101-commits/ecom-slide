@@ -486,7 +486,7 @@ function runCheck() {
     var fn = el.querySelector('.fn'), hm = el.querySelector('.hm');
     out.slides.push({ i: i + 1, page: pageOf(i), kind: x.s.kind, textOverlap: ov.slice(0, 12), outside: outS.slice(0, 8), outsideBody: outB.slice(0, 8), minFont: minF === 99 ? null : Math.round(minF * 10) / 10,
       fnLines: fn && fn.textContent.trim() ? Math.round(fn.getBoundingClientRect().height / k / 18.75) : 0, headLen: hm ? hm.textContent.replace(/\s/g, '').length : 0,
-      headLines: hm && hm.textContent.trim() ? Math.round(hm.getBoundingClientRect().height / k / 35.5) : 0, occupied: bd ? Math.round(occ / cells.length * 100) : null, beats: nBeats(i) });
+      headLines: hm && hm.textContent.trim() ? Math.round(hm.getBoundingClientRect().height / k / 35.5) : 0, occupied: bd && !el.querySelector('.fl svg') ? Math.round(occ / cells.length * 100) : null, beats: nBeats(i) });
     var rec = out.slides[out.slides.length - 1]; Object.keys(dp).forEach(function (key) { if (dp[key] && dp[key].length) rec[key] = dp[key].slice(0, 8) });
     /* 6판 규격 측정 : 보이는 글의 글자 크기(SVG 글 + HTML 글, 계산된 값) · 선 굵기 · 사각형 모서리 분포 */
     var hz = {}, wz = {}, rz = {}; function inc(m, v) { v = Math.round(v * 10) / 10; m[v] = (m[v] || 0) + 1 }

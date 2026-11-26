@@ -47,10 +47,10 @@ ECOM.parts.body = function (bd, s, ctx) { var svg = ctx.svg(512), os = (s.organs
   L.sort(function (a, b) { return a._p[1] - b._p[1] }); R.sort(function (a, b) { return a._p[1] - b._p[1] });
   function col(list, left) { var n = list.length; if (!n) return; var cw = 330, gap = 14, chh = Math.min(100, (512 - 8 - (n - 1) * gap) / n), x0 = left ? 0 : 1168 - cw, y0 = (512 - (n * chh + (n - 1) * gap)) / 2;
     list.forEach(function (o, j) { var y = y0 + j * (chh + gap), t = 900 + o._i * 380, col = TONE[o.tone] || C.main, p = o._p, ex = left ? x0 + cw : x0, ey = y + chh / 2;
-      E('path', { d: 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ' L' + (left ? ex + 26 : ex - 26) + ' ' + ey.toFixed(1) + ' L' + ex + ' ' + ey.toFixed(1), fill: 'none', stroke: col, 'stroke-width': 1.4, 'data-leader': 1, 'data-at': t, 'data-fx': 'draw', 'data-ms': 320 }, svg);
+      E('path', { d: 'M' + p[0].toFixed(1) + ' ' + p[1].toFixed(1) + ' L' + (left ? ex + 26 : ex - 26) + ' ' + p[1].toFixed(1) + ' L' + (left ? ex + 26 : ex - 26) + ' ' + ey.toFixed(1) + ' L' + ex + ' ' + ey.toFixed(1), fill: 'none', stroke: col, 'stroke-width': 1.4, 'data-leader': 1, 'data-at': t, 'data-fx': 'draw', 'data-ms': 320 }, svg);
       E('circle', { cx: p[0], cy: p[1], r: 4, fill: '#fff', stroke: col, 'stroke-width': 2, 'data-at': t, 'data-fx': 'pop' }, svg);
       var g = E('g', { 'data-at': t + 260, 'data-fx': 'slide', 'data-dx': left ? -14 : 14, 'data-key': o.label || o.o }, svg);
-      E('rect', { x: x0, y: y, width: cw, height: chh, rx: 10, fill: '#fff', stroke: C.line }, g); E('rect', { x: left ? x0 + cw - 5 : x0, y: y, width: 5, height: chh, fill: col }, g);
+      E('rect', { x: x0, y: y, width: cw, height: chh, rx: 6, fill: C.g08 }, g); E('rect', { x: left ? x0 + cw - 5 : x0, y: y, width: 5, height: chh, fill: col }, g);
       var tx = x0 + (left ? 16 : 20); T(g, tx, y + 26, o.label || o.o, { 'font-size': 16, 'font-weight': 700, fill: C.ink });
       var yy = y + 26; if (o.value != null) { yy += 34; var vs = h.nf(o.value, o.dec || 0); T(g, tx, yy, vs, { 'font-size': 28, 'font-weight': 800, fill: col, 'data-count': o.value, 'data-dec': o.dec || 0, 'data-at': t + 300, 'data-fx': 'count' }); if (o.unit) T(g, tx + 6 + h.textW(vs, 28, 1), yy, o.unit, { 'font-size': 14, fill: C.mute }) }
       if (o.sub) h.wrap(o.sub, 13, cw - 36).slice(0, Math.max(1, Math.floor((y + chh - yy - 10) / 18))).forEach(function (ln, q) { T(g, tx, yy + 21 + q * 18, ln, { 'font-size': 13, fill: C.cmp }) }) }) }
@@ -64,7 +64,7 @@ ECOM.parts.body.layouts = ['default'];
 ECOM.coLogo = function (p, x, y, w, hh, name, o) { o = o || {}; var L = (window.ECOM_LOGO && window.ECOM_LOGO.co) || {}, src = L[name];
   var g = E('g', { 'data-key': name }, p);
   if (src) { E('image', { href: src, x: x, y: y, width: w, height: hh, preserveAspectRatio: 'xMidYMid meet' }, g); return g }
-  E('rect', { x: x, y: y, width: w, height: hh, rx: 8, fill: o.fill || C.g08, stroke: C.line }, g); var r = Math.min(hh * .36, 16);
+  E('rect', { x: x, y: y, width: w, height: hh, rx: 6, fill: o.fill || C.g08 }, g); var r = Math.min(hh * .36, 16);
   E('circle', { cx: x + 10 + r, cy: y + hh / 2, r: r, fill: o.tone || C.main }, g); T(g, x + 10 + r, y + hh / 2 + r * .38, String(name || '').slice(0, 1), { 'font-size': r * 1.05, 'font-weight': 800, fill: '#fff', 'text-anchor': 'middle' });
   T(g, x + 18 + 2 * r, y + hh / 2 + 5, name || '', { 'font-size': Math.min(15, hh * .38), 'font-weight': 700, fill: C.ink }); return g };
 })();
