@@ -75,7 +75,7 @@ ECOM.parts.mfbom = function (bd, s, ctx) {
     Z.chip(g, x + NW / 2, 20, t.name, 15, { fill: C.g08, stroke: C.g65, sw: 1.6, color: C.dark, min: 100 });
     t.items.forEach(function (o, j) { var y = 56 + (446 / k) * (j + .5) - NH / 2; pos[o.id] = { x: x, y: y, i: i, o: o } }) });
   function ed(a, b, hi, t) { var A = pos[a], B = pos[b]; if (!A || !B) return; var x1 = A.x + NW, y1 = A.y + NH / 2, x2 = B.x, y2 = B.y + NH / 2, c = (x1 + x2) / 2;
-    E('path', { d: 'M' + x1 + ' ' + y1 + ' C' + c + ' ' + y1 + ', ' + c + ' ' + y2 + ', ' + x2 + ' ' + y2, fill: 'none', stroke: hi ? C.dark : C.g40, 'stroke-width': hi ? 4.5 : 2, opacity: hi ? 1 : .9, 'data-at': t, 'data-fx': 'draw', 'data-ms': 600 }, svg) }
+    E('path', { d: ECOM.h.orthoD([x1, y1], [x2, y2], [[c, y1], [c, y2]]), fill: 'none', stroke: hi ? C.dark : C.g40, 'stroke-width': hi ? 3 : 1.5, opacity: hi ? 1 : .9, 'data-at': t, 'data-fx': 'draw', 'data-ms': 600 }, svg) }
   var hs = {}; (s.hi || []).forEach(function (e) { hs[e[0] + '>' + e[1]] = 1 });
   (s.edges || []).forEach(function (e, k) { if (!hs[e[0] + '>' + e[1]]) ed(e[0], e[1], 0, 400 + pos[e[0]].i * 500 + k * 40) });
   (s.edges || []).forEach(function (e, k) { if (hs[e[0] + '>' + e[1]]) ed(e[0], e[1], 1, 600 + pos[e[0]].i * 500 + k * 40) });

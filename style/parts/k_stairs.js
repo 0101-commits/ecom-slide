@@ -16,8 +16,8 @@ function stairsDefault(bd, s, ctx) {
   steps.forEach(function (st, k) { var x = x0 + k * dx, y = y0 + k * pitch, ta = t0 + k * PER, last = k === N - 1, my = y + sh / 2;
     // 굽은 화살(위 왼쪽에서 내려와 이름표로)
     if (k > 0 || intro) { var sx = x - 36, sy = k ? y - pitch + sh + 6 : y - 18, ex = x - 7;
-      var d = 'M' + sx + ' ' + sy + ' C ' + (sx - 6) + ' ' + (my - 4) + ', ' + (sx + 8) + ' ' + my + ', ' + ex + ' ' + my;
-      E('path', { d: d, fill: 'none', stroke: C.g65, 'stroke-width': 2.6, 'stroke-linecap': 'round', 'data-at': ta, 'data-fx': 'draw', 'data-ms': 380 }, svg);
+      var d = ECOM.h.orthoD([sx, sy], [ex, my], 'vh', 10);
+      E('path', { d: d, fill: 'none', stroke: C.g65, 'stroke-width': 3, 'stroke-linecap': 'round', 'data-at': ta, 'data-fx': 'draw', 'data-ms': 380 }, svg);
       K.head(svg, x - 1, my, 0, C.g65, 10, { 'data-at': ta + 330, 'data-fx': 'fade', 'data-ms': 160 }) }
     var html = '<div class="k-sttg' + (last ? ' last' : '') + '" style="width:' + TAG + 'px">' + h.esc(st.tag || String(k + 1)) + '</div><div class="k-stbx" style="left:' + tx + 'px;width:' + tw + 'px">'
       + '<div class="k-stt">' + h.md(st.title || '') + '</div>' + (st.lines || []).map(function (l) { return '<div class="k-stl">' + h.md(l) + '</div>' }).join('') + '</div>';

@@ -44,6 +44,10 @@
 | `list` | 번호 목록(그림 번호와 짝) | `items[{n, t, s, fig, hot, tone}]` |
 | `iso` | 공간 배치, 내부 구조(분해도) | `items[{k:"box|cyl|plate|flow|guide", x, y, z, w, d, h, r, tone:"strong|soft|mid|plain|warn|ground|ghost", tag, fig, pin, foot, side, lines[], grid, t, pts[], dash, ord}]` · `u`(한 칸 28) `ox` `oy` · `panel` · `texts[{fx, fy, t}]` · `list`(옆 번호 목록) |
 | `plan` | 공간 배치(평면도, 배치도, 단면), 설비 계통, 기계 | `size[가로, 세로]` · `shapes[{k:"rect|line|poly|circle|arc|rep", …, fill:"soft|solid|hi|hatch", sw:"bold|mid|thin", dash, arrow}]` · `syms[{k:"tank|vessel|pump|valve|hx|turbine|gen|tower|fan", x, y, w, h, hot, t, tp}]` · `pipes[{pts[], tone, dash, lab}]` · `dims[{a, b, t, off}]` · `texts[]` · `pins[{x, y, n, to}]` · `title{name, scale, unit}` · `list`. 6판은 흰 바탕 옅은 격자(짙은 청사진 바탕 없음) |
+| `section` | 층 단면, 구성 분해(방송 구성) | `layers[{t, v, fig, s, tone:"d|g|m|s|y", minus, hot}]`(아래부터, 두께 = 값), `total{t, v, fig}`(왼쪽 묶음), `unit`, `explode`(층 사이 띄움). 이름표는 오른쪽 칸, 직각 지시선 |
+| `hexmap` | 지역별 값(한국 17 시도 육각 칸, 경계 자료 없음) | `values{시도: 값}`, `bands[경계 1~3개]`, `unit`, `dec`(소수 자리), `rise`(값만큼 솟은 입체), `side`(오른쪽 높은 곳, 낮은 곳 3곳씩, 기본 켬), `legend` |
+| `versus` | 두 대상 맞대결(대결 판) | `a{name, icon, s, fig, k}`, `b{…}`(반씩 나눈 바탕), `rows[{t, a, b, fa, fb, hi}]`(같은 잣대 줄, 숫자면 가운데에서 바깥으로 막대), `lowWin`(작은 값이 이김), `note`(원인 한 줄) |
+| `photo` | 사진 합성(근거 제시) | `img`, `ar`, `focus[0~1, 0~1]`, `fade:"right|left|bottom|none"`(그쪽을 흰색으로 흐리게), `calls[{x, y, n, t, s, hot}]`(사진 위 번호 → 흐린 쪽 이름표, 직각 지시선), `credit`(각주에 「사진: …」) |
 
 - `tone`: `strong`(짙은 면, 결론 칸) · `soft`(중간 면) · `ghost` · `warn` · `mid` · `hot`. 없으면 옅은 면.
 - 숫자 크기: `stat` 은 36px, `big:true` 는 52px(장에 1곳). `bars` 의 `hero:true` 는 52px.
@@ -96,8 +100,17 @@
 
 - 카드(`cards`)와 타일(`tiles`)의 `icon`: 라인 아이콘 이름(`style/icons`, Lucide, ISC: database, cpu, shield-check 등 24종) 또는 `tf:<코드>`(Tossface 원본 그림, `style/tossface`, 예: `tf:u1F33E`).
 - Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
-- `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
+- `skin`: `navy`(남색), `plain`(회색), `paper`(종이 질감 : 칸 면만 옅은 종이 색과 6% 결, 장 바탕은 흰색). 없으면 ECOM 초록. 벤토 틀(`bentoG`, `bentoL`)은 4단계 틀과 함께.
 - 지도와 인체는 엔진의 기존 화면 종류(`fullmap` · `map` · `body` 등)를 쓴다.
 - 아직 없는 것: `doc`(문서 그림), 그림 재료는 산업 · 물류 · 농업 · 의료 · 도시 장면.
 
 그림형 시험 덱: `style/demo6_picture.json`(판 4 그림형 명세 15장). 시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
+
+## 개념도 표시, 직각 연결선, 연결선 점검(7단계)
+
+- 장에 `"concept": "개념도" | "예시 치수" | "어림 값"`(true = 개념도). 꼬리표 옆(벤토 틀은 부제목 옆)에 칩, 각주 출처 줄 끝에 「단순화한 개념도」 「치수는 예시 값」 「값은 어림 값」이 붙음.
+- 연결선은 가로, 세로 마디만. 부품에서는 `ECOM.h.orthoD(a, b, via, r)` 로 경로를 만듦(`via` = `hvh` 기본, `vhv`, `hv`, `vh`, 또는 거칠 점 목록). 꺾는 곳만 둥글게(r 8).
+- 연결선 굵기는 1.5px(기본) 또는 3px(강조). 화살 꼭지는 선과 같은 색. 선 위 이름표는 흰 테두리 글이나 흰 칸으로 가림.
+- 화면 점검(`tools/check5.py`) 연결선 5항목 : 대각 연결선(곡선 포함), 연결선이 칸을 지남, 연결선이 글을 지남, 화살 꼭지 색, 연결선 굵기. 두 끝이 서로 다른 칸 가장자리에 닿는 선만 셈(지도, 그림 장 제외).
+- 견본: `style/demo6_broadcast.json` 6장(층 단면, 시도 육각 지도 평면과 입체, 대결 판, 사진 합성, 종이 질감과 사람 그림). 숫자는 모두 예시 값.
+- 파생 부품 한도는 덱당 화면 종류 1개(파일 수가 아니라 `ECOM.parts.<kind>` 수로 셈). 쓸 때는 `meta.derived` 에 `{"kind": "블록으로 못 그리는 까닭"}`.

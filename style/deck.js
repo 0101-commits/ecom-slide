@@ -59,6 +59,16 @@ function lv(p, b, extra) { var a = { 'data-b': b }; for (var k in extra) a[k] = 
 function at(p, ms, extra) { var a = { 'data-at': ms }; for (var k in extra) a[k] = extra[k]; return E('g', a, p) }
 function tri(p, x, y, up, s, fill, extra) { var d = up ? 'M' + x + ' ' + (y - s) + ' L' + (x + s * .95) + ' ' + (y + s * .7) + ' L' + (x - s * .95) + ' ' + (y + s * .7) + ' Z'
   : 'M' + x + ' ' + (y + s) + ' L' + (x + s * .95) + ' ' + (y - s * .7) + ' L' + (x - s * .95) + ' ' + (y - s * .7) + ' Z'; return E('path', Object.assign({ d: d, fill: fill }, extra || {}), p) }
+/* 6판 직각 연결선 경로 — a → b 를 가로 · 세로 마디로 잇고 꺾는 곳만 둥글게(r, 기본 8).
+   via = 'hvh'(가운데 x 에서 꺾음, 기본) · 'vhv'(가운데 y) · 'hv' · 'vh' · [[x,y], …](거칠 점, 가로 · 세로로만 놓을 것) */
+function orthoD(a, b, via, r) { via = via || 'hvh'; r = r == null ? 8 : r; var P = [a];
+  if (Array.isArray(via)) P = P.concat(via); else if (via === 'hvh') { var mx = (a[0] + b[0]) / 2; P.push([mx, a[1]], [mx, b[1]]) } else if (via === 'vhv') { var my = (a[1] + b[1]) / 2; P.push([a[0], my], [b[0], my]) } else if (via === 'hv') P.push([b[0], a[1]]); else P.push([a[0], b[1]]);
+  P.push(b); var Q = [P[0]]; P.forEach(function (p, i) { if (i && Math.abs(p[0] - Q[Q.length - 1][0]) + Math.abs(p[1] - Q[Q.length - 1][1]) > .5) Q.push(p) });
+  var f = function (v) { return Math.round(v * 10) / 10 }, d = 'M' + f(Q[0][0]) + ' ' + f(Q[0][1]);
+  for (var i = 1; i < Q.length - 1; i++) { var p0 = Q[i - 1], p1 = Q[i], p2 = Q[i + 1], dx0 = Math.sign(p1[0] - p0[0]), dy0 = Math.sign(p1[1] - p0[1]), dx1 = Math.sign(p2[0] - p1[0]), dy1 = Math.sign(p2[1] - p1[1]);
+    var rr = Math.min(r, (Math.abs(p1[0] - p0[0]) + Math.abs(p1[1] - p0[1])) / 2, (Math.abs(p2[0] - p1[0]) + Math.abs(p2[1] - p1[1])) / 2);
+    d += ' L' + f(p1[0] - dx0 * rr) + ' ' + f(p1[1] - dy0 * rr) + ' Q' + f(p1[0]) + ' ' + f(p1[1]) + ' ' + f(p1[0] + dx1 * rr) + ' ' + f(p1[1] + dy1 * rr) }
+  var z = Q[Q.length - 1]; return d + ' L' + f(z[0]) + ' ' + f(z[1]) }
 function arrow2(p, x, y0, y1, col, w) { col = col || C.dark; w = w || 1.6; var a = Math.min(y0, y1) + 3, b = Math.max(y0, y1) - 3; E('line', { x1: x, x2: x, y1: a, y2: b, stroke: col, 'stroke-width': w }, p);
   E('path', { d: 'M' + (x - 5) + ' ' + (a + 8) + ' L' + x + ' ' + a + ' L' + (x + 5) + ' ' + (a + 8), fill: 'none', stroke: col, 'stroke-width': w }, p);
   E('path', { d: 'M' + (x - 5) + ' ' + (b - 8) + ' L' + x + ' ' + b + ' L' + (x + 5) + ' ' + (b - 8), fill: 'none', stroke: col, 'stroke-width': w }, p) }
@@ -142,7 +152,7 @@ function play(root, skip) {
 function settle(root) { if (!root.getAnimations) return; root.getAnimations({ subtree: true }).forEach(function (a) { if (a._fx === 1 && a.playState === 'finished') a.cancel() }) }
 function finish(root) { stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); if (root._done) root._done(root); emphOn(root) }
 
-ECOM.h = { snapFs: snapFs, snapSw: snapSw, E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2,
+ECOM.h = { snapFs: snapFs, snapSw: snapSw, E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2, orthoD: orthoD,
   bracket: bracket, legend: legend, stepD: stepD, lineD: lineD, col: col, num: num, ext: ext, A: A, later: later, dur: dur, RM: RM, cText: cText, EIN: EIN, ESTD: ESTD, EOUT: EOUT, C: C };
 
 /* ───────── 장 만들기 ───────── */
@@ -150,11 +160,16 @@ var D = null, S = [], cur = -1, beatK = 0, origin = null, stage, deckEl, timers 
 var LOGO = window.ECOM_LOGO || {};
 function logoImg(white, cls) { var src = white ? LOGO.white : LOGO.green; return src ? '<img class="' + (cls || '') + '" src="' + src + '" alt="ECOM">' : '<b class="' + (cls || '') + '" style="font-size:20px;color:' + (white ? '#fff' : C.main) + '">ECOM</b>' }
 ECOM.logo = logoImg;
-function eyebrow(s) { var e = s.eyebrow; if (!e) return ''; if (typeof e === 'string') return '<b>' + esc(e) + '</b>';
-  return '<b>' + esc(e.group || '') + '</b>' + (e.topic ? '<span>' + esc(e.topic) + '</span>' : '') + (e.basis ? '<em>' + esc(e.basis) + '</em>' : '') }
+/* 6판 개념도 표시 : s.concept = '개념도' | '예시 치수' | '어림 값'(true = 개념도) → 꼬리표 옆 칩 + 출처 줄에 뜻 한 마디 */
+var CONCEPT = { '개념도': '단순화한 개념도', '예시 치수': '치수는 예시 값', '어림 값': '값은 어림 값' };
+function conceptOf(s) { var c = s.concept === true ? '개념도' : s.concept; return CONCEPT[c] ? c : '' }
+function conceptChip(s) { var c = conceptOf(s); return c ? '<i class="cc">' + esc(c) + '</i>' : '' }
+function eyebrow(s) { var e = s.eyebrow; if (!e) return conceptChip(s); if (typeof e === 'string') return '<b>' + esc(e) + '</b>' + conceptChip(s);
+  return '<b>' + esc(e.group || '') + '</b>' + (e.topic ? '<span>' + esc(e.topic) + '</span>' : '') + (e.basis ? '<em>' + esc(e.basis) + '</em>' : '') + conceptChip(s) }
 function footHTML(s) { var f = s.foot || {}, out = [], n = f.notes || [];
   if (n.length) out.push('주: ' + n.map(function (x, i) { return (i + 1) + ') ' + esc(x) }).join(' &nbsp;'));
-  if (f.source) out.push('출처: ' + esc(f.source) + (f.asof ? ' (' + esc(f.asof) + ' 기준)' : '')); return out.join('<br>') }
+  var cm = CONCEPT[conceptOf(s)];
+  if (f.source) out.push('출처: ' + esc(f.source) + (f.asof ? ' (' + esc(f.asof) + ' 기준)' : '') + (cm ? ', ' + cm : '')); else if (cm) out.push(cm); return out.join('<br>') }
 function pageOf(i) { var x = S[i]; return x.apx ? x.s.appendix : String(x.page) }
 function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
@@ -175,7 +190,7 @@ function buildSlide(x) {
     var lk = '';
     if (x.apx) lk = '<a data-back="1">← 본문으로</a>';
     else if (s.links && s.links.length) lk = s.links.map(function (l) { return '<a data-to="' + esc(l.to) + '">' + esc(l.text || l.to) + ' →</a>' }).join('');
-    el.innerHTML = (bento ? '<div class="bt mv">' + md([].concat(s.title || s.head || '').join('\n')) + '</div>' + (s.sub ? '<div class="bs mv">' + md(s.sub) + '</div>' : '')
+    el.innerHTML = (bento ? '<div class="bt mv">' + md([].concat(s.title || s.head || '').join('\n')) + '</div>' + (s.sub || conceptOf(s) ? '<div class="bs mv">' + md(s.sub || '') + conceptChip(s) + '</div>' : '')
       : '<div class="tag ch">' + eyebrow(s) + '</div><div class="hm mv">' + md(s.head || '') + '</div>') + '<div class="bd mv"></div><div class="fn ch">' + footHTML(s) + '</div>'
       + '<div class="lg ch">' + logoImg(ctx.dark) + '<span>' + esc(ctx.page) + '</span></div>' + (lk ? '<div class="lk ch">' + lk + '</div>' : '');
     ctx.bd = el.querySelector('.bd');
@@ -497,7 +512,7 @@ function runCheck() {
     el.querySelectorAll('rect,path,line,polyline,polygon,circle,ellipse').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (cs.stroke && cs.stroke !== 'none') { var w = parseFloat(cs.strokeWidth); if (w > 0) inc(wz, w) }
       if (e.tagName === 'rect') { var r = parseFloat(e.getAttribute('rx')); if (r > 0) inc(rz, r) } });
     rec.fsz = hz; rec.swz = wz; rec.rxz = rz;
-    var nc = (el.textContent.match(/모르는 (화면 종류|블록|그림 재료) : [^\s<]+/g) || []); if (nc.length) rec.newCode = nc.slice(0, 4);
+    var nc = (el.textContent.match(/모르는 (화면 종류|블록|그림 재료) : [^\s<]+/g) || []); if (nc.length) rec.newCode = nc.slice(0, 4); var pe = (el.textContent.match(/[a-z0-9]+ 그리기 오류 : [^<]{0,60}/g) || []); if (pe.length) rec.partErr = pe.slice(0, 3);
     /* 6판 품질 점검 4항목 : 칸 수(본문 칸 안 칸이 5개 넘음) · 흰 테두리 칸(흰 면 + 테두리) · 그림 크기(그림 장인데 가장 큰 그림이 본문 칸의 35% 밑) · 선명도(그림을 원본보다 크게 늘림) */
     (function () { var bdE = el.querySelector('.bd'); if (!bdE) return; var BB = toS(bdE.getBoundingClientRect()), bA = Math.max(1, (BB.r - BB.l) * (BB.b - BB.t)), cards = [], wb = [], big = 0, blur = [];
       function lum(c) { var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return -1; var v = m[1].split(',').map(parseFloat); if (v.length > 3 && v[3] < .5) return -1; return (v[0] * .299 + v[1] * .587 + v[2] * .114) / 255 }
@@ -520,6 +535,37 @@ function runCheck() {
       el.querySelectorAll('*').forEach(function (e) { if (e.namespaceURI === NS || !visible(e) || !Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim() })) return; var tl = lum2(getComputedStyle(e).color); if (tl < .8) return; var r = e.getBoundingClientRect(); if (!r.width) return;
         var b = e, bg = -1; while (b && b !== el && bg < 0) { bg = lum2(getComputedStyle(b).backgroundColor); b = b.parentElement } if (bg < 0) bg = under(e, r.left + r.width / 2, r.top + r.height / 2); if (bg > .8) bad.push(e.textContent.trim().slice(0, 12)) });
       if (bad.length) rec.lowC = bad.slice(0, 6) })();
+    /* 6판 연결선 점검 5항목 : 대각 · 곡선 연결선 · 칸을 지나는 연결선 · 화살 꼭지 색 · 글을 지나는 연결선 · 연결선 굵기(1.5 · 3 밖). 두 끝이 서로 다른 칸 가장자리에 닿는 선만 연결선으로 봄 */
+    (function () { if (/map|body|anatomy|iso|plan|build/.test((x.s.kind || '') + ' ' + (x.s.layout || '')) || /"(plan|iso|body|map|shot)"/.test(JSON.stringify(x.s.blocks || []))) return;
+      function col(c) { return (c || '').replace(/\s/g, '') } function hasPaint(c) { var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return false; var v = m[1].split(','); return !(v.length > 3 && +v[3] < .2) }
+      var BX = [];
+      el.querySelectorAll('.bd rect,.fl rect,.bd div').forEach(function (e) { if (!visible(e)) return; var q = toS(e.getBoundingClientRect()), w = q.r - q.l, h = q.b - q.t; if (w < 36 || h < 22 || w > 1000 || h > 470) return; var cs = getComputedStyle(e);
+        if (e.namespaceURI === NS) { if (!hasPaint(cs.fill) && !(cs.stroke && cs.stroke !== 'none')) return } else if (!hasPaint(cs.backgroundColor) && !(parseFloat(cs.borderTopWidth) > 0 && cs.borderTopStyle !== 'none')) return;
+        BX.push(q) });
+      function PT(e, px, py) { var m = e.getScreenCTM(); if (!m) return null; return [((m.a * px + m.c * py + m.e) - r0.left) / k, ((m.b * px + m.d * py + m.f) - r0.top) / k] }
+      function boxAt(p) { var best = -1, ba = 1e9; BX.forEach(function (q, i) { if (p[0] < q.l - 10 || p[0] > q.r + 10 || p[1] < q.t - 10 || p[1] > q.b + 10) return; var dE = Math.min(Math.abs(p[0] - q.l), Math.abs(p[0] - q.r), Math.abs(p[1] - q.t), Math.abs(p[1] - q.b)); if (dE > 14) return; var a = (q.r - q.l) * (q.b - q.t); if (a < ba) { ba = a; best = i } }); return best }
+      function inside(q, a, b) { return a.l >= q.l - 1 && a.r <= q.r + 1 && a.t >= q.t - 1 && a.b <= q.b + 1 && b.l >= q.l - 1 && b.r <= q.r + 1 && b.t >= q.t - 1 && b.b <= q.b + 1 }
+      function hits(p0, p1, q, sh) { for (var i = 2; i <= 18; i++) { var u = i / 20, px = p0[0] + (p1[0] - p0[0]) * u, py = p0[1] + (p1[1] - p0[1]) * u; if (px > q.l + sh && px < q.r - sh && py > q.t + sh && py < q.b - sh) return true } return false }
+      var TX = []; el.querySelectorAll('.bd text,.fl text').forEach(function (e) { if (!e.textContent.trim() || !visible(e)) return; var tc = getComputedStyle(e); if (/^stroke/.test(tc.paintOrder || '') && parseFloat(tc.strokeWidth) >= 2.5 && hasPaint(tc.stroke)) return; var q = toS(e.getBoundingClientRect()); if (q.r - q.l > 4) TX.push([e, q]) });
+      var TIP = []; el.querySelectorAll('.bd path,.bd polygon,.fl path,.fl polygon').forEach(function (e) { if (!visible(e)) return; var q = toS(e.getBoundingClientRect()), w = q.r - q.l, h = q.b - q.t; if (w > 22 || h > 22 || w < 3) return; var f = getComputedStyle(e).fill; if (!hasPaint(f)) return; TIP.push([(q.l + q.r) / 2, (q.t + q.b) / 2, col(f)]) });
+      var R = { connDiag: [], connCross: [], connTip: [], connText: [], connW: [] };
+      el.querySelectorAll('.bd line,.bd path,.bd polyline,.fl line,.fl path,.fl polyline').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (!cs.stroke || cs.stroke === 'none' || hasPaint(cs.fill)) return; var pts = [], curve = false, cor = [];
+        if (e.tagName === 'line') pts = [[+e.getAttribute('x1') || 0, +e.getAttribute('y1') || 0], [+e.getAttribute('x2') || 0, +e.getAttribute('y2') || 0]];
+        else if (e.tagName === 'polyline') { var nn = (e.getAttribute('points') || '').trim().split(/[\s,]+/).map(Number); for (var i = 0; i + 1 < nn.length; i += 2) pts.push([nn[i], nn[i + 1]]) }
+        else { var d = e.getAttribute('d') || ''; if (/^[\sMLHVQ0-9.,eE-]+$/.test(d) && !/[mlhvq]/.test(d)) { var re = /([MLHVQ])([^MLHVQ]*)/g, mm, cx = 0, cy = 0; while ((mm = re.exec(d))) { var v = mm[2].trim().split(/[\s,]+/).filter(Boolean).map(Number); if (mm[1] === 'H') { v.forEach(function (z) { cx = z; pts.push([cx, cy]) }) } else if (mm[1] === 'V') { v.forEach(function (z) { cy = z; pts.push([cx, cy]) }) } else if (mm[1] === 'Q') { for (var j0 = 0; j0 + 3 < v.length; j0 += 4) { cx = v[j0 + 2]; cy = v[j0 + 3]; pts.push([cx, cy]); cor[pts.length - 1] = 1 } } else for (var j = 0; j + 1 < v.length; j += 2) { cx = v[j]; cy = v[j + 1]; pts.push([cx, cy]) } } }
+          else if (/[CQSAcqsa]/.test(d) && !/[Zz]/.test(d) && e.getTotalLength) { var L = e.getTotalLength(), NQ = Math.max(8, Math.min(60, Math.round(L / 6))); for (var q0 = 0; q0 <= NQ; q0++) { var pp = e.getPointAtLength(L * q0 / NQ); pts.push([pp.x, pp.y]) } curve = true } }
+        if (pts.length < 2 || (!curve && pts.length > 14)) return; var S = pts.map(function (p) { return PT(e, p[0], p[1]) }); if (S.some(function (p) { return !p })) return;
+        var len = 0; for (var i2 = 1; i2 < S.length; i2++) len += Math.hypot(S[i2][0] - S[i2 - 1][0], S[i2][1] - S[i2 - 1][1]); if (len < 24) return;
+        var a = boxAt(S[0]), b = boxAt(S[S.length - 1]); if (a < 0 || b < 0 || a === b) return; var A = BX[a], B = BX[b];
+        if (inside(A, B, B) || inside(B, A, A)) return;
+        var nm = Math.round(S[0][0]) + ',' + Math.round(S[0][1]);
+        var dg = 0; for (var i5 = 1; i5 < S.length; i5++) { if (cor[i5]) continue; var ddx = Math.abs(S[i5][0] - S[i5 - 1][0]), ddy = Math.abs(S[i5][1] - S[i5 - 1][1]); if (ddx > (curve ? .4 : 3) && ddy > (curve ? .4 : 3)) dg += Math.hypot(ddx, ddy) }
+        if (curve ? dg > Math.max(18, len * .2) : dg > 0) R.connDiag.push(nm + (curve ? ' 곡선' : ' 대각'));
+        BX.forEach(function (q, i4) { if (i4 === a || i4 === b || q.b - q.t <= 30 || q.r - q.l <= 30 || inside(q, A, B) || inside(q, A, A) || inside(q, B, B)) return; for (var s = 1; s < S.length; s++) if (hits(S[s - 1], S[s], q, 4)) { R.connCross.push(nm); return } });
+        var sw = Math.round(parseFloat(cs.strokeWidth) * 10) / 10; if (sw && [1.5, 3].indexOf(sw) < 0) R.connW.push(nm + ' ' + sw + 'px');
+        var E2 = S[S.length - 1], tip = TIP.filter(function (t) { return Math.hypot(t[0] - E2[0], t[1] - E2[1]) < 12 })[0]; if (tip && tip[2] !== col(cs.stroke)) R.connTip.push(nm);
+        TX.forEach(function (t) { var q = t[1]; for (var s = 1; s < S.length; s++) if (hits(S[s - 1], S[s], q, 1)) { var cov = Array.prototype.some.call(el.querySelectorAll('rect'), function (r) { if (!(e.compareDocumentPosition(r) & 4) || !hasPaint(getComputedStyle(r).fill)) return false; var rq = toS(r.getBoundingClientRect()); return rq.l <= q.l + 2 && rq.r >= q.r - 2 && rq.t <= q.t + 2 && rq.b >= q.b - 2 }); if (!cov) R.connText.push(t[0].textContent.trim().slice(0, 10)); return } }) });
+      Object.keys(R).forEach(function (kk) { if (R[kk].length) rec[kk] = R[kk].slice(0, 4).concat(R[kk].length > 4 ? ['외 ' + (R[kk].length - 4) + '곳'] : []) }) })();
     var offF = Object.keys(hz).filter(function (v) { return +v <= 62 && SPEC.fs.indexOf(+v) < 0 }), offW = Object.keys(wz).filter(function (v) { return +v <= 8.5 && SPEC.sw.indexOf(+v) < 0 }), nHero = Object.keys(hz).reduce(function (a, v) { return a + (+v >= 48 && +v <= 62 ? hz[v] : 0) }, 0);
     if (offF.length) rec.specFs = offF.map(function (v) { return v + 'px ' + hz[v] + '곳' }); if (offW.length) rec.specSw = offW.map(function (v) { return v + 'px ' + wz[v] + '곳' }); var hl = heroList(el); if (hl.length > 1) rec.specHero = ['숫자 든 48~62px 글 ' + hl.length + '곳 : ' + hl.slice(0, 4).map(function (e) { return e.textContent.trim().slice(0, 12) }).join(' / ')];
     el.classList.remove('on') });

@@ -70,7 +70,7 @@ function stk(g, x, y, w, mh, items, va, an) {
   ms.forEach(function (m, i) { if (i) yy += m.it.gap || 0; m.ls.forEach(function (l, j) { T(g, x, yy + m.sz * .95 + j * m.sz * 1.36, l, { 'text-anchor': an || 'start', 'font-size': m.sz, 'font-weight': m.it.bold ? 700 : 400, fill: m.it.fill }) }); yy += m.ls.length * m.sz * 1.36 });
   return tot }
 var NEW = {};
-function kinds(P) { return { money: { col: P.main, w: 4.2, dash: '', lab: '돈' }, work: { col: P.cmp, w: 2.6, dash: '', lab: '일 · 비용' }, guarantee: { col: P.cmp, w: 2.6, dash: '7 5', lab: '보증' } } }
+function kinds(P) { return { money: { col: P.main, w: 3, dash: '', lab: '돈' }, work: { col: P.cmp, w: 1.5, dash: '', lab: '일 · 비용' }, guarantee: { col: P.cmp, w: 1.5, dash: '7 5', lab: '보증' } } }
 function collect(s) { var a = [], ct = s.center || null; if (ct) a.push({ id: 'center', n: ct, c: 1 });
   (s.nodes || []).slice(0, 8).forEach(function (n, i) { a.push({ id: n.id != null ? n.id : String(i), n: n, c: n.tone === 'dark' ? 1 : 0 }) }); return a }
 function drawBox(svg, o, cx, cy, w, hh, at, ctx, big) { var P = ctx.P, dk = ctx.dark, n = o.n, g = h.at(svg, at, { 'data-fx': 'pop', 'data-ms': 340, 'data-key': n.title || '' }), c = o.c, mw = w - 24;
@@ -137,8 +137,8 @@ NEW.trade = function (bd, s, ctx) {
       lst.sort(function (a, b) { return a.o - b.o }); var m = lst.length, len = (sd2 === 'L' || sd2 === 'R') ? o.h : o.w, pt = Math.min(26, (len - 28) / Math.max(1, m - 1)); lst.forEach(function (q, i) { q.e[q.k] = m > 1 ? (i - (m - 1) / 2) * pt : 0 }) }) });
   function port(o, sd2, off) { return sd2 === 'L' ? [o.cx - o.w / 2, o.cy + off] : sd2 === 'R' ? [o.cx + o.w / 2, o.cy + off] : sd2 === 't' ? [o.cx + off, o.cy - o.h / 2] : [o.cx + off, o.cy + o.h / 2] }
   E2.forEach(function (e, n) { var p1 = port(e.a, e.sa, e.oa || 0), p2 = port(e.b, e.sb, e.ob || 0), kd = e.kd, te = T0 + n * 320, g = E('g', { 'data-key': e.l.text || '' }, svg), d, ux = 0, uy = 0, lx, ly, an = 'middle';
-    if (e.sa === 'b' || e.sa === 't') { uy = e.sa === 'b' ? 1 : -1; d = 'M' + p1[0] + ' ' + p1[1] + ' L' + p2[0] + ' ' + (p2[1] - uy * 10); lx = (p1[0] + p2[0]) / 2 + 12; ly = (p1[1] + p2[1]) / 2 + 4; an = 'start' }
-    else { ux = e.sa === 'R' ? 1 : -1; var mx = (p1[0] + p2[0]) / 2; d = 'M' + p1[0] + ' ' + p1[1] + ' C' + mx + ' ' + p1[1] + ' ' + mx + ' ' + p2[1] + ' ' + (p2[0] - ux * 10) + ' ' + p2[1]; lx = mx; ly = (p1[1] + p2[1]) / 2 + 4 }
+    if (e.sa === 'b' || e.sa === 't') { uy = e.sa === 'b' ? 1 : -1; d = ECOM.h.orthoD(p1, [p2[0], p2[1] - uy * 10], 'vhv'); lx = (p1[0] + p2[0]) / 2 + 12; ly = (p1[1] + p2[1]) / 2 + 4; an = 'start' }
+    else { ux = e.sa === 'R' ? 1 : -1; var mx = (p1[0] + p2[0]) / 2; d = ECOM.h.orthoD(p1, [p2[0] - ux * 10, p2[1]], 'hvh'); lx = mx; ly = (p1[1] + p2[1]) / 2 + 4 }
     E('path', { d: d, fill: 'none', stroke: kd.col, 'stroke-width': kd.w, 'stroke-dasharray': kd.dash || null, 'stroke-linecap': 'round', 'data-at': te, 'data-fx': kd.dash ? 'fade' : 'draw', 'data-ms': 480 }, g); arrowTip(g, p2[0], p2[1], ux, uy || 0, kd.col, kd.w > 3 ? 14 : 12, te + 440);
     if (e.l.text) { var lt = h.at(g, te + 300, { 'data-fx': 'fade' }); elabel(lt, lx, ly, e.l.text, kd.col, an, ctx) } });
   legendK(svg, used, s.legend || {}, ctx);

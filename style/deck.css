@@ -20,6 +20,8 @@ body{overflow:hidden}
 .sl .tag{position:absolute;left:56px;top:26px;right:330px;font-size:16px;font-weight:700;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sl .tag span{font-weight:500;margin-left:12px}
 .sl .tag em{font-style:normal;font-weight:500;color:var(--mute);margin-left:10px;font-size:16px}
+/* 6판 개념도 칩(꼬리표 옆 · 벤토는 부제목 옆) */
+.sl .cc{font-style:normal;font-size:13px;font-weight:700;color:var(--g);background:#ECF5F1;border-radius:6px;padding:2px 8px;margin-left:12px;vertical-align:2px;letter-spacing:0}
 .sl .hm{position:absolute;left:56px;right:70px;top:52px;font-size:26px;line-height:1.48;font-weight:500;color:var(--ink)}
 .sl .hm b{font-weight:700;color:var(--gdk)}
 .sl .bd{position:absolute;left:56px;right:56px;top:144px;bottom:64px}

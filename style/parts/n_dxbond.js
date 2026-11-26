@@ -56,7 +56,7 @@ ECOM.parts.dxholder = function (bd, s, ctx) {
   /* 카드 */
   var gap = 12, cw = (W - gap * (n - 1)) / n, cy = 232, ch = 270, mxv = Math.max.apply(null, P.map(function (p) { return Math.max(p.share, p.prev) })) * 1.1;
   P.forEach(function (p, i) { var q = seg[i], bx = i * (cw + gap), g = h.at(svg, 900 + i * 200, { 'data-fx': 'rise' }), d = p.share - p.prev, up = d >= 0, sh = shades[i % shades.length];
-    E('path', { d: 'M' + q.c + ' ' + (by + bh) + ' L' + q.c + ' ' + (by + bh + 18) + ' L' + (bx + cw / 2) + ' ' + (cy - 20) + ' L' + (bx + cw / 2) + ' ' + cy, fill: 'none', stroke: C.axis, 'stroke-width': 1.4, 'stroke-dasharray': '3 3' }, g);
+    E('path', { d: ECOM.h.orthoD([q.c, by + bh], [bx + cw / 2, cy], [[q.c, by + bh + 18], [bx + cw / 2, by + bh + 18]], 6), fill: 'none', stroke: C.axis, 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }, g);
     E('rect', { x: bx, y: cy, width: cw, height: ch, rx: 10, fill: '#fff', stroke: C.axis, 'stroke-width': 1.4 }, g); E('rect', { x: bx, y: cy, width: cw, height: 40, rx: 10, fill: C[sh[0]] }, g); E('rect', { x: bx, y: cy + 28, width: cw, height: 12, fill: C[sh[0]] }, g);
     T(g, bx + cw / 2, cy + 27, p.name, { 'text-anchor': 'middle', 'font-size': 15.5, 'font-weight': 700, fill: sh[1] });
     T(g, bx + cw / 2 - 8, cy + 98, h.nf(p.share, 1), { 'text-anchor': 'middle', 'font-size': 38, 'font-weight': 700, fill: C.ink }); T(g, bx + cw / 2 + h.textW(h.nf(p.share, 1), 38, true) / 2 - 4, cy + 98, '%', { 'font-size': 18, 'font-weight': 700, fill: C.mute });

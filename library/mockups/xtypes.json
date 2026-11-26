@@ -7,7 +7,11 @@
    "q": "시간에 따라 어떻게 변했나",
    "draw": "꺾은선",
    "mockups": 63,
-   "mockups_any": 70
+   "mockups_any": 70,
+   "blocks": [
+    "line",
+    "stat"
+   ]
   },
   {
    "code": "rank",
@@ -15,7 +19,10 @@
    "q": "무엇이 더 큰가",
    "draw": "막대",
    "mockups": 31,
-   "mockups_any": 33
+   "mockups_any": 33,
+   "blocks": [
+    "bars"
+   ]
   },
   {
    "code": "share",
@@ -23,7 +30,12 @@
    "q": "전체 중 얼마인가",
    "draw": "쌓은 막대, 도넛, 100칸",
    "mockups": 34,
-   "mockups_any": 35
+   "mockups_any": 35,
+   "blocks": [
+    "section",
+    "bars",
+    "pict"
+   ]
   },
   {
    "code": "dist",
@@ -31,7 +43,10 @@
    "q": "얼마나 퍼져 있나",
    "draw": "점 분포 + 상자",
    "mockups": 14,
-   "mockups_any": 15
+   "mockups_any": 15,
+   "blocks": [
+    "dist"
+   ]
   },
   {
    "code": "pair",
@@ -39,7 +54,11 @@
    "q": "바꾸기 전과 후",
    "draw": "가운데 축 비교",
    "mockups": 26,
-   "mockups_any": 35
+   "mockups_any": 35,
+   "blocks": [
+    "compare",
+    "versus"
+   ]
   },
   {
    "code": "multi",
@@ -47,7 +66,11 @@
    "q": "여러 대상을 같은 기준으로",
    "draw": "머리글 표",
    "mockups": 43,
-   "mockups_any": 43
+   "mockups_any": 43,
+   "blocks": [
+    "table",
+    "matrix"
+   ]
   },
   {
    "code": "proc",
@@ -55,7 +78,10 @@
    "q": "어떤 순서로 진행되나",
    "draw": "차례 화살",
    "mockups": 9,
-   "mockups_any": 9
+   "mockups_any": 9,
+   "blocks": [
+    "steps"
+   ]
   },
   {
    "code": "cause",
@@ -63,7 +89,10 @@
    "q": "무엇이 무엇을 일으키나",
    "draw": "상자 + 직각 연결선",
    "mockups": 36,
-   "mockups_any": 39
+   "mockups_any": 39,
+   "blocks": [
+    "nodes"
+   ]
   },
   {
    "code": "lane",
@@ -71,7 +100,10 @@
    "q": "누가 하고 누구에게 넘기나",
    "draw": "상자 + 주체별 줄",
    "mockups": 9,
-   "mockups_any": 9
+   "mockups_any": 9,
+   "blocks": [
+    "nodes"
+   ]
   },
   {
    "code": "branch",
@@ -79,7 +111,10 @@
    "q": "예, 아니오로 어디로 가나",
    "draw": "상자 + 이름표 연결선",
    "mockups": 12,
-   "mockups_any": 15
+   "mockups_any": 15,
+   "blocks": [
+    "nodes"
+   ]
   },
   {
    "code": "layer",
@@ -87,7 +122,11 @@
    "q": "무엇 위에 무엇이 있나",
    "draw": "층 쌓기",
    "mockups": 17,
-   "mockups_any": 17
+   "mockups_any": 17,
+   "blocks": [
+    "layers",
+    "section"
+   ]
   },
   {
    "code": "contain",
@@ -95,7 +134,10 @@
    "q": "무엇이 무엇을 포함하나",
    "draw": "포함 겹",
    "mockups": 3,
-   "mockups_any": 3
+   "mockups_any": 3,
+   "blocks": [
+    "layers"
+   ]
   },
   {
    "code": "event",
@@ -103,7 +145,10 @@
    "q": "언제 무슨 일이 있었나",
    "draw": "시간 축 + 사건 카드",
    "mockups": 25,
-   "mockups_any": 39
+   "mockups_any": 39,
+   "blocks": [
+    "timeline"
+   ]
   },
   {
    "code": "cycle",
@@ -111,7 +156,10 @@
    "q": "어떤 조건에서 바뀌나",
    "draw": "상자 + 고리 연결선",
    "mockups": 7,
-   "mockups_any": 7
+   "mockups_any": 7,
+   "blocks": [
+    "nodes"
+   ]
   },
   {
    "code": "scale",
@@ -119,7 +167,10 @@
    "q": "익숙한 단위로 몇 개인가",
    "draw": "그림 단위",
    "mockups": 14,
-   "mockups_any": 18
+   "mockups_any": 18,
+   "blocks": [
+    "pict"
+   ]
   },
   {
    "code": "define",
@@ -127,7 +178,11 @@
    "q": "무엇으로 나뉘나",
    "draw": "카드 열",
    "mockups": 16,
-   "mockups_any": 16
+   "mockups_any": 16,
+   "blocks": [
+    "cards",
+    "tiles"
+   ]
   },
   {
    "code": "proof",
@@ -135,7 +190,11 @@
    "q": "실제 서류의 어디인가",
    "draw": "실제 그림 + 확대 풀이",
    "mockups": 9,
-   "mockups_any": 10
+   "mockups_any": 10,
+   "blocks": [
+    "shot",
+    "photo"
+   ]
   },
   {
    "code": "kpi",
@@ -143,7 +202,10 @@
    "q": "한 숫자가 답인 질문",
    "draw": "숫자 칸",
    "mockups": 26,
-   "mockups_any": 29
+   "mockups_any": 29,
+   "blocks": [
+    "stat"
+   ]
   },
   {
    "code": "ask",
@@ -151,7 +213,8 @@
    "q": "이 묶음에서 무엇을 묻나",
    "draw": "질문 대문 장",
    "mockups": 19,
-   "mockups_any": 19
+   "mockups_any": 19,
+   "blocks": []
   },
   {
    "code": "route",
@@ -159,7 +222,10 @@
    "q": "어디를 거쳐 어디로 가나",
    "draw": "지도",
    "mockups": 26,
-   "mockups_any": 26
+   "mockups_any": 26,
+   "blocks": [
+    "iso"
+   ]
   },
   {
    "code": "region",
@@ -167,7 +233,10 @@
    "q": "어느 지역이 얼마나",
    "draw": "지도 + 값 기둥",
    "mockups": 30,
-   "mockups_any": 30
+   "mockups_any": 30,
+   "blocks": [
+    "hexmap"
+   ]
   },
   {
    "code": "space",
@@ -175,7 +244,11 @@
    "q": "시설이 어떻게 놓이나",
    "draw": "등각 모형, 평면도",
    "mockups": 0,
-   "mockups_any": 0
+   "mockups_any": 0,
+   "blocks": [
+    "iso",
+    "plan"
+   ]
   },
   {
    "code": "inside",
@@ -183,7 +256,11 @@
    "q": "속이 어떻게 생겼나",
    "draw": "단면도, 분해도",
    "mockups": 7,
-   "mockups_any": 7
+   "mockups_any": 7,
+   "blocks": [
+    "section",
+    "iso"
+   ]
   },
   {
    "code": "system",
@@ -191,7 +268,10 @@
    "q": "무엇이 어디로 흐르나",
    "draw": "계통도",
    "mockups": 2,
-   "mockups_any": 2
+   "mockups_any": 2,
+   "blocks": [
+    "plan"
+   ]
   },
   {
    "code": "body",
@@ -199,7 +279,8 @@
    "q": "몸의 어디에 작용하나",
    "draw": "인체 그림",
    "mockups": 2,
-   "mockups_any": 2
+   "mockups_any": 2,
+   "blocks": []
   },
   {
    "code": "tiles",
@@ -207,7 +288,10 @@
    "q": "핵심을 한눈에",
    "draw": "벤토 타일",
    "mockups": 6,
-   "mockups_any": 6
+   "mockups_any": 6,
+   "blocks": [
+    "tiles"
+   ]
   }
  ],
  "kinds": {

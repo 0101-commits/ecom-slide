@@ -15,7 +15,7 @@ ECOM.parts.lncards = function (bd, s, ctx) {
   var gap = 14, cw = (W - gap * (n - 1)) / n, cy0 = 196, ch = 276;
   cards.forEach(function (c, k) { var g = h.at(svg, 300 + k * 330, { 'data-fx': 'rise' }), hi = !!c.hi, bx = k * (cw + gap), sx = X(c.start), ex = Math.max(X(c.end), sx + 5), mid = (sx + ex) / 2, col = hi ? C.warn : C.dark;
     E('rect', { x: sx, y: ty + 8, width: ex - sx, height: 24, rx: 3, fill: hi ? C.warn : C.g65 }, g);
-    E('path', { d: 'M' + mid + ' ' + (ty + 32) + ' L' + mid + ' ' + (ty + 70) + ' L' + (bx + cw / 2) + ' ' + (cy0 - 34) + ' L' + (bx + cw / 2) + ' ' + cy0, fill: 'none', stroke: C.axis, 'stroke-width': 1.4, 'stroke-dasharray': '3 3' }, g);
+    E('path', { d: ECOM.h.orthoD([mid, ty + 32], [bx + cw / 2, cy0], [[mid, ty + 70], [bx + cw / 2, ty + 70]], 6), fill: 'none', stroke: C.axis, 'stroke-width': 1.5, 'stroke-dasharray': '3 3' }, g);
     E('rect', { x: bx, y: cy0, width: cw, height: ch, rx: 10, fill: hi ? '#FBEFEA' : '#fff', stroke: hi ? C.warn : C.axis, 'stroke-width': hi ? 2 : 1.4 }, g);
     E('rect', { x: bx, y: cy0, width: cw, height: 44, rx: 10, fill: hi ? C.warn : C.dark }, g); E('rect', { x: bx, y: cy0 + 30, width: cw, height: 14, fill: hi ? C.warn : C.dark }, g);
     T(g, bx + cw / 2, cy0 + 29, c.title || '', { 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 700, fill: '#fff' });

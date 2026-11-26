@@ -72,7 +72,7 @@ function run(bd, s, ctx) {
     d = d.trim();
     if (q.area && pts.length) E('path', { d: d + ' L' + pts[pts.length - 1][0].toFixed(1) + ' ' + Y(q.areaTo != null ? q.areaTo : sc.lo) + ' L' + pts[0][0].toFixed(1) + ' ' + Y(q.areaTo != null ? q.areaTo : sc.lo) + ' Z', fill: q.areaColor ? h.col(q.areaColor) : C.g08, 'data-at': 150, 'data-fx': 'fade', 'data-ms': 600 }, svg);
     E('path', { d: d, fill: 'none', stroke: c, 'stroke-width': wd, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', 'stroke-dasharray': q.dash ? '7 5' : null, 'stroke-opacity': q.op != null ? q.op : null, 'data-at': 200 + k * 220, 'data-fx': 'draw', 'data-ms': 1100 }, svg);
-    q._pts = pts; if (pts.length && endNames && q.name) { var lp = pts[pts.length - 1]; lab.push({ x: lp[0] + 10, y: lp[1] + 5, c: q.nameColor ? h.col(q.nameColor) : c, t: q.name }) }
+    q._pts = pts; if (pts.length && endNames && q.name) { var lp = pts[pts.length - 1]; lab.push({ x: lp[0] + 10, y: lp[1] + 5, c: q.nameColor ? h.col(q.nameColor) : (c === C.gray || c === C.light ? C.mute : c), t: q.name }) }
     if (pts.length && q.dot) { var ep = pts[pts.length - 1]; E('circle', { cx: ep[0], cy: ep[1], r: 6.5, fill: c, 'data-at': 1500, 'data-fx': 'pop' }, svg) } });
   if (lab.length) { lab.sort(function (a, b) { return a.y - b.y }); for (var li = 1; li < lab.length; li++) if (lab[li].y - lab[li - 1].y < 16) lab[li].y = lab[li - 1].y + 16;
     var gl = h.at(svg, 1300, { 'data-fx': 'fade' }); lab.forEach(function (l) { T(gl, l.x, l.y, l.t, { 'font-size': 13.5, 'font-weight': 700, fill: l.c }) }) }

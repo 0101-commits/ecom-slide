@@ -374,7 +374,7 @@ def cmd_types(a):
     xt = load(lib_dir() / "library" / "mockups" / "xtypes.json")
     if not xt:
         say({"error": "설명 유형 표가 없어요 — setup 먼저"}, 1)
-    say({"types": [{"code": y["code"], "name": y["name"], "question": y["q"], "draw": y["draw"], "mockups": y["mockups_any"]} for y in xt["types"]]})
+    say({"types": [{"code": y["code"], "name": y["name"], "question": y["q"], "draw": y["draw"], "blocks": y.get("blocks", []), "mockups": y["mockups_any"]} for y in xt["types"]]})
 
 
 # ───────── find ─────────
@@ -864,7 +864,7 @@ def cmd_lint(a):
         say({"error": "deck.json 이 없어요"}, 1)
     iss = lint3(deck, lib_dir(), derived_parts(p)) if deck.get("schema") == 3 else lint(deck, lib_dir())
     if deck.get("schema") == 3:
-        iss += lint_var(deck, lib_dir(), a.name, len(derived_parts(p)))
+        iss += lint_var(deck, lib_dir(), a.name, derived_kinds(p))
     say({"ok": True, "fix": sum(1 for x in iss if x["sev"] == "고칠 것"), "confirm": sum(1 for x in iss if x["sev"] != "고칠 것"), "issues": iss})
 
 
@@ -907,6 +907,14 @@ def hist_prev(name, deck, n=2):
 def derived_parts(p):
     d = p / "parts"
     return sorted(d.glob("*.js")) if d.is_dir() else []
+
+
+def derived_kinds(p):
+    """회차 파생 부품이 새로 정한 화면 종류(kind) — 6판 한도는 파일 수가 아니라 이 수로 셈"""
+    ks = set()
+    for f in derived_parts(p):
+        ks |= set(re.findall(r"ECOM\.parts\.([a-z][a-z0-9]*)\s*=", f.read_text(encoding="utf-8")))
+    return sorted(ks)
 
 
 def put_candidates(name, files):
@@ -958,8 +966,14 @@ def lint_var(deck, lib, name=None, derived=0):
     old_bg = [j for j, x in enumerate(deck.get("slides", []), 1) if x.get("bg") in ("mint", "deep")]
     if old_bg:  # 6판 : 모든 장 흰 바탕 — bg mint · deep 은 흰 바탕으로 그려짐(전면 지도 bg map 만 남음)
         add(0, "바탕", "확인할 것", f"bg mint · deep 장 {len(old_bg)}개({', '.join(map(str, old_bg[:8]))}) — 6판은 흰 바탕으로 그림, bg 를 빼도 됨")
-    if derived > 3:
-        add(0, "파생 부품", "고칠 것", f"{derived}개 — 덱당 3개까지(나머지는 손잡이 · 재료로)")
+    ks = derived if isinstance(derived, list) else []
+    nd = len(ks) if isinstance(derived, list) else derived
+    if nd > 1:  # 6판 : 파일 수가 아니라 화면 종류(kind) 수로 셈
+        add(0, "파생 부품", "고칠 것", f"화면 종류 {nd}개({', '.join(ks[:6])}) — 덱당 1개까지. 목업 → 블록 조립 → 그림형 블록 → 안전 블록(표, 전후 비교, 차례 화살) 순서로 먼저 찾기")
+    why = (deck.get("meta") or {}).get("derived") or {}
+    nowhy = [k for k in ks if not why.get(k)]
+    if nowhy:
+        add(0, "파생 부품 사유", "확인할 것", f"meta.derived 에 사유 없음 : {', '.join(nowhy[:6])} — {{\"kind\": \"블록으로 못 그리는 까닭\"}}")
     return iss
 
 
@@ -1015,7 +1029,7 @@ def engine(lib, v3=True, brand=True, extra=None):
     if not v3:
         return (st / "v2" / "deck.css").read_text(encoding="utf-8"), (st / "v2" / "deck.js").read_text(encoding="utf-8"), None
     js = (st / "deck.js").read_text(encoding="utf-8") + "\n" + "\n".join(f.read_text(encoding="utf-8") for f in sorted((st / "parts").glob("*.js")))
-    if extra:  # 회차 파생 부품(덱당 3개까지) — 기존 부품 뒤에 붙여 같은 이름이면 덮어씀
+    if extra:  # 회차 파생 부품(6판 : 덱당 화면 종류 1개까지) — 기존 부품 뒤에 붙여 같은 이름이면 덮어씀
         js += "\n" + "\n".join(f"/* 파생 부품 {Path(f).name} */\n" + Path(f).read_text(encoding="utf-8") for f in extra)
     tfd = st / "tossface"
     if tfd.is_dir():  # Tossface 원본 SVG — 바꾸지 않고 덱을 만들 때만 그림(data:)으로 넣음(저장소에는 원본 파일과 라이선스 전문만)
@@ -1126,7 +1140,8 @@ DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 
         ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
         ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"),
         ("specFs", "글자 단계 밖", "확인할 것"), ("specSw", "선 굵기 밖", "확인할 것"), ("specHero", "대표 숫자 여러 곳", "확인할 것"),
-        ("qCards", "칸 수 많음", "확인할 것"), ("qWhite", "흰 테두리 칸", "확인할 것"), ("qPic", "그림 크기", "확인할 것"), ("qBlur", "그림 선명도", "고칠 것"), ("lowC", "밝은 바탕 위 밝은 글", "고칠 것"), ("newCode", "새 코드 필요", "고칠 것"))
+        ("qCards", "칸 수 많음", "확인할 것"), ("qWhite", "흰 테두리 칸", "확인할 것"), ("qPic", "그림 크기", "확인할 것"), ("qBlur", "그림 선명도", "고칠 것"), ("lowC", "밝은 바탕 위 밝은 글", "고칠 것"), ("newCode", "새 코드 필요", "고칠 것"),
+        ("connDiag", "대각 연결선", "고칠 것"), ("connCross", "연결선이 칸을 지남", "고칠 것"), ("connTip", "화살 꼭지 색", "확인할 것"), ("connText", "연결선이 글을 지남", "고칠 것"), ("connW", "연결선 굵기", "확인할 것"), ("partErr", "그리기 오류", "고칠 것"))
 
 
 def screen_check(br, page, timeout=600):
@@ -1167,7 +1182,7 @@ def cmd_check(a):
     v3 = deck.get("schema") == 3
     iss = lint3(deck, lib, derived_parts(p)) if v3 else lint(deck, lib)
     if v3:
-        iss += lint_var(deck, lib, a.name, len(derived_parts(p)))
+        iss += lint_var(deck, lib, a.name, derived_kinds(p))
     br = browser()
     screen = None
     if br:

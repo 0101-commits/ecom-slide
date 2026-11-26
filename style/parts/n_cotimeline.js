@@ -8,7 +8,7 @@ ECOM.parts.cotimeline = function (bd, s, ctx) {
   var all = []; S.forEach(function (q) { q.data.forEach(function (v) { all.push(v) }) }); var nt = h.niceTicks(0, Math.max.apply(null, all), 5), Y = h.lin(nt.lo, nt.hi, bot, top), g0 = h.at(svg, 0, { 'data-fx': 'fade' });
   for (var v = nt.lo; v <= nt.hi + 1e-9; v += nt.step) { E('line', { x1: L, x2: Rr, y1: Y(v), y2: Y(v), stroke: v === nt.lo ? C.axis : C.grid, 'stroke-dasharray': v === nt.lo ? null : '3 4' }, g0); T(g0, L - 8, Y(v) + 4.5, h.nf(v, 0), { 'text-anchor': 'end', 'font-size': 12.5, fill: C.mute }) }
   Lb.forEach(function (l, i) { if (/-01$/.test(l) && i % 12 === 0) { E('line', { x1: X(i), x2: X(i), y1: bot, y2: bot + 5, stroke: C.axis }, g0); T(g0, X(i), bot + 21, l.slice(0, 4), { 'text-anchor': 'middle', 'font-size': 12.5, fill: C.mute }) } });
-  T(g0, L, 116, s.base || '기준 시점 = 100', { 'font-size': 12.5, fill: C.mute });
+  T(g0, L, 116, s.base || '기준 시점 = 100', { 'font-size': 12.5, fill: C.mute, stroke: '#FFFFFF', 'stroke-width': 4, 'paint-order': 'stroke', 'stroke-linejoin': 'round' });
   S.forEach(function (q, k) { var c = h.col(q.color || (k ? 'cmp' : 'main')), d = h.lineD(q.data, X, Y); E('path', { d: d, fill: 'none', stroke: c, 'stroke-width': k ? 2.2 : 3, 'stroke-linejoin': 'round', 'data-at': 200 + k * 150, 'data-fx': 'draw', 'data-ms': 1200 }, svg);
     var g = h.at(svg, 1500, { 'data-fx': 'fade' }), ly = Y(q.data[m - 1]); E('circle', { cx: X(m - 1), cy: ly, r: 4.5, fill: c }, g);
     T(g, Rr + 12, ly - 2 + (k ? 14 : 0), q.name, { 'font-size': 14, 'font-weight': 700, fill: c }); T(g, Rr + 12, ly + 15 + (k ? 14 : 0), h.nf(q.data[m - 1], 0) + (s.unit || ''), { 'font-size': 16, 'font-weight': 700, fill: c }) });

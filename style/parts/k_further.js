@@ -22,12 +22,12 @@ function tree(bd, s, ctx) {
   K.D(bd, 'kx k-fug', 0, rootY - 78, RW, 156, '<span style="display:flex;flex-direction:column;gap:8px;align-items:center">' + h.md(s.caption || s.title || '추가 분석 과제') + (s.tag !== false ? '<i style="font-style:normal;font-size:13px;font-weight:700;color:' + P.dark + ';background:#fff;border-radius:999px;padding:2px 11px">' + h.esc(s.tag || '예시') + '</i>' : '') + '</span>', { 'data-b': 1, 'data-fx': 'zoom', 'data-ms': 480 });
   gs.forEach(function (g, i) { var its = g.items || [], gh = its.length * rh + (its.length - 1) * gap, gy = y + gh / 2, y0 = y;
     gb.push(function () { K.D(bd, 'kx', GX, gy - 42, GW, 84, '<div style="height:100%;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 12px;font-size:18px;font-weight:700;line-height:1.35;color:#fff">' + h.md(g.name || '') + '</div>', { 'data-b': 2, 'data-fx': 'pop', 'data-ms': 440, 'data-key': g.name }); bd.lastChild.style.background = P.g65; bd.lastChild.style.borderRadius = '12px' });
-    lines.push({ d: 'M' + RW + ' ' + rootY + ' C' + (RW + 34) + ' ' + rootY + ' ' + (GX - 34) + ' ' + gy + ' ' + GX + ' ' + gy, b: 2 });
-    its.forEach(function (it, j) { no++; var nn = no, ly = y0 + j * (rh + gap); lines.push({ d: 'M' + (GX + GW) + ' ' + gy + ' C' + (GX + GW + 36) + ' ' + gy + ' ' + (LX - 36) + ' ' + (ly + rh / 2) + ' ' + LX + ' ' + (ly + rh / 2), b: 3 });
+    lines.push({ d: ECOM.h.orthoD([RW, rootY], [GX, gy], 'hvh'), b: 2 });
+    its.forEach(function (it, j) { no++; var nn = no, ly = y0 + j * (rh + gap); lines.push({ d: ECOM.h.orthoD([GX + GW, gy], [LX, ly + rh / 2], 'hvh'), b: 3 });
       gb.push(function () { K.D(bd, 'kx k-fur', LX, ly, 1168 - LX, rh, '<div><em>' + h.esc((s.prefix || '분석') + ' ' + nn + '.') + '</em><b>' + h.md(it.title || '') + '</b></div>' + (it.text ? '<span>' + h.md(it.text) + '</span>' : ''), { 'data-b': 3, 'data-fx': 'left', 'data-key': it.title }); bd.lastChild.style.background = P.g08 }) });
     y += gh + ggap });
   gb.forEach(function (f) { f() }); svg = K.svg(ctx);
-  lines.forEach(function (l) { E('path', { d: l.d, fill: 'none', stroke: P.g40, 'stroke-width': 2.4, 'data-b': l.b, 'data-fx': 'draw', 'data-ms': 520 }, svg) });
+  lines.forEach(function (l) { E('path', { d: l.d, fill: 'none', stroke: P.g40, 'stroke-width': 1.5, 'data-b': l.b, 'data-fx': 'draw', 'data-ms': 520 }, svg) });
   ctx.root.setAttribute('data-gap', 360); ctx.root.setAttribute('data-stg', 120) }
 function grid(bd, s, ctx) {
   var P = ctx.P, items = allItems(s), n = items.length, cols = n <= 4 ? 2 : 3, rows = Math.ceil(n / cols), gap = 16, top = 54, cw = (1168 - (cols - 1) * gap) / cols, ch = (512 - top - (rows - 1) * gap) / rows, tone = [P.dark, P.g65, P.cmp];

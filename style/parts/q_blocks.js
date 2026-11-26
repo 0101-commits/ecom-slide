@@ -1,6 +1,6 @@
 /* 6판 조립 블록 — 화면 종류 blocks. 본문 칸(1168×512)을 layout 으로 나누고 blocks[] 를 차례로 채움. 형식 = style/SCHEMA6_blocks.md
    layout : full · L6R4(좌우 6:4) · T7B3(위아래 7:3) · T6B4:L6R6(위 한 칸 + 아래 좌우) · L7R5:T5B5(왼쪽 한 칸 + 오른쪽 위아래)
-   블록   : steps 차례 띠 · compare 가운데 축 비교 · stat 숫자 칸(+ 작은 추이선) · cards 카드 열 · note 결론 띠 · table 머리글 표 · bars 가로 막대 · timeline 시간 축 · layers 층 쌓기, 포함 겹 · pict 그림 단위 · nodes 상자 + 직각 연결선 · line 선 차트 · dist 점 분포 · matrix 2×2 · tiles 벤토 타일 · shot 실제 그림 + 확대 풀이 · list 번호 목록. 아이콘 = 라인 아이콘 이름 또는 tf:<코드>(Tossface, 쓴 장 각주에 출처). skin navy · plain
+   블록   : steps 차례 띠 · compare 가운데 축 비교 · stat 숫자 칸(+ 작은 추이선) · cards 카드 열 · note 결론 띠 · table 머리글 표 · bars 가로 막대 · timeline 시간 축 · layers 층 쌓기, 포함 겹 · pict 그림 단위 · nodes 상자 + 직각 연결선 · line 선 차트 · dist 점 분포 · matrix 2×2 · tiles 벤토 타일 · shot 실제 그림 + 확대 풀이 · list 번호 목록 · section 층 단면 · hexmap 시도 육각 지도 · versus 대결 판 · photo 사진 합성. 아이콘 = 라인 아이콘 이름 또는 tf:<코드>(Tossface, 쓴 장 각주에 출처). skin navy · plain · paper(종이 질감)
    칸은 테두리 없이 면 색(옅은 면 · 중간 면 · 짙은 면 = 결론), 글자는 6판 7단계 */
 (function () {
 'use strict';
@@ -23,7 +23,7 @@ function zones(code, W, H, gap) { gap = gap == null ? 24 : gap;
 /* 그리기 도움 — g 위에 그림 */
 function K(g) {
   function text(x, y, t, fs, w, fill, anchor) { T(g, x, y, t, { 'font-size': fs, 'font-weight': w || 400, fill: col(fill || 'ink'), 'text-anchor': anchor || 'start' }); return h.textW(t, fs, (w || 400) >= 700) }
-  function rect(x, y, w, hh, fill, rx) { return E('rect', { x: x, y: y, width: Math.max(0, w), height: Math.max(0, hh), rx: rx == null ? Math.min(RXD, hh / 2, w / 2) : rx, fill: col(fill || 'card') }, g) }
+  function rect(x, y, w, hh, fill, rx) { var r = E('rect', { x: x, y: y, width: Math.max(0, w), height: Math.max(0, hh), rx: rx == null ? Math.min(RXD, hh / 2, w / 2) : rx, fill: col(fill || 'card') }, g); if (GRAIN && /^(card|well|g08)$/.test(fill || 'card') && w > 60 && hh > 40) r.setAttribute('filter', 'url(#' + GRAIN + ')'); return r }
   function lines(t, fs, maxW, w) { return h.wrap(String(t), fs, maxW, (w || 400) >= 700) }
   function measure(w, items, pad, gap) { var tot = 0, k = 0; items.forEach(function (it) { if (!it || !it[0]) return; tot += lines(it[0], it[1], w - 2 * pad, it[2]).length * Math.round(it[1] * 1.42); k++ }); return tot + gap * Math.max(k - 1, 0) }
   function stack(x, y, w, hh, items, o) { o = o || {}; var pad = o.pad == null ? 12 : o.pad, gap = o.gap == null ? 6 : o.gap, al = o.align || 'middle', va = o.valign || 'middle', bl = [], tot = 0;
@@ -318,7 +318,8 @@ function list(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], it = 
 var SKINS = { navy: { g: '#1F4E8C', gdk: '#143A6B', g65: '#5E82B0', g40: '#A5BAD4', g18: '#CFDBEC', card: '#EDF2F8', gon: '#A9C6EA', gmid: '#1C4A82', gray: '#AEB9C6', line: '#C3D0E2', well: '#DCE5F1', grid: '#D3DDEB', light: '#C9D5E6', axis: '#7C8AA0' },
   bentoG: { g: '#00744F', gdk: '#005136', g65: '#4D9E83', g40: '#99C7B9', g18: '#CFE5DB', card: '#ECF5F1', gon: '#8FE3C0', gmid: '#0A6444', line: '#DDE6E1', well: '#EEF3F0' },
   bentoL: { g: '#4880EE', gdk: '#4880EE', g65: '#B0B8C1', g40: '#C9D9FA', g18: '#E3ECFD', card: '#F2F4F6', gon: '#E3ECFD', gmid: '#3A6BD0', ink: '#34383F', sub: '#646B77', mute: '#8B95A1', line: '#E5E8EB', well: '#F2F4F6', light: '#E5E8EB', warn: '#D9534F', warn08: '#FDECEC' },
-  plain: { g: '#3E4743', gdk: '#1D2521', g65: '#6B7570', g40: '#9AA3A0', g18: '#DDE3E0', card: '#F3F5F4', gon: '#C9D1CD', gmid: '#3E4743' } };
+  plain: { g: '#3E4743', gdk: '#1D2521', g65: '#6B7570', g40: '#9AA3A0', g18: '#DDE3E0', card: '#F3F5F4', gon: '#C9D1CD', gmid: '#3E4743' },
+  paper: { card: '#F6F1E6', well: '#EEE7D8', g08: '#F9F5EC', line: '#E3DBCB', grid: '#E3DBCB', light: '#DCD3C1', g18: '#DCE6D9', grain: 1 } };
 
 /* 그림 칸과 옆 목록 칸 나누기 — list · listw(330) · listside:'left' */
 function splitList(z, b) { if (!b.list) return [z, null]; var lw = b.listw || 330;
@@ -610,15 +611,116 @@ function plan(svg, z, b, t0) { var sp = splitList(z, b), x = sp[0][0], y = sp[0]
     rows.forEach(function (r2, q) { if (q) E('line', { x1: tx, x2: tx + tw, y1: ty + 20 * q, y2: ty + 20 * q, stroke: thin, 'stroke-width': 1.5 }, gP); T(gP, tx + 22, ty + 15 + 20 * q, r2[0], { 'font-size': 13, fill: thin, 'text-anchor': 'middle' }); T(gP, tx + 52, ty + 15 + 20 * q, r2[1], { 'font-size': 13, 'font-weight': 600, fill: txt }) }) }
   if (sp[1]) list(svg, sp[1], { items: b.list }, t0 + 800) }
 
-var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list, iso: iso, plan: plan };
+/* ───── 7단계 방송 화면 구성 부품 ───── */
+/* section : 층 단면(구성 분해) — layers[{t, v, s, tone, minus}] 아래부터 쌓음(두께 = 값) · total{t, v} 왼쪽 묶음 · unit · explode(층 사이 띄움)
+   이름표는 오른쪽 칸, 직각 지시선. minus 층은 점선 빈 층(빠지는 몫) */
+function section(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], L = b.layers || [], n = L.length, unit = b.unit || '', ex = b.explode ? 16 : 0, tot = b.total;
+  var x0 = x + (tot ? 170 : 8), sw = Math.min((w - (x0 - x)) * .46, 460), dep = Math.min(80, sw * .2), dx = dep * .87, dy = dep * .5;
+  var avail = H - dy - 16 - ex * Math.max(n - 1, 0), sum = L.reduce(function (a, q) { return a + Math.abs(+q.v || 0) }, 0) || 1;
+  var th = L.map(function (q) { return Math.max(34, avail * Math.abs(+q.v || 0) / sum) }), ts = th.reduce(function (a, v) { return a + v }, 0); th = th.map(function (v) { return v * Math.min(1, avail / ts) });
+  var yb = y + H - 6, ys = [], cur = yb; for (var i = 0; i < n; i++) { ys[i] = cur - th[i]; cur = ys[i] - ex }
+  var TN = ['d', 'g', 'm', 's', 'y'], DARK = { d: 1, g: 1, r: 1, k: 1 };
+  L.forEach(function (q, i) { var g = grp(svg, t0 + i * 320, q.t, 'rise'), tn = q.minus ? 'r' : (q.tone || TN[i % TN.length]), pal = PAL5[tn] || PAL5.g, yy = ys[i], hh = th[i];
+    var faces = [[[x0, yy], [x0 + dx, yy - dy], [x0 + sw + dx, yy - dy], [x0 + sw, yy]], [[x0, yy], [x0 + sw, yy], [x0 + sw, yy + hh], [x0, yy + hh]], [[x0 + sw, yy], [x0 + sw + dx, yy - dy], [x0 + sw + dx, yy + hh - dy], [x0 + sw, yy + hh]]];
+    faces.forEach(function (f, k) { var a = { points: f.map(function (pt) { return pt[0].toFixed(1) + ',' + pt[1].toFixed(1) }).join(' '), fill: q.minus ? '#FFFFFF' : pal[k], stroke: q.minus ? C.warn : '#FFFFFF', 'stroke-width': 1.5, 'stroke-linejoin': 'round' }; if (q.minus) a['stroke-dasharray'] = '6 5'; E('polygon', a, g) });
+    if (hh >= 34) T(g, x0 + sw / 2, yy + hh / 2 + 7, (q.minus ? '− ' : '') + (q.fig != null ? q.fig : q.v) + unit, { 'font-size': hh >= 60 ? 26 : 20, 'font-weight': 800, fill: q.minus ? C.warn : DARK[tn] ? '#FFFFFF' : C.ink, 'text-anchor': 'middle' }) });
+  var lx = x0 + sw + dx + 64, lw = x + w - lx, cy = L.map(function (q, i) { return ys[i] + th[i] / 2 }), lh = Math.min(78, (H - 10 * (n - 1)) / Math.max(1, n)), ly = cy.slice();
+  var ord = cy.map(function (v, i) { return i }).sort(function (a, c) { return cy[a] - cy[c] }), prev = y - 1e9;
+  ord.forEach(function (i) { ly[i] = Math.max(ly[i], prev + lh + 10, y + lh / 2); prev = ly[i] }); var over = prev + lh / 2 - (y + H); if (over > 0) ord.forEach(function (i) { ly[i] -= over });
+  L.forEach(function (q, i) { var g = grp(svg, t0 + 200 + i * 320, q.t, 'fade'), k = K(g), ex0 = x0 + sw + dx / 2, mid = (ex0 + lx) / 2, hot = q.hot;
+    link(g, Math.abs(cy[i] - ly[i]) < 1 ? [[ex0, cy[i]], [lx, cy[i]]] : [[ex0, cy[i]], [mid, cy[i]], [mid, ly[i]], [lx, ly[i]]], q.minus ? 'warn' : 'g65', { sw: 1.5, r: 6 });
+    k.rect(lx, ly[i] - lh / 2, lw, lh, hot ? 'gdk' : q.minus ? 'warn08' : 'card');
+    k.stack(lx, ly[i] - lh / 2, lw, lh, [[(q.minus ? '− ' : i < n - 1 || n === 1 ? '' : '') + q.t, 18, 700, hot ? 'white' : q.minus ? 'warn' : 'ink'], [q.s, 16, 400, hot ? 'gon' : 'sub']], { pad: 16, align: 'start', gap: 4 }) });
+  if (tot) { var g2 = grp(svg, t0 + n * 320 + 200, tot.t, 'fade'), top = ys[n - 1] - dy, bx = x0 - 22;
+    E('line', { x1: bx, x2: bx, y1: top, y2: yb, stroke: C.dark, 'stroke-width': 3 }, g2); [top, yb].forEach(function (yy) { E('line', { x1: bx, x2: bx + 12, y1: yy, y2: yy, stroke: C.dark, 'stroke-width': 3 }, g2) });
+    var my = (top + yb) / 2; T(g2, bx - 16, my - 14, tot.t, { 'font-size': 18, 'font-weight': 700, fill: C.ink, 'text-anchor': 'end' });
+    T(g2, bx - 16, my + 28, (tot.fig != null ? tot.fig : tot.v) + unit, { 'font-size': 36, 'font-weight': 800, fill: C.dark, 'text-anchor': 'end' }) } }
+
+/* hexmap : 한국 시도 육각 타일 지도(경계 자료 없이) — values{시도: 값} · bands[경계 1~3개] · unit · rise(값만큼 솟은 입체) · side(오른쪽 높은 · 낮은 3곳, 기본 켬) · legend */
+var KRH = [['인천', 0, 0], ['서울', 0, 1], ['경기', 0, 2], ['강원', 0, 3], ['충남', 1, 0], ['세종', 1, 1], ['충북', 1, 2], ['경북', 1, 3], ['전북', 2, 0], ['대전', 2, 1], ['대구', 2, 2], ['울산', 2, 3], ['전남', 3, 0], ['광주', 3, 1], ['경남', 3, 2], ['부산', 3, 3], ['제주', 4, 0]];
+function hexmap(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], V = b.values || {}, unit = b.unit || '', rise = !!b.rise, side = b.side !== false;
+  var mw = side ? w - 340 : w, sq = rise ? .66 : 1, ext = rise ? 54 : 0, legH = 40;
+  var R = Math.min(mw / (4.6 * 1.732), (H - legH - ext - 8) / ((4 * 1.5 + 2) * sq)), hw = R * 1.732, gw = hw * 4.5, gx = x + (mw - gw) / 2 + hw / 2, gy = y + R * sq + ext + 4;
+  var bands = b.bands || [], LV = bands.length === 1 ? ['g40', 'gdk'] : bands.length === 2 ? ['g18', 'g65', 'gdk'] : ['g18', 'g40', 'g65', 'gdk'];
+  var nums = Object.keys(V).map(function (k) { return +V[k] }).filter(function (v) { return !isNaN(v) }), lo = Math.min.apply(null, nums.concat([0])), hi = Math.max.apply(null, nums.concat([1]));
+  var dec = b.dec != null ? b.dec : Math.min(2, Math.max.apply(null, [0].concat(nums.map(function (v) { var s0 = String(v), i0 = s0.indexOf('.'); return i0 < 0 ? 0 : s0.length - i0 - 1 }))));
+  function fv(v) { return h.nf ? h.nf(v, dec) : v.toFixed(dec) }
+  function lvl(v) { var j = 0; while (j < bands.length && v >= bands[j]) j++; return LV[Math.min(j, LV.length - 1)] }
+  var SH = { g18: ['#CFE5DB', '#B5D4C7'], g40: ['#7FB5A2', '#679F8B'], g65: ['#2F7F64', '#246A52'], gdk: ['#003D2B', '#002E20'], well: ['#D5DDD9', '#C2CCC7'] };
+  var cells = KRH.map(function (c) { var v = V[c[0]], has = v != null && !isNaN(+v); return { n: c[0], r: c[1], c: c[2], v: has ? +v : null, cx: gx + c[2] * hw + (c[1] % 2 ? hw / 2 : 0), cy: gy + c[1] * R * 1.5 * sq } });
+  cells.sort(function (a, c) { return a.r - c.r || a.c - c.c });
+  cells.forEach(function (q, i) { var g = grp(svg, t0 + q.r * 140 + q.c * 40, q.n, 'rise'), fk = q.v == null ? 'well' : lvl(q.v), hz = rise && q.v != null ? 8 + ext * (q.v - Math.min(lo, 0)) / ((hi - Math.min(lo, 0)) || 1) : rise ? 8 : 0, Rr = R * .95;
+    var P = [-90, -30, 30, 90, 150, 210].map(function (a) { a = a * Math.PI / 180; return [q.cx + Rr * Math.cos(a), q.cy + Rr * Math.sin(a) * sq - hz] });
+    if (hz) [[2, 3], [3, 4], [1, 2]].forEach(function (e, k) { var a = P[e[0]], c = P[e[1]]; E('polygon', { points: [a, c, [c[0], c[1] + hz], [a[0], a[1] + hz]].map(function (pt) { return pt[0].toFixed(1) + ',' + pt[1].toFixed(1) }).join(' '), fill: (SH[fk] || SH.well)[k === 1 ? 1 : 0], stroke: '#FFFFFF', 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, g) });
+    E('polygon', { points: P.map(function (pt) { return pt[0].toFixed(1) + ',' + pt[1].toFixed(1) }).join(' '), fill: col(fk), stroke: '#FFFFFF', 'stroke-width': 1.5, 'stroke-linejoin': 'round' }, g);
+    var dk = fk === 'gdk' || fk === 'g65', cty = q.cy - hz; T(g, q.cx, cty - (q.v == null ? -6 : 6), q.n, { 'font-size': 16, 'font-weight': 700, fill: dk ? '#FFFFFF' : C.ink, 'text-anchor': 'middle' });
+    if (q.v != null) T(g, q.cx, cty + 16, fv(q.v) + unit, { 'font-size': 16, 'font-weight': 800, fill: dk ? '#CDEFE0' : C.dark, 'text-anchor': 'middle' }) });
+  if (bands.length) { var gL = grp(svg, t0 + 900, 'legend', 'fade'), kL = K(gL), lxp = x + 4, lyp = y + H - 28;
+    LV.forEach(function (lv, j) { var lab = j === 0 ? bands[0] + unit + ' 미만' : j === LV.length - 1 ? bands[j - 1] + unit + ' 이상' : bands[j - 1] + '~' + bands[j] + unit;
+      kL.rect(lxp, lyp, 18, 18, lv, 4); kL.text(lxp + 26, lyp + 14, lab, 13, 600, 'sub'); lxp += 26 + h.textW(lab, 13, false) + 22 });
+    if (b.legend) kL.text(lxp + 6, lyp + 14, b.legend, 13, 400, 'mute') }
+  if (side) { var srt = cells.filter(function (q) { return q.v != null }).sort(function (a, c) { return c.v - a.v }), sx = x + w - 316, gp = 16, ch = (H - gp) / 2;
+    [['높은 곳', srt.slice(0, 3), 'gdk'], ['낮은 곳', srt.slice(-3).reverse(), 'g18']].forEach(function (blk, j) { var g = grp(svg, t0 + 1100 + j * 300, blk[0], 'left'), k = K(g), yy = y + j * (ch + gp);
+      k.rect(sx, yy, 316, ch, 'card'); k.text(sx + 20, yy + 34, blk[0], 18, 700, 'g');
+      blk[1].forEach(function (q, m) { var ry = yy + 58 + m * ((ch - 70) / 3); k.rect(sx + 20, ry, 6, (ch - 70) / 3 - 12, blk[2], 2); k.text(sx + 38, ry + 26, q.n, 20, 700, 'ink'); k.text(sx + 296, ry + 26, fv(q.v) + unit, 20, 800, 'gdk', 'end') }) }) } }
+
+/* versus : 대결 판 — a{name, icon, fig, s} · b{…} 두 대상을 반씩 나눈 바탕에 · rows[{t, a, b, fa, fb}](같은 잣대 줄, 값은 숫자면 가운데에서 바깥으로 막대) · win('a'|'b' 줄마다 hi) · note(원인 한 줄) */
+function versus(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], A = b.a || {}, B = b.b || {}, rows = b.rows || [], noteH = b.note ? 52 : 0, hd = 146, half = (w - 12) / 2;
+  var g0 = grp(svg, t0, 'versus', 'fade'), k0 = K(g0); k0.rect(x, y, half, H - noteH - (noteH ? 12 : 0), 'card'); k0.rect(x + half + 12, y, half, H - noteH - (noteH ? 12 : 0), 'well');
+  [[A, x, 'gdk'], [B, x + half + 12, 'ink']].forEach(function (S, j) { var g = grp(svg, t0 + 200 + j * 250, S[0].name, j ? 'right' : 'left'), k = K(g), sx = S[1], ic = S[0].icon, tx = sx + 24;
+    if (ic) { iconSvg(g, ic, sx + 24, y + 24, 56, j ? 'g65' : 'g'); tx = sx + 96 }
+    k.text(tx, y + 50, S[0].name || '', 26, 800, S[2]); if (S[0].s) k.text(tx, y + 78, S[0].s, 16, 400, 'sub');
+    var fx2 = j ? sx + half - 24 : sx + half - 60; if (S[0].fig != null) k.text(fx2, y + 66, String(S[0].fig), 36, 800, j ? 'ink' : 'gdk', 'end'); if (S[0].k) k.text(fx2, y + 96, S[0].k, 13, 600, 'mute', 'end') });
+  var gv = grp(svg, t0 + 600, 'vs', 'pop'), kv = K(gv), cx = x + half + 6; kv.rect(cx - 26, y + 96, 52, 32, 'gdk', 16); kv.text(cx, y + 118, 'VS', 16, 800, 'white', 'middle');
+  var ry0 = y + hd, rh = (H - noteH - (noteH ? 12 : 0) - hd - 12) / Math.max(1, rows.length), bw = half - 230;
+  rows.forEach(function (r, i) { var g = grp(svg, t0 + 800 + i * 220, r.t, 'fade'), k = K(g), yy = ry0 + i * rh, va = +r.a, vb = +r.b, num = !isNaN(va) && !isNaN(vb), mx = Math.max(Math.abs(va), Math.abs(vb)) || 1, hi = r.hi || (num ? (b.lowWin ? (va < vb ? 'a' : 'b') : (va > vb ? 'a' : 'b')) : '');
+    E('line', { x1: x + 16, x2: x + w - 16, y1: yy, y2: yy, stroke: C.line, 'stroke-width': 1.5 }, g);
+    k.text(cx, yy + rh / 2 - 6, r.t, 16, 700, 'sub', 'middle');
+    if (num) { var la = bw * Math.abs(va) / mx, lb = bw * Math.abs(vb) / mx, by = yy + rh / 2 + 4, bh = Math.min(14, rh * .22);
+      k.rect(cx - 70 - la, by, la, bh, hi === 'a' ? 'gdk' : 'g40', 3); k.rect(cx + 70, by, lb, bh, hi === 'b' ? 'gdk' : 'g40', 3);
+      k.text(cx - 82 - la, by + bh / 2 + 7, r.fa || String(r.a), 20, 800, hi === 'a' ? 'gdk' : 'ink', 'end'); k.text(cx + 82 + lb, by + bh / 2 + 7, r.fb || String(r.b), 20, 800, hi === 'b' ? 'gdk' : 'ink') }
+    else { k.text(cx - 82, yy + rh / 2 + 14, r.fa || String(r.a), 20, 800, hi === 'a' ? 'gdk' : 'ink', 'end'); k.text(cx + 82, yy + rh / 2 + 14, r.fb || String(r.b), 20, 800, hi === 'b' ? 'gdk' : 'ink') } });
+  if (b.note) { var gn = grp(svg, t0 + 900 + rows.length * 220, 'note', 'rise'), kn = K(gn); kn.rect(x, y + H - noteH, w, noteH, 'gdk'); kn.text(x + 24, y + H - noteH / 2 + 7, b.note, 18, 700, 'white') } }
+
+/* photo : 사진 합성 — img(주소 · data:) · ar(가로 ÷ 세로) · focus[0~1, 0~1](잘릴 때 남길 곳) · fade('right' 기본 | 'left' | 'bottom' | 'none' : 그쪽을 흰색으로 흐리게)
+   calls[{x, y, n, t, s, hot}](사진 위 0~1 자리 → 흐린 쪽 이름표, 직각 지시선) · credit(각주에 「사진: …」으로 붙음) */
+function photo(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], fd = b.fade || 'right', g0 = grp(svg, t0, 'photo', 'fade'), ar = b.ar || 1.5, iw, ih;
+  var id = 'bph' + (++shid), cp = E('clipPath', { id: id }, g0); E('rect', { x: x, y: y, width: w, height: H, rx: RXD }, cp);
+  if (w / H > ar) { iw = w; ih = w / ar } else { ih = H; iw = H * ar }
+  var fc = b.focus || [.5, .5], ix = x + (w - iw) * fc[0], iy = y + (H - ih) * fc[1], gi = E('g', { 'clip-path': 'url(#' + id + ')' }, g0);
+  E('image', { href: b.img || '', x: ix, y: iy, width: iw, height: ih, preserveAspectRatio: 'none', 'data-k': 'photo' }, gi);
+  if (fd !== 'none') { var gid = 'bpf' + shid, v = fd === 'bottom', lg = E('linearGradient', { id: gid, x1: fd === 'left' ? 1 : 0, y1: 0, x2: v ? 0 : fd === 'left' ? 0 : 1, y2: v ? 1 : 0 }, g0);
+    [[0, 0], [.42, 0], [.62, .92], [1, 1]].forEach(function (s0) { E('stop', { offset: s0[0], 'stop-color': '#FFFFFF', 'stop-opacity': s0[1] }, lg) });
+    E('rect', { x: x, y: y, width: w, height: H, fill: 'url(#' + gid + ')' }, gi) }
+  var cs = b.calls || [], n = cs.length; if (!n) return;
+  var lw = Math.min(340, w * .34), lx = fd === 'left' ? x + 20 : x + w - lw - 20, gp = 12, ch = Math.min(96, (H - 40 - gp * (n - 1)) / n), ly0 = y + (H - (ch * n + gp * (n - 1))) / 2;
+  if (fd === 'bottom') { lw = (w - 40 - gp * (n - 1)) / n; ch = Math.min(96, H * .3) }
+  cs.forEach(function (c, i) { var g = grp(svg, t0 + 500 + i * 300, c.t, 'fade'), k = K(g), px = ix + iw * c.x, py = iy + ih * c.y, hot = c.hot, bxl, byt;
+    if (fd === 'bottom') { bxl = x + 20 + i * (lw + gp); byt = y + H - ch - 20 } else { bxl = lx; byt = ly0 + i * (ch + gp) }
+    var tx = fd === 'bottom' ? bxl + lw / 2 : fd === 'left' ? bxl + lw : bxl, ty = fd === 'bottom' ? byt : byt + ch / 2, path;
+    if (fd === 'bottom') path = [[px, py], [px, (py + ty) / 2], [tx, (py + ty) / 2], [tx, ty]]; else { var mid = fd === 'left' ? (px + tx) / 2 : (px + tx) / 2; path = Math.abs(py - ty) < 1 ? [[px, py], [tx, ty]] : [[px, py], [mid, py], [mid, ty], [tx, ty]] }
+    link(g, path, hot ? 'warn' : 'gdk', { sw: 1.5, r: 6 });
+    k.rect(bxl, byt, lw, ch, hot ? 'gdk' : 'white'); if (!hot) E('rect', { x: bxl, y: byt, width: lw, height: ch, rx: RXD, fill: 'none', stroke: col('line'), 'stroke-width': 1.5 }, g);
+    k.stack(bxl + 30, byt, lw - 30, ch, [[c.t, 18, 700, hot ? 'white' : 'ink'], [c.s, 16, 400, hot ? 'gon' : 'sub']], { pad: 14, align: 'start', gap: 4 });
+    pin(g, bxl + 22, byt + 22, c.n != null ? c.n : i + 1, hot ? 'warn' : 'gdk'); pin(g, px, py, c.n != null ? c.n : i + 1, hot ? 'warn' : 'gdk') });
+  if (b.credit && CTX) { var fn = CTX.root.querySelector('.fn'); if (fn) fn.insertAdjacentHTML('beforeend', '<span data-k="photo-credit">' + (fn.textContent.trim() ? ', ' : '') + '사진: ' + h.esc(b.credit) + '</span>') } }
+
+/* 종이 질감 : skin paper — 칸 면을 옅은 종이 색으로 + 결(잡음 무늬 6%). 장 바탕은 흰색 그대로 */
+var GRAIN = null;
+function grainDefs(svg) { var id = 'bgr' + (++shid), d = E('defs', {}, svg), f = E('filter', { id: id, x: 0, y: 0, width: 1, height: 1 }, d);
+  E('feTurbulence', { type: 'fractalNoise', baseFrequency: .85, numOctaves: 2, seed: 7, result: 'n' }, f); E('feColorMatrix', { in: 'n', type: 'saturate', values: 0, result: 'm' }, f);
+  var ct = E('feComponentTransfer', { in: 'm', result: 'a' }, f); E('feFuncA', { type: 'table', tableValues: '0 .07' }, ct);
+  E('feComposite', { in: 'a', in2: 'SourceGraphic', operator: 'in', result: 't' }, f); var mg = E('feMerge', {}, f); E('feMergeNode', { in: 'SourceGraphic' }, mg); E('feMergeNode', { in: 't' }, mg); return id }
+
+var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list, iso: iso, plan: plan, section: section, hexmap: hexmap, versus: versus, photo: photo };
 var CTX = null;
 ECOM.parts.blocks = function (bd, s, ctx) { CTX = ctx;
-  var HH = ctx.bento ? 470 : 512, svg = ctx.svg(HH), Z = zones(s.layout, 1168, HH, s.gap), bl = s.blocks || []; SK = SKINS[s.skin || (ctx.deck && ctx.deck.meta && ctx.deck.meta.skin) || (ctx.bento ? 'bentoG' : '')] || null; RXD = ctx.bento ? 18 : 6; usedTF = false;
+  var HH = ctx.bento ? 470 : 512, svg = ctx.svg(HH), Z = zones(s.layout, 1168, HH, s.gap), bl = s.blocks || []; SK = SKINS[s.skin || (ctx.deck && ctx.deck.meta && ctx.deck.meta.skin) || (ctx.bento ? 'bentoG' : '')] || null; RXD = ctx.bento ? 18 : 6; usedTF = false; GRAIN = SK && SK.grain ? grainDefs(svg) : null;
   bl.forEach(function (b, i) { var f = BLOCKS[b.type], z = Z[Math.min(i, Z.length - 1)];
     if (!f) { T(svg, z[0] + 12, z[1] + 28, '모르는 블록 : ' + b.type, { 'font-size': 16, fill: C.warn }); return }
     f(svg, z, b, 200 + i * 900) });
-  SK = null; RXD = 6;
-  if (usedTF) { var fn = ctx.root.querySelector('.fn'); if (fn) fn.insertAdjacentHTML('beforeend', '<span data-k="tf-credit"> · ' + (ECOM.TF_CREDIT || '이모지: 토스팀에서 제공한 토스페이스') + '</span>') }
+  SK = null; RXD = 6; GRAIN = null;
+  if (usedTF) { var fn = ctx.root.querySelector('.fn'); if (fn) fn.insertAdjacentHTML('beforeend', '<span data-k="tf-credit">' + (fn.textContent.trim() ? ', ' : '') + (ECOM.TF_CREDIT || '이모지: 토스팀에서 제공한 토스페이스') + '</span>') }
   ctx.root.setAttribute('data-gap', 380) };
 ECOM.parts.blocks.types = Object.keys(BLOCKS);
 })();
