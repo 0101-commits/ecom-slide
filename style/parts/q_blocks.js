@@ -7,7 +7,7 @@
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 var COL = { ink: C.ink, sub: C.sub, mute: C.mute, g: C.g65, gdk: C.dark, gon: '#CDEFE0', g18: C.g18, g40: C.g40, card: C.g08, well: '#DCEAE3',
   light: C.light, white: '#FFFFFF', line: C.line, warn: C.warn, warn08: C.warnsoft, yel: '#FFF3C4', g08: '#F3F9F6', warn40: '#E7C4B5', g65: C.g65, gmid: '#0A6444', gold: '#C98F35', axis: C.axis, gray: C.gray, grid: C.grid, paper: '#FFFFFF', on: C.on };
-var SK = null;
+var SK = null, RXD = 6;
 function col(k) { return (SK && SK[k]) || COL[k] || k }
 var TONE = { strong: ['gdk', 'white', 'gon'], soft: ['g18', 'ink', 'sub'], ghost: ['well', 'sub', 'mute'], warn: ['warn08', 'warn', 'sub'], mid: ['g40', 'ink', 'sub'], hot: ['yel', 'ink', 'sub'] };
 function tone(t) { return TONE[t] || ['card', 'ink', 'sub'] }
@@ -23,7 +23,7 @@ function zones(code, W, H, gap) { gap = gap == null ? 24 : gap;
 /* 그리기 도움 — g 위에 그림 */
 function K(g) {
   function text(x, y, t, fs, w, fill, anchor) { T(g, x, y, t, { 'font-size': fs, 'font-weight': w || 400, fill: col(fill || 'ink'), 'text-anchor': anchor || 'start' }); return h.textW(t, fs, (w || 400) >= 700) }
-  function rect(x, y, w, hh, fill, rx) { return E('rect', { x: x, y: y, width: Math.max(0, w), height: Math.max(0, hh), rx: rx == null ? Math.min(6, hh / 2) : rx, fill: col(fill || 'card') }, g) }
+  function rect(x, y, w, hh, fill, rx) { return E('rect', { x: x, y: y, width: Math.max(0, w), height: Math.max(0, hh), rx: rx == null ? Math.min(RXD, hh / 2, w / 2) : rx, fill: col(fill || 'card') }, g) }
   function lines(t, fs, maxW, w) { return h.wrap(String(t), fs, maxW, (w || 400) >= 700) }
   function measure(w, items, pad, gap) { var tot = 0, k = 0; items.forEach(function (it) { if (!it || !it[0]) return; tot += lines(it[0], it[1], w - 2 * pad, it[2]).length * Math.round(it[1] * 1.42); k++ }); return tot + gap * Math.max(k - 1, 0) }
   function stack(x, y, w, hh, items, o) { o = o || {}; var pad = o.pad == null ? 12 : o.pad, gap = o.gap == null ? 6 : o.gap, al = o.align || 'middle', va = o.valign || 'middle', bl = [], tot = 0;
@@ -314,6 +314,8 @@ function list(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], it = 
 
 /* 색 틀(skin) — 명세의 skin 이 navy · plain 이면 블록 색을 그 틀로(벤토 틀 bentoG · bentoL 은 4단계 틀과 함께) */
 var SKINS = { navy: { g: '#1F4E8C', gdk: '#143A6B', g65: '#5E82B0', g40: '#A5BAD4', g18: '#CFDBEC', card: '#EDF2F8', gon: '#A9C6EA', gmid: '#1C4A82', gray: '#AEB9C6', line: '#C3D0E2', well: '#DCE5F1', grid: '#D3DDEB', light: '#C9D5E6', axis: '#7C8AA0' },
+  bentoG: { g: '#00744F', gdk: '#005136', g65: '#4D9E83', g40: '#99C7B9', g18: '#CFE5DB', card: '#ECF5F1', gon: '#8FE3C0', gmid: '#0A6444', line: '#DDE6E1', well: '#EEF3F0' },
+  bentoL: { g: '#4880EE', gdk: '#4880EE', g65: '#B0B8C1', g40: '#C9D9FA', g18: '#E3ECFD', card: '#F2F4F6', gon: '#E3ECFD', gmid: '#3A6BD0', ink: '#34383F', sub: '#646B77', mute: '#8B95A1', line: '#E5E8EB', well: '#F2F4F6', light: '#E5E8EB', warn: '#D9534F', warn08: '#FDECEC' },
   plain: { g: '#3E4743', gdk: '#1D2521', g65: '#6B7570', g40: '#9AA3A0', g18: '#DDE3E0', card: '#F3F5F4', gon: '#C9D1CD', gmid: '#3E4743' } };
 
 /* 그림 칸과 옆 목록 칸 나누기 — list · listw(330) · listside:'left' */
@@ -608,11 +610,11 @@ function plan(svg, z, b, t0) { var sp = splitList(z, b), x = sp[0][0], y = sp[0]
 var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list, iso: iso, plan: plan };
 var CTX = null;
 ECOM.parts.blocks = function (bd, s, ctx) { CTX = ctx;
-  var svg = ctx.svg(512), Z = zones(s.layout, 1168, 512, s.gap), bl = s.blocks || []; SK = SKINS[s.skin] || null; usedTF = false;
+  var HH = ctx.bento ? 470 : 512, svg = ctx.svg(HH), Z = zones(s.layout, 1168, HH, s.gap), bl = s.blocks || []; SK = SKINS[s.skin || (ctx.deck && ctx.deck.meta && ctx.deck.meta.skin) || (ctx.bento ? 'bentoG' : '')] || null; RXD = ctx.bento ? 18 : 6; usedTF = false;
   bl.forEach(function (b, i) { var f = BLOCKS[b.type], z = Z[Math.min(i, Z.length - 1)];
     if (!f) { T(svg, z[0] + 12, z[1] + 28, '모르는 블록 : ' + b.type, { 'font-size': 16, fill: C.warn }); return }
     f(svg, z, b, 200 + i * 900) });
-  SK = null;
+  SK = null; RXD = 6;
   if (usedTF) { var fn = ctx.root.querySelector('.fn'); if (fn) fn.insertAdjacentHTML('beforeend', '<span data-k="tf-credit"> · ' + (ECOM.TF_CREDIT || '이모지: 토스팀에서 제공한 토스페이스') + '</span>') }
   ctx.root.setAttribute('data-gap', 380) };
 ECOM.parts.blocks.types = Object.keys(BLOCKS);

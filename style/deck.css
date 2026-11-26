@@ -236,3 +236,10 @@ body.still .tip3,.tip3:empty{display:none}
 @media print{.tip3{display:none!important}}
 /* 6판 선 굵기 기본값 : 굵기를 안 적은 SVG 선 · 칸 테두리는 1px 대신 1.5px(지도 path 는 그대로) */
 .sl svg :is(line,rect,polyline,polygon,circle)[stroke]:not([stroke-width]){stroke-width:1.5}
+/* 6판 벤토 틀 : 제목 2줄 36px + 부제목 18px, 본문 칸 470px, 출처 한 줄 */
+.sl.bento .bt{position:absolute;left:56px;right:56px;top:40px;font-size:36px;font-weight:700;line-height:1.28;letter-spacing:-.025em;color:var(--ink);text-wrap:balance}
+.sl.bento .bt b{color:var(--g)}
+.sl.bento .bs{position:absolute;left:56px;right:56px;top:140px;font-size:18px;line-height:1.5;color:var(--sub)}
+.sl.bento .bd{top:186px;bottom:64px}
+.sl.bento .fn{bottom:22px}
+.sl.bento .lg img,.sl.bento .lg svg{display:none}

@@ -297,6 +297,20 @@ def cmd_mockup(a):
          "families": fams if not (a.family or q or want) else None})
 
 
+def cmd_packs(a):
+    """주제 팩 3종(경제 · 업무 보고 · 일반)과 목적별 이야기 흐름 5종. name 을 주면 그 팩의 흐름을 장 차례로 풀어 보여 줌"""
+    pk = load(lib_dir() / "library" / "packs" / "packs.json")
+    if not pk:
+        say({"error": "주제 팩 표가 없어요 — setup 먼저"}, 1)
+    if not a.name:
+        say({"packs": [{"code": k, "name": v["name"], "frame": v["frame"], "skin": v["skin"], "flows": [pk["flows"][f]["name"] for f in v["flows"]]} for k, v in pk["packs"].items()],
+             "flows": [{"code": k, "name": v["name"], "use": v["use"], "steps": [s["role"] for s in v["steps"]]} for k, v in pk["flows"].items()]})
+    v = pk["packs"].get(a.name) or next((x for x in pk["packs"].values() if x["name"] == a.name), None)
+    if not v:
+        say({"error": f"주제 팩 없음 : {a.name}", "packs": list(pk["packs"])}, 1)
+    say(dict(v, flows={f: pk["flows"][f] for f in v["flows"]}))
+
+
 def cmd_types(a):
     """설명 유형 26종 — 장이 전달하려는 내용의 형식. 주제와 무관하게 이 유형으로 목업을 고름(mockup --type)"""
     xt = load(lib_dir() / "library" / "mockups" / "xtypes.json")
@@ -666,8 +680,9 @@ def lint3(deck, lib, extra=None):
         prev = k
         if run == 3 and k not in ("cover", "part", "end") and not s.get("appendix"):
             add(i, "같은 종류 연속", "확인할 것", f"{k} 3장째 — 2장까지 권고")
+        bento_s = (s.get("frame") or (deck.get("meta") or {}).get("frame")) == "bento"
         for f, why in OLD_FIELDS.items():
-            if f in s and not (f == "title" and (k in ("cover", "part", "statement", "term", "further", "discuss", "headline", "label", "rankroll", "body") or (k == "table" and s.get("layout") in ("grow", "marker", "years")))):
+            if f in s and not (bento_s and f in ("title", "sub")) and not (f == "title" and (k in ("cover", "part", "statement", "term", "further", "discuss", "headline", "label", "rankroll", "body") or (k == "table" and s.get("layout") in ("grow", "marker", "years")))):
                 add(i, "판 2 칸", "고칠 것", f"`{f}` — {why}")
         txt = strings_of(s)
         alltxt = " ".join(t for _, t in txt)
@@ -687,6 +702,13 @@ def lint3(deck, lib, extra=None):
                     add(i, "단위 없는 숫자", "고칠 것", f"「{t[:40]}」의 {mm.group(1)}")
                     break
         if k in ("cover", "part", "end"):
+            continue
+        if (s.get("frame") or (deck.get("meta") or {}).get("frame")) == "bento":  # 벤토 틀 : 제목 2줄 + 부제목
+            ttl = s.get("title") or s.get("head")
+            if not ttl:
+                add(i, "벤토 제목", "고칠 것", "title 없음 — 결론 문장 2줄")
+            elif len([x for x in ([ttl] if isinstance(ttl, str) else ttl) if x]) > 2:
+                add(i, "벤토 제목", "고칠 것", "제목은 2줄 안")
             continue
         e = s.get("eyebrow")
         if not isinstance(e, dict) or not e.get("group") or not e.get("topic"):
@@ -1077,6 +1099,7 @@ def main():
     x = sp.add_parser("series"); x.add_argument("--q")
     x = sp.add_parser("fetch"); x.add_argument("name"); x.add_argument("id"); x.add_argument("--since", default="2021.01")
     x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family", help="화면 종류(kind) 또는 판 2 묶음 이름"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20); x.add_argument("--type", help="설명 유형 코드 또는 이름 일부(예: trend, 추이, 과정)")
+    x = sp.add_parser("packs"); x.add_argument("name", nargs="?")
     sp.add_parser("types")
     x = sp.add_parser("find")
     for k in ("layout", "kind", "struct"):

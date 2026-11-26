@@ -27,6 +27,13 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 3. **깊이** : 입문 · 실무.  4. **토의 질문 수** : 2 · 3.
 답은 `meta.length`([최소, 최대]) · `meta.cover` · `meta.depth` · `meta.questions`.
 
+## 2-1. 새 주제 질문 카드 (ECOM 경제 스터디 회차가 아닌 덱 — AskUserQuestion 한 번, 4문항)
+1. **목적과 독자** : 보고 · 설명 · 제안 · 결정 · 교육 중 하나 + 읽는 사람(예: 대표, 팀, 처음 보는 사람). 목적이 이야기 흐름을 정한다(`ecs.py packs` 의 흐름 5종, 장마다 설명 유형 후보).
+2. **틀** : ECOM 틀(꼬리표, 헤드메시지 2줄, 각주) · 벤토 틀(제목 2줄 + 부제목, 둥근 카드, 출처 한 줄). `meta.frame` = `ecom` | `bento`, 장마다 `frame` 으로 바꿀 수 있음.
+3. **주제 팩** : 경제 · 업무 보고 · 일반(`ecs.py packs <팩>` = 색, 숫자 출처 규칙, 글 규칙, 자주 쓰는 설명 유형과 그림 재료).
+4. **본문 장 수**.
+답은 `meta.purpose` · `meta.reader` · `meta.frame` · `meta.pack` · `meta.length`. 장은 흐름의 역할 차례로 짜고, 장마다 설명 유형 → `ecs.py mockup --type` 또는 조립 블록(`style/SCHEMA6_blocks.md`)으로 만든다.
+
 ## 3. 사실표 — 작성하는 날의 최신 숫자, 열쇠 없이
 - `ecs.py read <회차>` → `work/자료.txt`.
 - `ecs.py series --q <지표>` 로 계열 번호를 찾고 `ecs.py fetch <회차> <id> --since 2021.01`(ECOS 공개 시험 열쇠 · FRED 내려받기 주소). 못 받으면 그 문장을 전하고 자료 · 웹 검색 숫자로 진행.

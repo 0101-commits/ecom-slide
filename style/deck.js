@@ -164,7 +164,8 @@ function buildSlide(x) {
   /* 짙은 바탕은 그 배치가 짙은 색표를 아는 때만(ECOM.parts.<kind>.dark = ['배치', …]) — 모르면 흰 바탕으로 그리고 점검에 남김 */
   if ((bg === 'deep' || bg === 'map') && !(part && part.dark && part.dark.indexOf(s.layout || 'default') >= 0)) { x.bgOff = bg; bg = '' }
   if (bg) el.classList.add('bg-' + bg);
-  var ctx = { W: 1168, H: 512, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx, bg: bg, dark: false, P: C };
+  var frame = s.frame || (D && D.meta && D.meta.frame) || 'ecom', bento = frame === 'bento' && !/^(cover|part|end)$/.test(kind); if (bento) el.classList.add('bento');
+  var ctx = { W: 1168, H: bento ? 470 : 512, bento: bento, root: el, deck: D, index: x.i, page: pageOf(x.i), apx: x.apx, bg: bg, dark: false, P: C };
   /* 전면 층(bg map 등) : 장 전체 1280×720 을 덮는 판 — 꼬리표 · 헤드메시지 · 각주는 그 위 */
   ctx.full = function () { var f = el.querySelector('.fl'); if (!f) { f = document.createElement('div'); f.className = 'fl'; el.insertBefore(f, el.firstChild) } return f };
   ctx.svg = function (h, bd) { var v = E('svg', { class: 'cv', viewBox: '0 0 1168 ' + (h || 512), width: 1168, height: h || 512 }); (bd || ctx.bd).appendChild(v); return v };
@@ -174,7 +175,8 @@ function buildSlide(x) {
     var lk = '';
     if (x.apx) lk = '<a data-back="1">← 본문으로</a>';
     else if (s.links && s.links.length) lk = s.links.map(function (l) { return '<a data-to="' + esc(l.to) + '">' + esc(l.text || l.to) + ' →</a>' }).join('');
-    el.innerHTML = '<div class="tag ch">' + eyebrow(s) + '</div><div class="hm mv">' + md(s.head || '') + '</div><div class="bd mv"></div><div class="fn ch">' + footHTML(s) + '</div>'
+    el.innerHTML = (bento ? '<div class="bt mv">' + md([].concat(s.title || s.head || '').join('\n')) + '</div>' + (s.sub ? '<div class="bs mv">' + md(s.sub) + '</div>' : '')
+      : '<div class="tag ch">' + eyebrow(s) + '</div><div class="hm mv">' + md(s.head || '') + '</div>') + '<div class="bd mv"></div><div class="fn ch">' + footHTML(s) + '</div>'
       + '<div class="lg ch">' + logoImg(ctx.dark) + '<span>' + esc(ctx.page) + '</span></div>' + (lk ? '<div class="lk ch">' + lk + '</div>' : '');
     ctx.bd = el.querySelector('.bd');
     if (!part) ctx.bd.innerHTML = '<p style="color:#B4461E">모르는 화면 종류 : ' + esc(kind) + '</p>';

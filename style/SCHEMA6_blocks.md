@@ -85,12 +85,19 @@
 - 인체(`body` 화면 종류): 지시선은 직각(가로 → 세로 → 가로), 설명 칸은 테두리 없는 옅은 면.
 - 시험: `style/demo6_scene.json` 4장(견본 공급 경로 · 같은 장 장 전체 배치 · 제조업 수출 경로 개념도 · 견본 84㎡ 평면도 · 농산물이 도시에 이르는 경로 개념도).
 
+## 틀 2종
+
+- ECOM 틀(기본): 꼬리표(eyebrow), 헤드메시지 2줄(head), 본문 칸 1168×512, 각주(foot).
+- 벤토 틀: 장에 `"frame": "bento"`(또는 `meta.frame`). 제목 2줄 36px(`title`, 줄 목록 또는 글), 부제목 18px(`sub`), 본문 칸 1168×470, 카드 모서리 18px, 출처는 아래 한 줄(`foot.source`), 로고 없음. 색은 `skin` `bentoG`(초록, 기본) 또는 `bentoL`(파랑).
+- 덱 전체 색: `meta.skin`(navy, plain, bentoG, bentoL). 장의 `skin` 이 먼저.
+- 주제 팩과 이야기 흐름: `ecs.py packs`(팩 3종 · 흐름 5종), `ecs.py packs <팩>`(그 팩의 틀, 색, 출처 규칙, 글 규칙, 설명 유형, 그림 재료, 흐름 차례). 자료 = `library/packs/packs.json`.
+
 ## 아이콘과 색 틀
 
 - 카드(`cards`)와 타일(`tiles`)의 `icon`: 라인 아이콘 이름(`style/icons`, Lucide, ISC: database, cpu, shield-check 등 24종) 또는 `tf:<코드>`(Tossface 원본 그림, `style/tossface`, 예: `tf:u1F33E`).
 - Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
 - `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
 - 지도와 인체는 엔진의 기존 화면 종류(`fullmap` · `map` · `body` 등)를 쓴다.
-- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림 재료는 산업 · 물류 · 농업 · 의료 · 도시 장면.
+- 아직 없는 것: `doc`(문서 그림), 그림 재료는 산업 · 물류 · 농업 · 의료 · 도시 장면.
 
 그림형 시험 덱: `style/demo6_picture.json`(판 4 그림형 명세 15장). 시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).

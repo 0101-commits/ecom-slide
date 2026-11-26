@@ -840,13 +840,13 @@
   },
   {
    "kind": "blocks",
-   "skin": null,
-   "eyebrow": {
-    "group": "",
-    "topic": "",
-    "basis": " · 견본 b2"
-   },
-   "head": "언어 모델은 다음 토큰을 하나씩 예측해 답을 만듦",
+   "frame": "bento",
+   "skin": "bentoL",
+   "title": [
+    "언어 모델은 다음 토큰을",
+    "하나씩 예측해 답을 만듦"
+   ],
+   "sub": "토큰 분리부터 선택까지 다섯 단계를 답이 끝날 때까지 반복",
    "layout": "T6B4",
    "blocks": [
     {
@@ -936,20 +936,25 @@
      ]
     }
    ],
+   "eyebrow": {
+    "group": "",
+    "topic": "",
+    "basis": "견본 b2"
+   },
    "foot": {
-    "source": "",
+    "source": "개념 설명",
     "notes": []
    }
   },
   {
    "kind": "blocks",
-   "skin": null,
-   "eyebrow": {
-    "group": "",
-    "topic": "",
-    "basis": " · 견본 b3"
-   },
-   "head": "조선 수군, 의병, 명군이 일본군의 보급과 병력을 제약",
+   "frame": "bento",
+   "skin": "bentoL",
+   "title": [
+    "조선 수군, 의병, 명군이",
+    "일본군의 보급과 병력을 제약"
+   ],
+   "sub": "1592년 5월부터 1593년 4월까지 전세가 바뀐 세 가지 요인",
    "layout": "full",
    "blocks": [
     {
@@ -1053,8 +1058,13 @@
      "fs": 16
     }
    ],
+   "eyebrow": {
+    "group": "",
+    "topic": "",
+    "basis": "견본 b3"
+   },
    "foot": {
-    "source": "",
+    "source": "개념 설명",
     "notes": []
    }
   },
