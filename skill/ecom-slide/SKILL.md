@@ -57,7 +57,8 @@ description: ECOM 경제 스터디 발표를 HTML 파일 하나로 만든다(엔
 - 단위 : 한 장 안 같은 양은 한 단위, 모든 숫자 주석에 단위. 말투 : `rules/write.md` 의 AI 말투 사전 금지어를 쓰지 않는다.
 - 쌓기는 엔진이 자동. 바뀜 단계(`beats`)는 뜻이 바뀌는 곳만 장당 2개까지. 같은 자료를 이어 보면 `chart` 이름을 같게, 같은 숫자를 이어받으면 `carry`.
 - 장이 30장 넘으면 묶음마다 Agent(general-purpose, model sonnet)에게 나눠 맡기고 합친다.
-- `ecs.py lint <회차>` → 「고칠 것」을 모두 고친다.
+- `ecs.py lint <회차>` → 「고칠 것」을 모두 고친다. 6판 글 규칙(`rules/write.md` 판 6: 가운뎃점 대신 쉼표, 前/現 허용, 확정 안 된 계획 금지, 조건 괄호, 꼬리표 번호와 경로 금지)도 여기서 걸린다. 가운뎃점은 `ecs.py fixdots <회차> --write` 로 한 번에 쉼표로. 「도식 후보」(작은 표, 글 속 화살표, 글 나열, 조건 문장, 숫자 많은 글)는 그 장을 도식으로 바꿀지 본다.
+- 사용자가 덱 글을 직접 고친 판을 주면 `ecs.py textdiff <초안> <고친 판>` → 묶음별로 이유를 AskUserQuestion 으로 묻고(추정 금지) `rules/write.md` 「6판 고친 방식」과 개정 기록에 답만 더한다.
 
 ## 6. 묶기 · 점검
 - `ecs.py build <회차>` → `ecs.py check <회차> --shots all`.

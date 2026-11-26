@@ -297,6 +297,64 @@ def cmd_mockup(a):
          "families": fams if not (a.family or q or want) else None})
 
 
+DOT = re.compile(r"\s*·\s*")
+
+
+def undot(o, key="", cnt=None):
+    """화면 글의 가운뎃점 → 쉼표. NO_VIS 칸(note · kind · id 등)은 그대로"""
+    cnt = cnt if cnt is not None else [0]
+    if isinstance(o, str):
+        if key in NO_VIS or "·" not in o:
+            return o
+        cnt[0] += o.count("·")
+        return DOT.sub(", ", o).strip(", ").replace(", ,", ",")
+    if isinstance(o, list):
+        return [undot(v, key, cnt) for v in o]
+    if isinstance(o, dict):
+        return {k: undot(v, k, cnt) for k, v in o.items()}
+    return o
+
+
+def cmd_fixdots(a):
+    """덱(또는 목업 목록) 글의 가운뎃점을 쉼표로 — 6판 글 규칙. --write 없으면 몇 곳인지만"""
+    f = Path(a.deck) if Path(a.deck).exists() else sess(a.deck) / "deck.json"
+    d = load(f)
+    if not d:
+        say({"error": f"덱을 읽지 못함 : {f}"}, 1)
+    cnt = [0]
+    if "slides" in d:
+        d["slides"] = [undot(s, "", cnt) for s in d["slides"]]
+    if "mockups" in d:
+        d["mockups"] = [dict(m, slide=undot(m.get("slide"), "", cnt), title=undot(m.get("title"), "title", cnt)) for m in d["mockups"]]
+    if a.write and cnt[0]:
+        raw = f.read_text(encoding="utf-8")  # 원래 형식(들여쓰기 여부) 그대로
+        f.write_text(json.dumps(d, ensure_ascii=False, indent=1 if "\n " in raw[:4000] else None), encoding="utf-8", newline="\n")
+    say({"file": str(f), "dots": cnt[0], "written": bool(a.write and cnt[0])})
+
+
+def cmd_textdiff(a):
+    """초안 덱과 사용자가 고친 덱의 글 차이(장 차례 기준). 이유는 추정하지 말고 이 목록으로 묶어 물은 뒤 rules/write.md 「고친 방식」에 답만 더함"""
+    A, B = load(Path(a.before)), load(Path(a.after))
+    if not A or not B:
+        say({"error": "두 덱 파일을 읽지 못함"}, 1)
+    sa, sb = A.get("slides", []), B.get("slides", [])
+    out = []
+    for i in range(max(len(sa), len(sb))):
+        x = dict(strings_of(sa[i])) if i < len(sa) else {}
+        y = dict(strings_of(sb[i])) if i < len(sb) else {}
+        tx = [t for k, t in strings_of(sa[i])] if i < len(sa) else []
+        ty = [t for k, t in strings_of(sb[i])] if i < len(sb) else []
+        gone = [t for t in tx if t not in ty]
+        new = [t for t in ty if t not in tx]
+        for g, n in zip(gone, new):
+            out.append({"slide": i + 1, "before": g, "after": n})
+        for g in gone[len(new):]:
+            out.append({"slide": i + 1, "before": g, "after": None})
+        for n in new[len(gone):]:
+            out.append({"slide": i + 1, "before": None, "after": n})
+    say({"slides": [len(sa), len(sb)], "changes": len(out), "items": out[:a.n]})
+
+
 def cmd_packs(a):
     """주제 팩 3종(경제 · 업무 보고 · 일반)과 목적별 이야기 흐름 5종. name 을 주면 그 팩의 흐름을 장 차례로 풀어 보여 줌"""
     pk = load(lib_dir() / "library" / "packs" / "packs.json")
@@ -596,7 +654,69 @@ def lint(deck, lib):
 # ───────── lint 3판(schema 3) ─────────
 AI_TONE = [("꼭대기", "고점"), ("고원", "지속 구간"), ("방아쇠", "요인"), ("체력", "성장 여력"), ("웃돈", "프리미엄"), ("쉽게 말해", "(지움)"),
            ("한 줄로", "(지움)"), ("핵심은", "(지움)"), ("결국", "(지움)"), ("주목할 점은", "(지움)"), ("사실상", "(지움)"), ("좁힘", "축소"),
-           ("함께 인하", "동반 인하"), ("한국 먼저", "한국 선제 인상"), ("넉 달째", "4개월 연속"), ("内", ""), ("現", "현재"), ("强", "강세"), ("高", "높음"), ("美", "미국"), ("韓", "한국")]
+           ("함께 인하", "동반 인하"), ("한국 먼저", "한국 선제 인상"), ("넉 달째", "4개월 연속"), ("内", "")]
+# 6판 글 규칙(문체 사전) — rules/write.md 「6판 고친 방식」
+BEFORE_AFTER = re.compile(r"(변경|개선|도입|적용|교체|전환)\s*(전|후)(?![가-힣])")
+FRAC = re.compile(r"\d+\s*분의\s*\d+")
+PLAN_WORDS = re.compile(r"(할|될|진행할|추진할|도입할|적용할|검토할|반영할)\s*예정|예정(임|이다|입니다)|추진\s*예정|검토\s*예정")
+PATHS = re.compile(r"[A-Za-z]:\\|\\Users\\|/Users/|/home/|\.(json|py|js|csv|xlsx)\b")
+EYE_NUM = re.compile(r"^\s*(\d{1,2}\s*[\.\)]|\d{2}\s|[①-⑳]|PART\s*\d|Part\s*\d)")
+LIST_KEYS = ("points", "bullets", "lines", "items_text", "words")
+NO_VIS = ("note", "kind", "layout", "skin", "frame", "type", "icon", "img", "id", "bg", "emph", "fx")
+BRANCH_K = ("ladder", "tree", "stdecide", "scfork", "scicicle", "scissue", "quadrant")
+FLOW_K = ("flow", "stairs", "hub", "relay", "czchain", "chainfire", "czvstep", "stproc", "tlbill", "cycle", "timeline")
+TEXT_K = ("statement", "term", "further", "discuss", "label", "headline", "qtcard", "qtdiff", "st3q")
+
+
+def style6(s, k, txt, add, i):
+    """6판 고친 방식 — 가운뎃점 · 前/現 · 분수 기호 · 확정 안 된 계획 · 경로 · 꼬리표 번호와 경로"""
+    vis = [(k2, x) for k2, x in txt if k2 not in NO_VIS]
+    alltxt = " ".join(x for _, x in vis)
+    dots = [x for _, x in vis if "·" in x]
+    if dots:
+        add(i, "가운뎃점", "고칠 것", f"{len(dots)}곳 : 「{dots[0][:28]}」 — 나열은 쉼표나 조사(와, 과), 칸 구분은 빗금")
+    for rx, item, sev, why in ((BEFORE_AFTER, "前/現", "확인할 것", "前 / 現 표기 가능"), (FRAC, "분수 기호", "확인할 것", "⅓ 같은 기호로"),
+                               (PLAN_WORDS, "확정 안 된 계획", "확인할 것", "확정된 일정만 쓰고 아니면 지금 상태(검토 중 등)로"), (PATHS, "경로", "고칠 것", "파일 경로와 파일 이름은 쓰지 않음")):
+        m = rx.search(alltxt)
+        if m:
+            add(i, item, sev, f"「{m.group(0)}」 — {why}")
+    e = s.get("eyebrow")
+    if isinstance(e, dict):
+        for key in ("group", "topic"):
+            v = str(e.get(key) or "")
+            if EYE_NUM.search(v):
+                add(i, "꼬리표 번호", "고칠 것", f"「{v[:20]}」 — 대분류 번호 없이 주제만")
+            if v.count("|") or v.count(">"):
+                add(i, "꼬리표 경로", "고칠 것", f"「{v[:24]}」 — 여러 단계 경로 없이 장의 주제만")
+
+
+def structure6(s, k, txt, add, i):
+    """구조화 점검 5항목(6판) — 표와 글 나열을 도식 후보로 알림(모두 확인할 것)"""
+    bl = [b for b in (s.get("blocks") or []) if isinstance(b, dict)]
+    bt = {b.get("type") for b in bl}
+    vis = [(k2, x) for k2, x in txt if k2 not in NO_VIS and k2 != "head"]
+    rows = s.get("rows") if k == "table" else next((b.get("rows") for b in bl if b.get("type") == "table"), None)
+    if isinstance(rows, list) and 0 < len(rows) <= 3 and all(isinstance(r, (list, dict)) for r in rows):
+        nc = max(len(r) if isinstance(r, list) else len(r.get("cells", r)) for r in rows)
+        if nc <= 3:
+            add(i, "도식 후보 : 작은 표", "확인할 것", f"{len(rows)}줄 × {nc}칸 표 — 카드 열이나 가운데 축 비교로")
+    arrows = sum(x.count("→") for _, x in vis if len(x) <= 80)
+    if arrows >= 4 and k not in FLOW_K and not bt & {"steps", "nodes", "timeline"}:
+        add(i, "도식 후보 : 글 속 화살표", "확인할 것", f"화살표 {arrows}개 — 차례 띠나 상자 + 연결선으로")
+    for key in LIST_KEYS:
+        v = s.get(key)
+        if isinstance(v, list) and len(v) >= 5 and all(isinstance(x, str) and len(x) <= 40 for x in v):
+            add(i, "도식 후보 : 글 나열", "확인할 것", f"`{key}` {len(v)}개 — 카드 열이나 타일로")
+            break
+    cond = sum(len(re.findall(r"(이면|하면|일 때|일 경우|인 경우)", x)) for _, x in vis)
+    if cond >= 3 and k not in BRANCH_K and "nodes" not in bt:
+        add(i, "도식 후보 : 조건 문장", "확인할 것", f"조건 {cond}곳 — 갈림 도식(상자 + 이름표 연결선)으로")
+    if k in TEXT_K:
+        nums = sum(len(re.findall(r"\d[\d,.]*\s*(%p|%|배|원|달러|명|건|분|년|개월|억|조)", x)) for _, x in vis)
+        if nums >= 3:
+            add(i, "도식 후보 : 숫자 많은 글", "확인할 것", f"글 속 숫자 {nums}개 — 숫자 칸(stat)이나 막대로")
+
+
 OLD_FIELDS = {"concl": "결론 띠(헤드메시지로 옮김)", "aside": "오른쪽 요점 칸(본문 안으로)", "heading": "어깨끈(꼬리표로)", "read": "읽기 겹(화면으로)", "title": "짧은 제목(head 2줄로)", "theme": "강조색(초록 고정)"}
 BARE_NUM = re.compile(r"(?<![\d.])(\d+\.\d{2})(?![\d.%~]|\s*~|%p|bp|원|배|달러|억|조|만|명|건|개월|년|월|일|장|회|분기|p|포인트|백만|천|십억|엔|위안|유로|\s*(%|원|배|달러|억|조|명|bp|개월|엔))")
 DATE = re.compile(r"\d{4}\.\d{2}")
@@ -689,6 +809,8 @@ def lint3(deck, lib, extra=None):
         for w, rep in AI_TONE:
             if w and w in alltxt:
                 add(i, "AI 말투", "고칠 것", f"「{w}」 → {rep}")
+        style6(s, k, txt, add, i)
+        structure6(s, k, txt, add, i)
         if INVEST.search(alltxt):
             add(i, "투자 권유 말", "고칠 것", INVEST.search(alltxt).group(0))
         if HOLDER.search(alltxt):
@@ -1099,6 +1221,8 @@ def main():
     x = sp.add_parser("series"); x.add_argument("--q")
     x = sp.add_parser("fetch"); x.add_argument("name"); x.add_argument("id"); x.add_argument("--since", default="2021.01")
     x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family", help="화면 종류(kind) 또는 판 2 묶음 이름"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20); x.add_argument("--type", help="설명 유형 코드 또는 이름 일부(예: trend, 추이, 과정)")
+    x = sp.add_parser("fixdots"); x.add_argument("deck", help="deck.json 경로 또는 회차"); x.add_argument("--write", action="store_true")
+    x = sp.add_parser("textdiff"); x.add_argument("before"); x.add_argument("after"); x.add_argument("--n", type=int, default=200)
     x = sp.add_parser("packs"); x.add_argument("name", nargs="?")
     sp.add_parser("types")
     x = sp.add_parser("find")
