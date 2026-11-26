@@ -6,7 +6,7 @@
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 var COL = { ink: C.ink, sub: C.sub, mute: C.mute, g: C.g65, gdk: C.dark, gon: '#CDEFE0', g18: C.g18, g40: C.g40, card: C.g08, well: '#DCEAE3',
-  light: C.light, white: '#FFFFFF', line: C.line, warn: C.warn, warn08: C.warnsoft, yel: '#FFF3C4', g65: C.g65, gmid: '#0A6444', gold: '#C98F35', axis: C.axis, gray: C.gray, grid: C.grid, paper: '#FFFFFF', on: C.on };
+  light: C.light, white: '#FFFFFF', line: C.line, warn: C.warn, warn08: C.warnsoft, yel: '#FFF3C4', g08: '#F3F9F6', warn40: '#E7C4B5', g65: C.g65, gmid: '#0A6444', gold: '#C98F35', axis: C.axis, gray: C.gray, grid: C.grid, paper: '#FFFFFF', on: C.on };
 var SK = null;
 function col(k) { return (SK && SK[k]) || COL[k] || k }
 var TONE = { strong: ['gdk', 'white', 'gon'], soft: ['g18', 'ink', 'sub'], ghost: ['well', 'sub', 'mute'], warn: ['warn08', 'warn', 'sub'], mid: ['g40', 'ink', 'sub'], hot: ['yel', 'ink', 'sub'] };
@@ -316,7 +316,110 @@ function list(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], it = 
 var SKINS = { navy: { g: '#1F4E8C', gdk: '#143A6B', g65: '#5E82B0', g40: '#A5BAD4', g18: '#CFDBEC', card: '#EDF2F8', gon: '#A9C6EA', gmid: '#1C4A82', gray: '#AEB9C6', line: '#C3D0E2', well: '#DCE5F1', grid: '#D3DDEB', light: '#C9D5E6', axis: '#7C8AA0' },
   plain: { g: '#3E4743', gdk: '#1D2521', g65: '#6B7570', g40: '#9AA3A0', g18: '#DDE3E0', card: '#F3F5F4', gon: '#C9D1CD', gmid: '#3E4743' } };
 
-var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list };
+/* 그림 칸과 옆 목록 칸 나누기 — list · listw(330) · listside:'left' */
+function splitList(z, b) { if (!b.list) return [z, null]; var lw = b.listw || 330;
+  return b.listside === 'left' ? [[z[0] + lw + 16, z[1], z[2] - lw - 16, z[3]], [z[0], z[1], lw, z[3]]] : [[z[0], z[1], z[2] - lw - 16, z[3]], [z[0] + z[2] - lw, z[1], lw, z[3]]] }
+
+/* iso : 등각 모형 — items[{k:'box|cyl|plate|flow|guide', x, y, z, w, d, h, r, tone, tag, fig, pin, ptone, foot, side, lines[], grid, t, pts[], dash, tone_, ord, op}] · u(한 칸 크기 28) · ox · oy(원점 비율) · panel · texts[] · list
+   무광 3면 색 : 윗면 밝게, 왼면 중간, 오른면 짙게 */
+var ISO = { strong: ['g65', 'g', 'gdk'], soft: ['g08', 'g18', 'g40'], mid: ['g18', 'g40', 'g65'], plain: ['white', 'line', 'gray'], warn: ['warn08', 'warn40', 'warn'], ground: ['well', 'light', 'gray'], ghost: ['white', 'well', 'light'] };
+function iso(svg, z, b, t0) { var sp = splitList(z, b), x = sp[0][0], y = sp[0][1], pw = sp[0][2], ph = sp[0][3], u = b.u || 28, ox = x + pw * (b.ox == null ? .5 : b.ox), oy = y + ph * (b.oy == null ? .42 : b.oy);
+  function P(a, c, e) { return [ox + (a - c) * u * .866, oy + (a + c) * u * .5 - (e || 0) * u] }
+  function poly(g, pts, fill, stroke, op) { E('polygon', { points: pts.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1) }).join(' '), fill: col(fill), stroke: col(stroke || fill), 'stroke-width': 1.5, 'stroke-linejoin': 'round', opacity: op || null }, g) }
+  function seg(g, p0, p1, c, dash) { E('line', { x1: p0[0], y1: p0[1], x2: p1[0], y2: p1[1], stroke: col(c), 'stroke-width': 1.5, 'stroke-dasharray': dash || null }, g) }
+  var g0 = grp(svg, t0, null, 'fade'); if (b.panel !== false) K(g0).rect(x, y, pw, ph, 'card');
+  function key(it) { if (it.k === 'plate') return -999 + (it.ord || 0); if (it.k === 'flow') return -500 + (it.ord || 0); return it.ord != null ? it.ord : (it.x || 0) + (it.y || 0) + ((it.w || it.r || 1) + (it.d || it.r || 1)) / 2 }
+  var items = (b.items || []).slice().sort(function (p, q) { return key(p) - key(q) || (p.z || 0) - (q.z || 0) }), lab = [], gI = grp(svg, t0 + 200, null, 'fade');
+  items.forEach(function (it) { var k = it.k || 'box', pal = ISO[it.tone || 'plain'] || ISO.plain, top = pal[0], left = pal[1], right = pal[2], a = it.x || 0, c = it.y || 0, e = it.z || 0, hi, cen, foot;
+    if (k === 'plate') { var w = it.w, d = it.d; poly(gI, [P(a, c, e), P(a + w, c, e), P(a + w, c + d, e), P(a, c + d, e)], top, it.edge || left);
+      if (it.grid) { for (var i = 1; i < w; i++) seg(gI, P(a + i, c, e), P(a + i, c + d, e), left); for (var j = 1; j < d; j++) seg(gI, P(a, c + j, e), P(a + w, c + j, e), left) }
+      if (it.t) { var q = P(a + .4, c + d - .5, e); lab.push(['txt', q[0], q[1], it.t, 16, 700, 'mute', 'start']) } return }
+    if (k === 'flow') { var pts = it.pts.map(function (p) { return P(p[0], p[1], p.length > 2 ? p[2] : e) }), tc = it.tone_ || 'gdk';
+      E('polyline', { points: pts.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1) }).join(' '), fill: 'none', stroke: col(tc), 'stroke-width': it.sw || 3, 'stroke-linejoin': 'round', 'stroke-dasharray': it.dash ? '7 5' : null }, gI);
+      var zp = pts[pts.length - 1], yp = pts[pts.length - 2], dx = zp[0] - yp[0], dy = zp[1] - yp[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, s = 11;
+      E('path', { d: 'M' + zp[0] + ',' + zp[1] + 'L' + (zp[0] - ux * s - uy * s * .55) + ',' + (zp[1] - uy * s + ux * s * .55) + 'L' + (zp[0] - ux * s + uy * s * .55) + ',' + (zp[1] - uy * s - ux * s * .55) + 'Z', fill: col(tc) }, gI);
+      if (it.t) { var li = it.lp != null ? it.lp : Math.floor((pts.length - 1) / 2), m = [(pts[li][0] + pts[li + 1][0]) / 2, (pts[li][1] + pts[li + 1][1]) / 2]; lab.push(['txt', m[0] + (it.dx || 0), m[1] - 8 + (it.dy || 0), it.t, 16, 700, tc, 'middle']) } return }
+    if (k === 'guide') { (it.at || []).forEach(function (q) { seg(gI, P(q[0], q[1], it.z0), P(q[0], q[1], it.z1), 'axis', '4 4') }); return }
+    if (k === 'cyl') { var r = it.r, hh = it.h, Tp = P(a, c, e + hh), B = P(a, c, e), ra = r * u * 1.2247, rb = r * u * .7071;
+      E('path', { d: 'M' + (Tp[0] - ra) + ',' + Tp[1] + ' L' + (B[0] - ra) + ',' + B[1] + ' A' + ra + ',' + rb + ' 0 0 0 ' + (B[0] + ra) + ',' + B[1] + ' L' + (Tp[0] + ra) + ',' + Tp[1] + ' Z', fill: col(left) }, gI);
+      E('path', { d: 'M' + Tp[0] + ',' + (Tp[1] + rb) + ' L' + B[0] + ',' + (B[1] + rb) + ' A' + ra + ',' + rb + ' 0 0 0 ' + (B[0] + ra) + ',' + B[1] + ' L' + (Tp[0] + ra) + ',' + Tp[1] + ' A' + ra + ',' + rb + ' 0 0 1 ' + Tp[0] + ',' + (Tp[1] + rb) + ' Z', fill: col(right) }, gI);
+      E('ellipse', { cx: Tp[0], cy: Tp[1], rx: ra, ry: rb, fill: col(top), stroke: col(left), 'stroke-width': 1.5 }, gI);
+      hi = [Tp[0], Tp[1] - rb]; cen = Tp; foot = [B[0], B[1] + rb] }
+    else { var w2 = it.w || 1, d2 = it.d || 1, h2 = it.h || 1, op = it.op;
+      poly(gI, [P(a, c + d2, e), P(a + w2, c + d2, e), P(a + w2, c + d2, e + h2), P(a, c + d2, e + h2)], left, null, op);
+      poly(gI, [P(a + w2, c, e), P(a + w2, c + d2, e), P(a + w2, c + d2, e + h2), P(a + w2, c, e + h2)], right, null, op);
+      poly(gI, [P(a, c, e + h2), P(a + w2, c, e + h2), P(a + w2, c + d2, e + h2), P(a, c + d2, e + h2)], top, left, op);
+      (it.lines || []).forEach(function (ln) { seg(gI, P(a + ln[0] * w2, c + ln[1] * d2, e + h2), P(a + ln[2] * w2, c + ln[3] * d2, e + h2), left) });
+      cen = P(a + w2 / 2, c + d2 / 2, e + h2); hi = [cen[0], P(a, c, e + h2)[1]]; foot = P(a + w2, c + d2, e) }
+    var yy = hi[1] - 9;
+    if (it.tag) { lab.push(['txt', hi[0] + (it.tdx || 0), yy + (it.tdy || 0), it.tag, 16, 700, 'ink', 'middle']); yy -= 22 }
+    if (it.fig) lab.push(['txt', hi[0] + (it.tdx || 0), yy + (it.tdy || 0), it.fig, 20, 800, 'gdk', 'middle']);
+    if (it.pin != null) lab.push(['pin', cen[0], cen[1], it.pin, it.ptone || 'gdk']);
+    if (it.foot) lab.push(['txt', foot[0] + (it.fdx || 0), foot[1] + 20 + (it.fdy || 0), it.foot, 16, 600, 'sub', 'middle']);
+    if (it.side) { var qs = k === 'box' ? P(a + (it.w || 1), c + (it.d || 1) / 2, e + (it.h || 1) / 2) : cen; lab.push(['lead', qs[0], qs[1], it.side, it.sx || x + pw - 20]) } });
+  var gl = grp(svg, t0 + 600, null, 'fade');
+  lab.forEach(function (l) { if (l[0] === 'txt') T(gl, l[1], l[2], l[3], { 'font-size': l[4], 'font-weight': l[5], fill: col(l[6]), 'text-anchor': l[7], stroke: '#FFFFFF', 'stroke-width': 6, 'paint-order': 'stroke', 'stroke-linejoin': 'round' });
+    else if (l[0] === 'pin') pin(gl, l[1], l[2], l[3], l[4]);
+    else { var twd = h.textW(l[3], 16, true); link(gl, [[l[1] + 3, l[2]], [l[4] - twd - 10, l[2]]], 'axis', { sw: 1.5 }); E('circle', { cx: l[1] + 3, cy: l[2], r: 3, fill: C.dark }, gl); T(gl, l[4], l[2] + 5, l[3], { 'font-size': 16, 'font-weight': 700, fill: C.ink, 'text-anchor': 'end' }) } });
+  (b.texts || []).forEach(function (q) { T(gl, x + pw * q.fx, y + ph * q.fy, q.t, { 'font-size': q.fs || 16, 'font-weight': q.w || 600, fill: col(q.fill || 'sub'), 'text-anchor': q.anchor || 'start' }) });
+  if (sp[1]) list(svg, sp[1], { items: b.list }, t0 + 800) }
+
+/* plan : 도면 · 계통도 · 기계 — 흰 바탕 옅은 격자(6판은 짙은 청사진 바탕 없음) 위 선 그림 + 치수선 + 번호 + 기호 + 배관 + 표제란
+   size[가로, 세로](도면 단위) · margin · mt_ · dx · dy · grid(24) · shapes[{k:'rect|line|poly|circle|arc|rep', x, y, w, h, r, pts[], a0, a1, c:'line|thin|warn|hi', fill:'soft|solid|hi|hatch|warn', sw:'bold|mid|thin', dash, arrow, n, dx, dy, shape}]
+   syms[{k:'tank|vessel|pump|valve|hx|turbine|gen|tower|fan', x, y, w, h, hot, core, trays, t, tp:'below|above|in'}] · pipes[{pts[], tone, dash, arrow, lab, lp, sw}] · dims[{a, b, t, off}] · texts[{x, y, t, fs, w, fill, anchor, halo}] · pins[{x, y, n, to}] · title{name, scale, unit} · list */
+var plid = 0, LIGHT6 = { gon: 'g65', white: 'gdk', on: 'g65', gmid: 'gdk' };   /* 짙은 청사진용 색 이름 → 흰 바탕용 */
+function arrowHead(g, a, b, c, s) { var dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L; s = s || 9;
+  E('path', { d: 'M' + b[0] + ',' + b[1] + 'L' + (b[0] - ux * s - uy * s * .5) + ',' + (b[1] - uy * s + ux * s * .5) + 'L' + (b[0] - ux * s + uy * s * .5) + ',' + (b[1] - uy * s - ux * s * .5) + 'Z', fill: c }, g) }
+function plan(svg, z, b, t0) { var sp = splitList(z, b), x = sp[0][0], y = sp[0][1], pw = sp[0][2], ph = sp[0][3], ln = C.ink, thin = '#55605B', soft = '#F3F9F6', txt = C.ink, GR = b.grid || 24;
+  var g0 = grp(svg, t0, b.title && b.title.name, 'fade'), id = 'bpl' + (++plid), df = E('defs', {}, g0);
+  var cp = E('clipPath', { id: id + 'c' }, df); E('rect', { x: x, y: y, width: pw, height: ph, rx: 6 }, cp);
+  var pt = E('pattern', { id: id + 'h', width: 8, height: 8, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, df); E('line', { x1: 0, y1: 0, x2: 0, y2: 8, stroke: C.axis, 'stroke-width': 1.5 }, pt);
+  E('rect', { x: x, y: y, width: pw, height: ph, rx: 6, fill: '#FFFFFF' }, g0); var gg = E('g', { 'clip-path': 'url(#' + id + 'c)', 'data-k': 'plan' }, g0);
+  for (var i = 1; x + i * GR < x + pw; i++) E('line', { x1: x + i * GR, x2: x + i * GR, y1: y, y2: y + ph, stroke: '#E3ECE7', 'stroke-width': i % 4 === 0 ? 1.5 : .8 }, gg);
+  for (var j = 1; y + j * GR < y + ph; j++) E('line', { x1: x, x2: x + pw, y1: y + j * GR, y2: y + j * GR, stroke: '#E3ECE7', 'stroke-width': j % 4 === 0 ? 1.5 : .8 }, gg);
+  var W = b.size[0], H = b.size[1], m = b.margin == null ? 44 : b.margin, mt = b.mt_ == null ? m : b.mt_, k = Math.min((pw - 2 * m) / W, (ph - mt - m) / H), ox = x + (pw - W * k) / 2 + (b.dx || 0), oy = y + mt + (ph - mt - m - H * k) / 2 + (b.dy || 0);
+  function TP(a, c) { return [ox + a * k, oy + c * k] }
+  var SW = { bold: 3, mid: 1.5, thin: 1.5 }, gS = grp(svg, t0 + 200, null, 'fade');
+  function shape(sh, da, dc) { da = da || 0; dc = dc || 0; var kd = sh.k, c = { line: ln, thin: thin, warn: C.warn, hi: C.main }[sh.c || 'line'] || col(sh.c), fl = sh.fill, fill = !fl ? 'none' : (fl === 'hatch' ? 'url(#' + id + 'h)' : ({ soft: soft, solid: ln, hi: C.g65, bg: '#FFFFFF', warn: C.warn }[fl] || col(fl))), sw = SW[sh.sw || 'mid'], dash = sh.dash ? '6 5' : null;
+    if (kd === 'rect') { var p = TP(sh.x + da, sh.y + dc); E('rect', { x: p[0], y: p[1], width: sh.w * k, height: sh.h * k, rx: (sh.r || 0) * k, fill: fill, stroke: c, 'stroke-width': sw, 'stroke-dasharray': dash }, gS) }
+    else if (kd === 'line' || kd === 'poly') { var P = sh.pts.map(function (q) { return TP(q[0] + da, q[1] + dc) });
+      E(kd === 'poly' ? 'polygon' : 'polyline', { points: P.map(function (q) { return q[0].toFixed(1) + ',' + q[1].toFixed(1) }).join(' '), fill: fill, stroke: c, 'stroke-width': sw, 'stroke-linejoin': 'round', 'stroke-dasharray': dash }, gS);
+      if (sh.arrow && P.length > 1) arrowHead(gS, P[P.length - 2], P[P.length - 1], C.main, 9) }
+    else if (kd === 'circle') { var pc = TP(sh.x + da, sh.y + dc); E('circle', { cx: pc[0], cy: pc[1], r: sh.r * k, fill: fill, stroke: c, 'stroke-width': sw, 'stroke-dasharray': dash }, gS) }
+    else if (kd === 'arc') { var ca = TP(sh.x + da, sh.y + dc), r = sh.r * k, a0 = sh.a0 * Math.PI / 180, a1 = sh.a1 * Math.PI / 180;
+      E('path', { d: 'M' + (ca[0] + r * Math.cos(a0)) + ',' + (ca[1] + r * Math.sin(a0)) + ' A' + r + ',' + r + ' 0 ' + (Math.abs(sh.a1 - sh.a0) > 180 ? 1 : 0) + ' ' + (sh.a1 > sh.a0 ? 1 : 0) + ' ' + (ca[0] + r * Math.cos(a1)) + ',' + (ca[1] + r * Math.sin(a1)), fill: 'none', stroke: c, 'stroke-width': sw, 'stroke-dasharray': dash }, gS) }
+    else if (kd === 'rep') for (var q = 0; q < sh.n; q++) shape(sh.shape, da + q * (sh.dx || 0), dc + q * (sh.dy || 0)) }
+  (b.shapes || []).forEach(function (sh) { shape(sh) });
+  var gY = grp(svg, t0 + 400, null, 'fade');
+  (b.syms || []).forEach(function (sy) { var p = TP(sy.x, sy.y), w = (sy.w || 0) * k, hh = (sy.h || 0) * k, c = ln, fill = sy.hot ? C.g65 : soft, r;
+    if (sy.k === 'tank') E('rect', { x: p[0], y: p[1], width: w, height: hh, rx: Math.min(w, hh) * .18, fill: fill, stroke: c, 'stroke-width': 3 }, gY);
+    else if (sy.k === 'vessel') { r = w / 2; E('path', { d: 'M' + p[0] + ',' + (p[1] + r) + ' A' + r + ',' + r + ' 0 0 1 ' + (p[0] + w) + ',' + (p[1] + r) + ' L' + (p[0] + w) + ',' + (p[1] + hh - r) + ' A' + r + ',' + r + ' 0 0 1 ' + p[0] + ',' + (p[1] + hh - r) + ' Z', fill: fill, stroke: c, 'stroke-width': 3 }, gY);
+      if (sy.core) E('rect', { x: p[0] + w * .24, y: p[1] + hh * .42, width: w * .52, height: hh * .34, rx: 0, fill: 'url(#' + id + 'h)', stroke: c, 'stroke-width': 1.5 }, gY) }
+    else if (sy.k === 'pump') { r = w / 2; var cx = p[0] + r, cy = p[1] + r; E('circle', { cx: cx, cy: cy, r: r, fill: fill, stroke: c, 'stroke-width': 3 }, gY); E('polygon', { points: (cx - r * .45) + ',' + (cy - r * .55) + ' ' + (cx + r * .6) + ',' + cy + ' ' + (cx - r * .45) + ',' + (cy + r * .55), fill: c }, gY) }
+    else if (sy.k === 'valve') { var vx = p[0] + w / 2, vy = p[1] + hh / 2; E('polygon', { points: p[0] + ',' + p[1] + ' ' + vx + ',' + vy + ' ' + p[0] + ',' + (p[1] + hh), fill: '#FFFFFF', stroke: c, 'stroke-width': 3 }, gY); E('polygon', { points: (p[0] + w) + ',' + p[1] + ' ' + vx + ',' + vy + ' ' + (p[0] + w) + ',' + (p[1] + hh), fill: '#FFFFFF', stroke: c, 'stroke-width': 3 }, gY) }
+    else if (sy.k === 'hx') { E('rect', { x: p[0], y: p[1], width: w, height: hh, rx: Math.min(w, hh) * .2, fill: fill, stroke: c, 'stroke-width': 3 }, gY); var zz = []; for (var q = 0; q <= 5; q++) zz.push((p[0] + w * (.15 + .7 * q / 5)).toFixed(1) + ',' + (p[1] + hh * (q % 2 ? .75 : .25)).toFixed(1)); E('polyline', { points: zz.join(' '), fill: 'none', stroke: thin, 'stroke-width': 3 }, gY) }
+    else if (sy.k === 'turbine') E('polygon', { points: p[0] + ',' + (p[1] + hh * .3) + ' ' + (p[0] + w) + ',' + p[1] + ' ' + (p[0] + w) + ',' + (p[1] + hh) + ' ' + p[0] + ',' + (p[1] + hh * .7), fill: fill, stroke: c, 'stroke-width': 3 }, gY);
+    else if (sy.k === 'gen') E('circle', { cx: p[0] + w / 2, cy: p[1] + w / 2, r: w / 2, fill: fill, stroke: c, 'stroke-width': 3 }, gY);
+    else if (sy.k === 'tower') { E('rect', { x: p[0], y: p[1], width: w, height: hh, rx: w * .3, fill: fill, stroke: c, 'stroke-width': 3 }, gY); var n = sy.trays || 6; for (var t = 0; t < n; t++) E('line', { x1: p[0] + 4, x2: p[0] + w - 4, y1: p[1] + hh * (t + 1) / (n + 1), y2: p[1] + hh * (t + 1) / (n + 1), stroke: thin, 'stroke-width': 1.5, 'stroke-dasharray': '5 4' }, gY) }
+    else if (sy.k === 'fan') { r = w / 2; var fx = p[0] + r, fy = p[1] + r; E('circle', { cx: fx, cy: fy, r: r, fill: fill, stroke: c, 'stroke-width': 3 }, gY); E('line', { x1: fx - r * .7, y1: fy - r * .7, x2: fx + r * .7, y2: fy + r * .7, stroke: c, 'stroke-width': 3 }, gY); E('line', { x1: fx - r * .7, y1: fy + r * .7, x2: fx + r * .7, y2: fy - r * .7, stroke: c, 'stroke-width': 3 }, gY) }
+    if (sy.t) { var pos = sy.tp || 'below', pb = TP(sy.x + (sy.w || 0) / 2, sy.y + (sy.h || 0)), py = pos === 'below' ? pb[1] + 20 : (pos === 'above' ? TP(0, sy.y)[1] - 8 : TP(0, sy.y + (sy.h || 0) / 2)[1] + 5);
+      T(gY, pb[0], py, sy.t, { 'font-size': 16, 'font-weight': 700, fill: txt, 'text-anchor': 'middle', stroke: '#FFFFFF', 'stroke-width': 6, 'paint-order': 'stroke', 'stroke-linejoin': 'round' }) } });
+  var gP = grp(svg, t0 + 600, null, 'fade');
+  (b.pipes || []).forEach(function (pp) { var P = pp.pts.map(function (q) { return TP(q[0], q[1]) }), tn = LIGHT6[pp.tone] || pp.tone || 'g65'; link(gP, P, tn, { dash: pp.dash, arrow: pp.arrow !== false, sw: pp.sw }); if (pp.lab) linkLab(gP, P, pp.lab, tn, 'white', pp.lp) });
+  (b.dims || []).forEach(function (d) { var A = TP(d.a[0], d.a[1]), B = TP(d.b[0], d.b[1]), off = d.off == null ? -22 : d.off, c = C.main, s = off > 0 ? 1 : -1, ww = h.textW(d.t, 13, true) + 10;
+    if (Math.abs(A[1] - B[1]) < .5) { var yy = A[1] + off; E('line', { x1: A[0], x2: A[0], y1: A[1] + 4 * s, y2: yy + 5 * s, stroke: c, 'stroke-width': 1.5 }, gP); E('line', { x1: B[0], x2: B[0], y1: B[1] + 4 * s, y2: yy + 5 * s, stroke: c, 'stroke-width': 1.5 }, gP); E('line', { x1: A[0], x2: B[0], y1: yy, y2: yy, stroke: c, 'stroke-width': 1.5 }, gP); arrowHead(gP, [B[0], yy], [A[0], yy], c, 7); arrowHead(gP, [A[0], yy], [B[0], yy], c, 7);
+      var mx = (A[0] + B[0]) / 2; E('rect', { x: mx - ww / 2, y: yy - 9, width: ww, height: 18, rx: 0, fill: '#FFFFFF' }, gP); T(gP, mx, yy + 5, d.t, { 'font-size': 13, 'font-weight': 600, fill: c, 'text-anchor': 'middle' }) }
+    else { var xx = A[0] + off; E('line', { x1: A[0] + 4 * s, x2: xx + 5 * s, y1: A[1], y2: A[1], stroke: c, 'stroke-width': 1.5 }, gP); E('line', { x1: B[0] + 4 * s, x2: xx + 5 * s, y1: B[1], y2: B[1], stroke: c, 'stroke-width': 1.5 }, gP); E('line', { x1: xx, x2: xx, y1: A[1], y2: B[1], stroke: c, 'stroke-width': 1.5 }, gP); arrowHead(gP, [xx, B[1]], [xx, A[1]], c, 7); arrowHead(gP, [xx, A[1]], [xx, B[1]], c, 7);
+      var my = (A[1] + B[1]) / 2; E('rect', { x: xx - ww / 2, y: my - 9, width: ww, height: 18, rx: 0, fill: '#FFFFFF' }, gP); T(gP, xx, my + 5, d.t, { 'font-size': 13, 'font-weight': 600, fill: c, 'text-anchor': 'middle' }) } });
+  (b.texts || []).forEach(function (q) { var p = TP(q.x, q.y), a = { 'font-size': q.fs ? ECOM.fs(q.fs < 15 ? 16 : q.fs) : 16, 'font-weight': q.w || 600, fill: col(LIGHT6[q.fill] || q.fill || (q.main === false ? thin : txt)), 'text-anchor': q.anchor || 'middle' };
+    if (q.halo) Object.assign(a, { stroke: '#FFFFFF', 'stroke-width': 6, 'paint-order': 'stroke', 'stroke-linejoin': 'round' }); T(gP, p[0], p[1], q.t, a) });
+  (b.pins || []).forEach(function (q) { var p = TP(q.x, q.y); if (q.to) { var t2 = TP(q.to[0], q.to[1]); E('line', { x1: p[0], y1: p[1], x2: t2[0], y2: t2[1], stroke: thin, 'stroke-width': 1.5 }, gP); E('circle', { cx: t2[0], cy: t2[1], r: 2.6, fill: thin }, gP) } pin(gP, p[0], p[1], q.n, 'gdk') });
+  var tb = b.title; if (tb) { var rows = [['도면', tb.name], ['축척', tb.scale || '개념도'], ['단위', tb.unit || '-']], tw = Math.max.apply(null, rows.map(function (r2) { return h.textW(r2[1], 13, true) })) + 62, tx = x + pw - tw - 12, ty = y + ph - 12 - 20 * rows.length;
+    E('rect', { x: tx, y: ty, width: tw, height: 20 * rows.length, rx: 0, fill: '#FFFFFF', stroke: thin, 'stroke-width': 1.5 }, gP); E('line', { x1: tx + 44, x2: tx + 44, y1: ty, y2: ty + 20 * rows.length, stroke: thin, 'stroke-width': 1.5 }, gP);
+    rows.forEach(function (r2, q) { if (q) E('line', { x1: tx, x2: tx + tw, y1: ty + 20 * q, y2: ty + 20 * q, stroke: thin, 'stroke-width': 1.5 }, gP); T(gP, tx + 22, ty + 15 + 20 * q, r2[0], { 'font-size': 13, fill: thin, 'text-anchor': 'middle' }); T(gP, tx + 52, ty + 15 + 20 * q, r2[1], { 'font-size': 13, 'font-weight': 600, fill: txt }) }) }
+  if (sp[1]) list(svg, sp[1], { items: b.list }, t0 + 800) }
+
+var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list, iso: iso, plan: plan };
 ECOM.parts.blocks = function (bd, s, ctx) {
   var svg = ctx.svg(512), Z = zones(s.layout, 1168, 512, s.gap), bl = s.blocks || []; SK = SKINS[s.skin] || null; usedTF = false;
   bl.forEach(function (b, i) { var f = BLOCKS[b.type], z = Z[Math.min(i, Z.length - 1)];

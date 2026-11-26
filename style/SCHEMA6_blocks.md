@@ -42,6 +42,8 @@
 | `tiles` | 요약 타일(벤토) | `grid[열, 줄]` · `items[{c, r, cs, rs, icon, ic, k, fig, big, t, fs, s, tone, bars[[이름, 값, 강조]], bottom}]` · `arrows[[a, b]]` · `gap` |
 | `shot` | 근거 제시 | `img`(덱 기준 경로 또는 data:) · `ar`(원본 가로 ÷ 세로) · `crop[l, t, r, b]`(0~1) · `box[x, y, w, h]`(잘라 낸 그림 안 0~1) · `title` `mark` · `calls[{k, t, s, hot}]` · `dw` |
 | `list` | 번호 목록(그림 번호와 짝) | `items[{n, t, s, fig, hot, tone}]` |
+| `iso` | 공간 배치, 내부 구조(분해도) | `items[{k:"box|cyl|plate|flow|guide", x, y, z, w, d, h, r, tone:"strong|soft|mid|plain|warn|ground|ghost", tag, fig, pin, foot, side, lines[], grid, t, pts[], dash, ord}]` · `u`(한 칸 28) `ox` `oy` · `panel` · `texts[{fx, fy, t}]` · `list`(옆 번호 목록) |
+| `plan` | 공간 배치(평면도, 배치도, 단면), 설비 계통, 기계 | `size[가로, 세로]` · `shapes[{k:"rect|line|poly|circle|arc|rep", …, fill:"soft|solid|hi|hatch", sw:"bold|mid|thin", dash, arrow}]` · `syms[{k:"tank|vessel|pump|valve|hx|turbine|gen|tower|fan", x, y, w, h, hot, t, tp}]` · `pipes[{pts[], tone, dash, lab}]` · `dims[{a, b, t, off}]` · `texts[]` · `pins[{x, y, n, to}]` · `title{name, scale, unit}` · `list`. 6판은 흰 바탕 옅은 격자(짙은 청사진 바탕 없음) |
 
 - `tone`: `strong`(짙은 면, 결론 칸) · `soft`(중간 면) · `ghost` · `warn` · `mid` · `hot`. 없으면 옅은 면.
 - 숫자 크기: `stat` 은 36px, `big:true` 는 52px(장에 1곳). `bars` 의 `hero:true` 는 52px.
@@ -53,6 +55,7 @@
 - 카드(`cards`)와 타일(`tiles`)의 `icon`: 라인 아이콘 이름(`style/icons`, Lucide, ISC: database, cpu, shield-check 등 24종) 또는 `tf:<코드>`(Tossface 원본 그림, `style/tossface`, 예: `tf:u1F33E`).
 - Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
 - `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
-- 아직 없는 것: `doc`(문서 그림), 벤토 틀.
+- 지도와 인체는 엔진의 기존 화면 종류(`fullmap` · `map` · `body` 등)를 쓴다.
+- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림형 블록의 견본 품질(장 전체 배치, 명암 3단, 세부 묘사).
 
-시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
+그림형 시험 덱: `style/demo6_picture.json`(판 4 그림형 명세 15장). 시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
