@@ -50,12 +50,33 @@
 - `stat` 의 `n`(숫자) · `dec` 를 주면 숫자가 굴러 올라감. `spark` 는 칸 아래 작은 추이선(`sl` = 양 끝 이름, `rng` = 세로 범위).
 - 움직임: 블록마다 차례로 떠오름(카드, 줄, 단계 하나씩). 마우스 올림 카드는 칸 이름(`data-key`)으로 붙음.
 
+## 그림 재료(iso 블록, 견본 수준)
+
+`iso` 의 `items` 에서 아래 `k` 를 쓰면 판 6 견본과 같은 그림이 나온다. 좌표는 등각 칸 단위(a 오른쪽 아래, b 왼쪽 아래, z 위), `tone` 은 3면 색표 이름 `w` 흰 · `g` 초록 · `m` 옅은 초록 · `d` 짙은 초록 · `y` 노랑 · `r` 빨강 · `k` 검정 · `s` 회녹(이 이름이면 명암 3단 + 바닥 그림자).
+
+| k | 그림 | 칸 |
+|---|---|---|
+| `box` · `prism` | 상자 · 다각 기둥 | `x y w d h z` · `pts[[a, b]]` `h` · `shadow` |
+| `cyl` | 원통(탱크 · 탑) | `x y r h z rings` |
+| `derrick` | 시추탑(유전) | `x y s h` |
+| `ship` | 유조선(b 방향으로 뱃머리) | `x y len w` |
+| `building` | 창 있는 건물 | `x y w d h floors wl wr tone` |
+| `sphere` | 구형 탱크 | `x y r z` |
+| `station` | 주유소(매장 · 지붕 · 주유기) | `x y` |
+| `water` | 바다 띠(흰 물가선) | `x y w d` |
+| `route` | 관(짙은 초록 굵은 선) · 항로(`style:"sea"`, 흰 점선) | `pts[[a, b, z]]` `arrow` `sw` |
+| `text` | 땅 위 글(흰 테두리) | `x y z t dx dy fill` |
+
+- 재료마다 `tag`(흰 이름 칸 + 세로 지시선), `pin`(번호)을 붙일 수 있다.
+- 블록 칸: `u`(칸 크기 px) · `oxp` `oyp`(원점, 본문 칸 안 px) · `panel:false`(흰 바탕) · `gridlines`(옅은 바닥 격자) · `callouts[{at[a, b, z], x, w, t, v, s, tone}]`(위쪽 숫자 칸 + 지시선).
+- 시험: `style/demo6_scene.json`(견본 「원유가 주유소에 이르는 공급 경로」를 재료 명세로).
+
 ## 아이콘과 색 틀
 
 - 카드(`cards`)와 타일(`tiles`)의 `icon`: 라인 아이콘 이름(`style/icons`, Lucide, ISC: database, cpu, shield-check 등 24종) 또는 `tf:<코드>`(Tossface 원본 그림, `style/tossface`, 예: `tf:u1F33E`).
 - Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
 - `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
 - 지도와 인체는 엔진의 기존 화면 종류(`fullmap` · `map` · `body` 등)를 쓴다.
-- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림형 블록의 견본 품질(장 전체 배치, 명암 3단, 세부 묘사).
+- 아직 없는 것: `doc`(문서 그림), 벤토 틀, 그림 재료는 공급 경로 장면용 9종만(공장 · 발전소 · 항만 크레인 · 철도 등은 더 만들 몫), 장 전체로 깔리는 배치(헤드 쪽 흐림).
 
 그림형 시험 덱: `style/demo6_picture.json`(판 4 그림형 명세 15장). 시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
