@@ -497,6 +497,7 @@ function runCheck() {
     el.querySelectorAll('rect,path,line,polyline,polygon,circle,ellipse').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (cs.stroke && cs.stroke !== 'none') { var w = parseFloat(cs.strokeWidth); if (w > 0) inc(wz, w) }
       if (e.tagName === 'rect') { var r = parseFloat(e.getAttribute('rx')); if (r > 0) inc(rz, r) } });
     rec.fsz = hz; rec.swz = wz; rec.rxz = rz;
+    var nc = (el.textContent.match(/모르는 (화면 종류|블록|그림 재료) : [^\s<]+/g) || []); if (nc.length) rec.newCode = nc.slice(0, 4);
     /* 6판 품질 점검 4항목 : 칸 수(본문 칸 안 칸이 5개 넘음) · 흰 테두리 칸(흰 면 + 테두리) · 그림 크기(그림 장인데 가장 큰 그림이 본문 칸의 35% 밑) · 선명도(그림을 원본보다 크게 늘림) */
     (function () { var bdE = el.querySelector('.bd'); if (!bdE) return; var BB = toS(bdE.getBoundingClientRect()), bA = Math.max(1, (BB.r - BB.l) * (BB.b - BB.t)), cards = [], wb = [], big = 0, blur = [];
       function lum(c) { var m = /rgba?\(([^)]+)\)/.exec(c || ''); if (!m) return -1; var v = m[1].split(',').map(parseFloat); if (v.length > 3 && v[3] < .5) return -1; return (v[0] * .299 + v[1] * .587 + v[2] * .114) / 255 }

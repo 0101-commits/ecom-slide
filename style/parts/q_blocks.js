@@ -87,7 +87,7 @@ function cards(svg, z, b, t0) { var x = z[0], y0 = z[1], w = z[2], H0 = z[3], it
     k.rect(xx, y, cw, hh, ts[0]); var items = [];
     if (a.k) items.push([a.k, 16, 700, st ? 'gon' : 'g']); if (a.fig) items.push([a.fig, 26, 800, st ? 'white' : 'gdk']); items.push([a.t, 20, 700, ts[1]]);
     if (a.s) items.push([a.s, 18, 400, st ? ts[2] : 'sub']); (a.items || []).forEach(function (l) { items.push(['- ' + l, 18, 400, st ? ts[2] : 'sub']) });
-    if (a.icon) { iconSvg(g, a.icon, xx + 18, y + 22, 46, st ? 'gon' : 'g'); k.stack(xx, y + 76, cw, hh - 76, items, { pad: 18, align: 'start', valign: 'top', gap: 10 }) }
+    if (a.icon) { var need = 76 + k.measure(cw, items, 18, 10) + 22, oy = hh > need + 40 ? (hh - need) / 2 : 0; iconSvg(g, a.icon, xx + 18, y + 22 + oy, 46, st ? 'gon' : 'g'); k.stack(xx, y + 76 + oy, cw, hh - 76 - oy, items, { pad: 18, align: 'start', valign: 'top', gap: 10 }) }
     else k.stack(xx, y, cw, hh, items, { pad: 18, align: 'start', valign: b.valign || 'middle', gap: 10 }) }) }
 
 /* note : 결론 띠 — t(한 문장) · tag · tone:'soft' 면 옅은 띠 */
@@ -280,6 +280,8 @@ function iconSvg(g, name, x, y, size, color) { name = String(name || '');
 function tiles(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], cols = b.grid[0], rows = b.grid[1], gap = b.gap == null ? 16 : b.gap, cw = (w - gap * (cols - 1)) / cols, rh = (H - gap * (rows - 1)) / rows, G = {};
   (b.items || []).forEach(function (t, i) { var g = grp(svg, t0 + i * 260, t.t), k = K(g), cs = t.cs || 1, rs = t.rs || 1, tx = x + t.c * (cw + gap), ty = y + t.r * (rh + gap), tw = cw * cs + gap * (cs - 1), th = rh * rs + gap * (rs - 1), hot = t.tone === 'strong', soft = t.tone === 'soft', pad = 26, yy = ty + pad, brs = t.bars || [], bh = 62 * brs.length;
     k.rect(tx, ty, tw, th, hot ? 'gdk' : (soft ? 'g18' : 'card')); G[i] = [tx, ty, tw, th];
+    var R0 = []; if (t.k) R0.push([t.k, 16, 600, '']); if (t.fig) R0.push([t.fig, t.big ? 52 : 36, 800, '']); R0.push([t.t, t.fs || 20, 700, '']); if (t.s) R0.push([t.s, 16, 400, '']);
+    if (t.icon && !brs.length && !t.bottom) { var need2 = 54 + k.measure(tw, R0, pad, 6), free = th - 2 * pad - need2; if (free > 40) yy += free / 2 }
     if (t.icon) { iconSvg(g, t.icon, tx + pad, yy, 38, hot ? 'gon' : (t.ic || 'g')); yy += 54 }
     if (brs.length) { var mx = Math.max.apply(null, brs.map(function (q) { return q[1] }));
       brs.forEach(function (q, j) { var by = ty + th - pad - bh + j * 62 + 8, L = (tw - pad * 2) * q[1] / mx; k.text(tx + pad, by + 12, q[0], 16, 700, hot ? 'white' : 'sub'); k.rect(tx + pad, by + 22, L, 26, hot ? (q[2] ? 'gon' : 'gmid') : (q[2] ? 'gdk' : 'g40'), 2) }); th -= bh + 6 }
@@ -495,6 +497,7 @@ function iso(svg, z, b, t0) { var bleed = !!(b.bleed && CTX); if (bleed) svg = b
     else if (mk === 'cyl' && PAL5[it.tone]) { KT.cyl(it.x || 0, it.y || 0, it.r || .5, it.h || 1, it.tone, it.z || 0, it.rings, it.shadow); an = P(it.x || 0, it.y || 0, (it.z || 0) + (it.h || 1)) }
     else if (KT[mk] && /^(derrick|ship|building|sphere|station|water|route|factory|cooling|crane|containers|rail|train|warehouse|truck|turbine|field|greenhouse|silo|tractor|hospital|ambulance|tower|house|tree|road|car)$/.test(mk)) an = KT[mk](it);
     if (an || mk === 'water' || mk === 'route' || mk === 'prism' || (PAL5[it.tone] && (mk === 'box' || mk === 'cyl'))) { if (an && it.tag) lab.push(['tagbox', an[0] + (it.tdx || 0), an[1] + (it.tdy || 0), it.tag]); if (an && it.pin != null) lab.push(['pin', an[0], an[1] + 18, it.pin, it.ptone || 'gdk']); return }
+    if (!/^(box|cyl|plate|flow|guide)$/.test(mk)) { var qx = P(it.x || 0, it.y || 0, it.z || 0); T(gI, qx[0], qx[1], '모르는 그림 재료 : ' + mk, { 'font-size': 16, fill: C.warn, 'text-anchor': 'middle' }); return }
     var k = mk, pal = ISO[it.tone || 'plain'] || ISO.plain, top = pal[0], left = pal[1], right = pal[2], a = it.x || 0, c = it.y || 0, e = it.z || 0, hi, cen, foot;
     if (k === 'plate') { var w = it.w, d = it.d; poly(gI, [P(a, c, e), P(a + w, c, e), P(a + w, c + d, e), P(a, c + d, e)], top, it.edge || left);
       if (it.grid) { for (var i = 1; i < w; i++) seg(gI, P(a + i, c, e), P(a + i, c + d, e), left); for (var j = 1; j < d; j++) seg(gI, P(a, c + j, e), P(a + w, c + j, e), left) }

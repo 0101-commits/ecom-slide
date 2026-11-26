@@ -14,3 +14,8 @@ style/_*.json
 style/_*.html
 style/v2/preview.html
 style/_check5/
+
+# 6판 시험 출력
+style/_topics6/
+style/_c6_*/
+style/_c6_*.log
