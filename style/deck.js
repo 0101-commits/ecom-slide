@@ -19,7 +19,21 @@ function RM() { return STILL || CHECK || PRES || (RMQ && RMQ.matches) || documen
 function dur(ms) { return RM() ? 1 : ms }
 
 /* ───────── 그리기 도움 ───────── */
-function E(t, a, p) { var e = document.createElementNS(NS, t); if (a) for (var k in a) if (a[k] !== undefined && a[k] !== null && k !== 'lh') e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
+/* 6판 통일 규격 — 글자 7단계 · 선 굵기 4가지 · 모서리(6, 막대 2, 알약형은 그대로). 부품이 넘긴 값은 E() · textW() 가 이 표로 맞춤.
+   글자 : 14 미만 → 13 · 14~17 → 16 · ~19.5 → 18 · ~23.5 → 20 · ~30 → 26 · ~48 → 36 · ~62 → 52 · 그보다 큰 글(표지 · 숫자판)은 그대로 */
+var SPEC = ECOM.SPEC = { fs: [13, 16, 18, 20, 26, 36, 52], sw: [1.5, 3, 5, 8], rx: 6, rxBar: 2 };
+function snapFs(v) { v = +v; if (!(v > 0)) return v; if (v < 14) return 13; if (v <= 17) return 16; if (v < 19.5) return 18; if (v < 23.5) return 20; if (v <= 30) return 26; if (v < 48) return 36; if (v <= 62) return 52; return v }
+function snapSw(v) { v = +v; if (!(v > 0) || v > 8.5) return v; if (v <= 1.6) return 1.5; if (v <= 4) return 3; if (v <= 6.5) return 5; return 8 }
+function specA(t, a) { var o = null; function set(k, v) { if (!o) o = Object.assign({}, a); o[k] = v }
+  function num(v) { return typeof v === 'number' || /^[\s\d.]+(px)?\s*$/.test(String(v)) }
+  var tx = t === 'text' || t === 'tspan';
+  if (a['font-size'] != null && num(a['font-size'])) { var f0 = parseFloat(a['font-size']), f = snapFs(f0); if (f !== f0) set('font-size', f) }
+  if (!tx && a['stroke-width'] != null && num(a['stroke-width'])) { var w0 = parseFloat(a['stroke-width']), w = snapSw(w0); if (w !== w0) set('stroke-width', w) }
+  if (t === 'rect' && a.rx != null && num(a.rx)) { var r = parseFloat(a.rx), mn = Math.min(parseFloat(a.width) || 1e9, parseFloat(a.height) || 1e9);
+    if (r > 0 && r < mn / 2 - .5) { var r2 = r <= 3 ? SPEC.rxBar : SPEC.rx; if (r2 !== r) { set('rx', r2); if (a.ry != null) set('ry', r2) } } }
+  return o || a }
+ECOM.fs = snapFs;
+function E(t, a, p) { var e = document.createElementNS(NS, t); if (a) a = specA(t, a); if (a) for (var k in a) if (a[k] !== undefined && a[k] !== null && k !== 'lh') e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
 function T(p, x, y, s, a) { a = a || {}; var e = E('text', Object.assign({ x: x, y: y }, a), p), L = String(s == null ? '' : s).split('\n');
   if (L.length === 1) e.textContent = L[0]; else L.forEach(function (t, i) { var ts = E('tspan', { x: x, dy: i ? (a.lh || 1.3) + 'em' : 0 }, e); ts.textContent = t }); return e }
 function H(tag, cls, html, p, css) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (css) e.style.cssText = css; if (p) p.appendChild(e); return e }
@@ -27,7 +41,7 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function 
 function md(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>') }
 function nf(v, d, o) { if (v == null || isNaN(v)) return '—'; d = d == null ? 0 : d; var r = Math.abs(v).toFixed(d), s = r.split('.'); s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   var zero = +r === 0, sg = v < 0 && !zero ? '−' : (o && o.sign && v > 0 && !zero ? '+' : ''); return sg + s.join('.') }
-function textW(s, size, bold) { var w = 0; s = String(s); for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i), ch = s[i];
+function textW(s, size, bold) { var w = 0; s = String(s); if (size >= 10) size = snapFs(size); for (var i = 0; i < s.length; i++) { var c = s.charCodeAt(i), ch = s[i];
     if (c >= 0xAC00 && c <= 0xD7A3 || c >= 0x3130 && c <= 0x318F) w += .94; else if (/[0-9]/.test(ch)) w += .58; else if (/[.,:;·]/.test(ch)) w += .3;
     else if (ch === ' ') w += .27; else if (ch === '%') w += .86; else if (/[A-Z]/.test(ch)) w += .66; else if (/[a-z]/.test(ch)) w += .54; else if (/[()\[\]]/.test(ch)) w += .34; else w += .62 }
   return w * size * (bold ? 1.03 : 1) }
@@ -125,7 +139,7 @@ function play(root, skip) {
 function settle(root) { if (!root.getAnimations) return; root.getAnimations({ subtree: true }).forEach(function (a) { if (a._fx === 1 && a.playState === 'finished') a.cancel() }) }
 function finish(root) { stopPlay(root); root.querySelectorAll('[data-b],[data-at]').forEach(function (e) { e.style.opacity = '' }); if (root._done) root._done(root); emphOn(root) }
 
-ECOM.h = { E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2,
+ECOM.h = { snapFs: snapFs, snapSw: snapSw, E: E, T: T, H: H, esc: esc, md: md, nf: nf, textW: textW, wrap: wrap, niceTicks: niceTicks, decOf: decOf, lin: lin, lv: lv, at: at, tri: tri, arrow2: arrow2,
   bracket: bracket, legend: legend, stepD: stepD, lineD: lineD, col: col, num: num, ext: ext, A: A, later: later, dur: dur, RM: RM, cText: cText, EIN: EIN, ESTD: ESTD, EOUT: EOUT, C: C };
 
 /* ───────── 장 만들기 ───────── */
@@ -455,6 +469,15 @@ function runCheck() {
       fnLines: fn && fn.textContent.trim() ? Math.round(fn.getBoundingClientRect().height / k / 18.75) : 0, headLen: hm ? hm.textContent.replace(/\s/g, '').length : 0,
       headLines: hm && hm.textContent.trim() ? Math.round(hm.getBoundingClientRect().height / k / 35.5) : 0, occupied: bd ? Math.round(occ / cells.length * 100) : null, beats: nBeats(i) });
     var rec = out.slides[out.slides.length - 1]; Object.keys(dp).forEach(function (key) { if (dp[key] && dp[key].length) rec[key] = dp[key].slice(0, 8) });
+    /* 6판 규격 측정 : 보이는 글의 글자 크기(SVG 글 + HTML 글, 계산된 값) · 선 굵기 · 사각형 모서리 분포 */
+    var hz = {}, wz = {}, rz = {}; function inc(m, v) { v = Math.round(v * 10) / 10; m[v] = (m[v] || 0) + 1 }
+    el.querySelectorAll('text').forEach(function (t) { if (t.textContent.trim() && visible(t)) inc(hz, parseFloat(getComputedStyle(t).fontSize) || 0) });
+    el.querySelectorAll('*').forEach(function (e) { if (e.namespaceURI === NS || !Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim() }) || !visible(e)) return; inc(hz, parseFloat(getComputedStyle(e).fontSize) || 0) });
+    el.querySelectorAll('rect,path,line,polyline,polygon,circle,ellipse').forEach(function (e) { if (!visible(e)) return; var cs = getComputedStyle(e); if (cs.stroke && cs.stroke !== 'none') { var w = parseFloat(cs.strokeWidth); if (w > 0) inc(wz, w) }
+      if (e.tagName === 'rect') { var r = parseFloat(e.getAttribute('rx')); if (r > 0) inc(rz, r) } });
+    rec.fsz = hz; rec.swz = wz; rec.rxz = rz;
+    var offF = Object.keys(hz).filter(function (v) { return +v <= 62 && SPEC.fs.indexOf(+v) < 0 }), offW = Object.keys(wz).filter(function (v) { return +v <= 8.5 && SPEC.sw.indexOf(+v) < 0 }), nHero = Object.keys(hz).reduce(function (a, v) { return a + (+v >= 48 && +v <= 62 ? hz[v] : 0) }, 0);
+    if (offF.length) rec.specFs = offF.map(function (v) { return v + 'px ' + hz[v] + '곳' }); if (offW.length) rec.specSw = offW.map(function (v) { return v + 'px ' + wz[v] + '곳' }); if (nHero > 1) rec.specHero = ['48~62px 글 ' + nHero + '곳'];
     el.classList.remove('on') });
   if (cur >= 0) S[cur].el.classList.add('on'); return out }
 

@@ -39,7 +39,7 @@ function vicious(bd, s, ctx) {
   var svg = K.svg(ctx), arcs = [], items = [], T0 = 500, PER = 560;
   function inCard(x, y, pad) { return P.some(function (p) { return Math.abs(x - p[0]) < CWd / 2 + pad && Math.abs(y - p[1]) < CH / 2 + pad }) }
   st.forEach(function (q, i) { var p = P[i], t = T0 + i * PER - 260;
-    var html = '<i style="background:' + W + ';width:42px;height:42px;font-size:18px">' + (i + 1) + '</i><div><b style="font-size:19px">' + h.md(q.title || '') + '</b>' + (q.text ? '<span style="font-size:15px">' + h.md(q.text) + '</span>' : '') + (q.value ? '<em style="font-size:14.5px;color:' + W + ';background:' + C.warnsoft + '">' + h.md(q.value) + '</em>' : '') + '</div>';
+    var html = '<i style="background:' + W + ';width:42px;height:42px;font-size:18px">' + (i + 1) + '</i><div><b style="font-size:18px">' + h.md(q.title || '') + '</b>' + (q.text ? '<span style="font-size:16px">' + h.md(q.text) + '</span>' : '') + (q.value ? '<em style="font-size:16px;color:' + W + ';background:' + C.warnsoft + '">' + h.md(q.value) + '</em>' : '') + '</div>';
     var d = K.D(bd, 'kx k-cyc', p[0] - CWd / 2, p[1] - CH / 2, CWd, CH, html, { 'data-at': Math.max(0, t), 'data-fx': 'pop', 'data-ms': 380, 'data-key': q.title || '' }); d.style.borderColor = W;
     var a0 = A[i], a1 = A[(i + 1) % N] + (i === N - 1 ? 2 * Math.PI : 0), pts = [];
     for (var k = 0; k <= 90; k++) { var a = a0 + (a1 - a0) * k / 90, x = cx + RX * Math.cos(a), y = cy + RY * Math.sin(a); if (!inCard(x, y, 14)) pts.push([x, y]) }

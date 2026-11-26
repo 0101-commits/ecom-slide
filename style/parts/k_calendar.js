@@ -5,8 +5,8 @@
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T, K = ECOM.kx;
 function icon(kind, col) { var w = '<svg width="16" height="14" viewBox="0 0 16 14">';
   if (kind === 'up') return w + '<path d="M8 1 L15 13 H1 Z" fill="' + col + '"/></svg>'; if (kind === 'down') return w + '<path d="M1 1 H15 L8 13 Z" fill="' + col + '"/></svg>';
-  if (kind === 'next') return w + '<circle cx="8" cy="7" r="5.5" fill="#fff" stroke="#9AA3A0" stroke-width="1.8" stroke-dasharray="2 2"/></svg>';
-  return w + '<circle cx="8" cy="7" r="5.5" fill="#fff" stroke="' + col + '" stroke-width="2.4"/></svg>' }
+  if (kind === 'next') return w + '<circle cx="8" cy="7" r="5.5" fill="#fff" stroke="#9AA3A0" stroke-width="3" stroke-dasharray="2 2"/></svg>';
+  return w + '<circle cx="8" cy="7" r="5.5" fill="#fff" stroke="' + col + '" stroke-width="3"/></svg>' }
 ECOM.parts.calendar = function (bd, s, ctx) {
   var MN = s.months || ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'], M = MN.length, rows = s.rows || [], R = rows.length, nw = s.now || null;
   var GX = 190, cw = (1168 - GX) / M, HH = 40, legH = s.legend === false ? 0 : 40, rh = Math.min(184, (512 - HH - 8 - legH) / Math.max(1, R)), ly0 = HH + 8;

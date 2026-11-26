@@ -106,7 +106,7 @@ LAY.deep = function (bd, s, ctx) { var P = ctx.P, u = ECOM.u, labels = s.labels 
     E('path', { d: pathD(q, X, Y), fill: 'none', stroke: c, 'stroke-width': 4.6, 'stroke-linejoin': 'round', 'stroke-dasharray': q.dash ? '7 6' : null, 'data-key': q.name, 'data-b': 2, 'data-fx': 'draw', 'data-ms': 1100 }, svg);
     var g = E('g', { 'data-key': q.name, 'data-b': 3, 'data-fx': 'fade' }, svg), t = tops[k]; E('circle', { cx: X(n - 1), cy: Y(last), r: 6.5, fill: c }, g);
     T(g, x1 + 18, t + 16, q.name, { 'font-size': 14, 'font-weight': 700, fill: P.sub });
-    T(g, x1 + 18, t + 50, h.nf(last, dec) + suf, { 'font-size': 33, 'font-weight': 700, fill: c, 'data-fx': 'count', 'data-count': last, 'data-dec': dec, 'data-suf': suf }) });
+    T(g, x1 + 18, t + 54, h.nf(last, dec) + suf, { 'font-size': 33, 'font-weight': 700, fill: c, 'data-fx': 'count', 'data-count': last, 'data-dec': dec, 'data-suf': suf }) });
   var ag = h.lv(svg, 4); (s.arrows || []).forEach(function (ar) { var x = X(ar.at) + (ar.dx || 0), sd = ar.side || 1; if (x > x1 - 30) { x = X(ar.at) - 12; sd = -1 } h.arrow2(ag, x, Y(ar.a), Y(ar.b), P.dark, 2);
     var ty = (Y(ar.a) + Y(ar.b)) / 2, lb = u.label(ag, x + sd * 10, ty - 2, ar.text, { color: P.dark, size: 14.5, anchor: sd > 0 ? 'start' : 'end' }); L.push(lb); if (ar.sub) { lb.sub = T(ag, x + sd * 10, ty + 16, ar.sub, { 'text-anchor': sd > 0 ? 'start' : 'end', 'font-size': 12.5, fill: P.mute }); lb.below = 17 } });
   u.avoid(L, 15, SEG, []); ctx.root.setAttribute('data-gap', 380); ctx.root.setAttribute('data-stg', 70) };

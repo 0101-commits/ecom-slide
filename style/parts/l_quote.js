@@ -7,13 +7,13 @@
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 if (!document.getElementById('l-quote-css')) { var st = document.createElement('style'); st.id = 'l-quote-css';
   st.textContent = [
-    '.l-qr{position:absolute;left:0;width:1168px;box-sizing:border-box;border-radius:10px;display:flex;align-items:center;font-size:16px;line-height:1.5;color:var(--ink)}',
+    '.l-qr{position:absolute;left:0;width:1168px;box-sizing:border-box;border-radius:6px;display:flex;align-items:center;font-size:16px;line-height:1.5;color:var(--ink)}',
     '.l-qr.z{background:var(--paper)}.l-qi{flex:0 0 110px;box-sizing:border-box;padding-left:20px;font-weight:700}',
     '.l-qo{flex:0 0 394px;box-sizing:border-box;padding-right:20px;color:var(--mute);font-weight:500}.l-qn{flex:0 0 520px;box-sizing:border-box;padding-right:16px;font-weight:500}',
     '.l-qr .d{color:#9AA3A0;text-decoration:line-through;text-decoration-thickness:1.5px}',
-    '.l-qr .a{background:var(--g18);color:var(--gdk);font-weight:700;border-radius:4px;padding:2px 3px;margin:0 -1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
-    '.l-qc{margin-left:auto;margin-right:14px;flex:0 0 auto;font-size:12.5px;font-weight:700;color:#fff;padding:5px 12px;border-radius:15px;white-space:nowrap}',
-    '.l-qh{position:absolute;top:26px;font-size:14px;font-weight:700;color:var(--mute)}'
+    '.l-qr .a{background:var(--g18);color:var(--gdk);font-weight:700;border-radius:6px;padding:2px 3px;margin:0 -1px;-webkit-box-decoration-break:clone;box-decoration-break:clone}',
+    '.l-qc{margin-left:auto;margin-right:14px;flex:0 0 auto;font-size:13px;font-weight:700;color:#fff;padding:5px 12px;border-radius:6px;white-space:nowrap}',
+    '.l-qh{position:absolute;top:26px;font-size:16px;font-weight:700;color:var(--mute)}'
   ].join(''); document.head.appendChild(st) }
 function rich(t) { return h.esc(t).replace(/~~(.+?)~~/g, '<span class="d">$1</span>').replace(/\+\+(.+?)\+\+/g, '<span class="a">$1</span>') }
 ECOM.parts.quote = function (bd, s, ctx) {

@@ -9,25 +9,25 @@
 var h = ECOM.h, H = h.H, esc = h.esc, YEL = '#FFE066', INK = '#1D2521';
 if (!document.getElementById('p-rankroll-css')) { var st = document.createElement('style'); st.id = 'p-rankroll-css';
   st.textContent = [
-    '.rr-hd{display:flex;align-items:center;gap:12px;font-size:14px;font-weight:700;border-bottom:2px solid currentColor;box-sizing:border-box}',
-    '.rr-row{position:relative;display:flex;align-items:center;box-sizing:border-box;border-bottom:1px solid rgba(128,140,134,.28);background:rgba(128,140,134,.055);font-size:19px}',
+    '.rr-hd{display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700;border-bottom:2px solid currentColor;box-sizing:border-box}',
+    '.rr-row{position:relative;display:flex;align-items:center;box-sizing:border-box;border-bottom:1px solid rgba(128,140,134,.28);background:rgba(128,140,134,.055);font-size:18px}',
     '.rr-row>*{position:relative;z-index:1}',
-    '.rr-band{position:absolute!important;z-index:0!important;left:-8px;right:-8px;top:3px;bottom:3px;border-radius:7px;background:' + YEL + '}',
+    '.rr-band{position:absolute!important;z-index:0!important;left:-8px;right:-8px;top:3px;bottom:3px;border-radius:6px;background:' + YEL + '}',
     '.rr-n{flex:0 0 64px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}',
     '.rr-nm{flex:0 0 176px;font-weight:700;letter-spacing:-.01em;white-space:nowrap}',
     '.rr-tr{flex:1;display:flex;align-items:center;min-width:0}',
-    '.rr-bar{display:block;height:20px;border-radius:3px;flex:0 0 auto}',
-    '.rr-v{margin-left:10px;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}',
+    '.rr-bar{display:block;height:20px;border-radius:2px;flex:0 0 auto}',
+    '.rr-v{margin-left:10px;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}',
     '.rr-cell{font-variant-numeric:tabular-nums;white-space:nowrap}',
-    '.rr-pn{position:absolute;box-sizing:border-box;border-radius:12px;padding:24px 26px;display:flex;flex-direction:column}',
-    '.rr-pn small{font-size:14px;font-weight:700}',
-    '.rr-pn .nm{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px}',
+    '.rr-pn{position:absolute;box-sizing:border-box;border-radius:6px;padding:24px 26px;display:flex;flex-direction:column}',
+    '.rr-pn small{font-size:16px;font-weight:700}',
+    '.rr-pn .nm{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:6px}',
     '.rr-pn .big{font-size:68px;line-height:1.05;font-weight:800;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums}',
-    '.rr-pn .big u{text-decoration:none;font-size:22px;font-weight:700;margin-left:6px}',
-    '.rr-pn p{margin:10px 0 0;font-size:15px;line-height:1.5}',
+    '.rr-pn .big u{text-decoration:none;font-size:20px;font-weight:700;margin-left:6px}',
+    '.rr-pn p{margin:10px 0 0;font-size:16px;line-height:1.5}',
     '.rr-lg{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600;margin-top:auto}',
-    '.rr-lg span{display:flex;align-items:center;gap:8px}.rr-lg i{display:inline-block;width:24px;height:12px;border-radius:3px;flex:0 0 auto}',
-    '.rr-ttl{display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:800;letter-spacing:-.01em;box-sizing:border-box}'
+    '.rr-lg span{display:flex;align-items:center;gap:8px}.rr-lg i{display:inline-block;width:24px;height:12px;border-radius:2px;flex:0 0 auto}',
+    '.rr-ttl{display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;letter-spacing:-.01em;box-sizing:border-box}'
   ].join(''); document.head.appendChild(st) }
 
 function hook(ctx, items) { ctx.root._hook = function () { if (h.RM()) return 0; var end = 0;
@@ -53,9 +53,9 @@ function bars(bd, s, ctx) { var P = ctx.P, rows = s.rows || [], n = rows.length,
   var pn = H('div', 'rr-pn', '<small style="color:' + P.mute + '">' + esc(sd.label || '짚은 행') + '</small><div class="nm" style="color:' + P.ink + '">' + esc(r.name) + '</div>'
     + '<div class="big" style="color:' + P.main + '"><span data-count="' + r.v + '" data-dec="' + (s.dec || 0) + '" data-at="' + (150 + n * 110 + 250) + '" data-fx="count" data-ms="900">' + h.nf(r.v, s.dec || 0) + '</span><u>' + esc(s.unit || '') + '</u></div>'
     + '<p style="color:' + P.sub + '"><b style="color:' + P.ink + '">' + n + '개 중 ' + (k + 1) + '위</b>' + (sd.note ? ' · ' + esc(sd.note) : '') + '</p>'
-    + '<div style="margin-top:20px;display:flex;flex-direction:column;gap:16px"><div><div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(r.name) + '</span><span>' + fmt(r.v, s) + '</span></div><u style="display:block;height:16px;border-radius:4px;background:' + P.main + ';width:' + Math.min(100, Math.abs(r.v) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div>'
-    + '<div><div style="display:flex;justify-content:space-between;font-size:13.5px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(sd.avg || '전체 평균') + '</span><span>' + fmt(avg, s) + '</span></div><u style="display:block;height:16px;border-radius:4px;background:' + P.g40 + ';width:' + Math.min(100, Math.abs(avg) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div></div>'
-    + '<div style="margin-top:20px"><div style="display:flex;gap:4px">' + rows.map(function (q, i) { return '<i style="flex:1;height:24px;border-radius:4px;background:' + (i === k ? YEL : P.g40) + (i === k ? ';outline:1px solid ' + P.ink : '') + '"></i>' }).join('') + '</div><div style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:' + P.sub + ';margin-top:5px"><span>1위</span><span>' + n + '위</span></div></div>'
+    + '<div style="margin-top:20px;display:flex;flex-direction:column;gap:16px"><div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(r.name) + '</span><span>' + fmt(r.v, s) + '</span></div><u style="display:block;height:16px;border-radius:6px;background:' + P.main + ';width:' + Math.min(100, Math.abs(r.v) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div>'
+    + '<div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(sd.avg || '전체 평균') + '</span><span>' + fmt(avg, s) + '</span></div><u style="display:block;height:16px;border-radius:6px;background:' + P.g40 + ';width:' + Math.min(100, Math.abs(avg) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div></div>'
+    + '<div style="margin-top:20px"><div style="display:flex;gap:4px">' + rows.map(function (q, i) { return '<i style="flex:1;height:24px;border-radius:6px;background:' + (i === k ? YEL : P.g40) + (i === k ? ';outline:1px solid ' + P.ink : '') + '"></i>' }).join('') + '</div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.sub + ';margin-top:5px"><span>1위</span><span>' + n + '위</span></div></div>'
     + legendBox([[YEL, '노랑 띠 = 짚은 행'], [P.main, '진한 막대 = 짚은 행 값'], [P.g40, '옅은 막대 = 나머지']], P), bd, 'left:' + (LW + 24) + 'px;top:0;width:' + (1168 - LW - 24) + 'px;height:512px;background:' + P.paper + ';border:1px solid ' + P.line);
   pn.setAttribute('data-key', '풀이'); pn.setAttribute('data-at', 150 + n * 110); pn.setAttribute('data-fx', 'fade'); pn.setAttribute('data-ms', 500);
   hook(ctx, items) }
@@ -78,8 +78,8 @@ function scroll(bd, s, ctx) { var P = ctx.P, rows = s.rows || [], n = rows.lengt
   var pn = H('div', 'rr-pn', '<small style="color:' + P.mute + '">전체 ' + n + '개 가운데 보이는 구간</small>', bd, 'left:' + px + 'px;top:0;width:' + pw + 'px;height:512px;background:' + P.paper + ';border:1px solid ' + P.line);
   var mini = H('div', null, null, pn, 'position:relative;margin-top:14px;height:' + (n * p) + 'px');
   rows.forEach(function (r, i) { var hi = i === k, lab = (i === 0 || i === n - 1 || hi) ? (i + 1) + '위' : '';
-    H('div', null, '<span style="flex:0 0 40px;font-size:12.5px;font-weight:700;color:' + (hi ? P.ink : P.mute) + '">' + lab + '</span><i style="display:block;height:' + Math.max(6, p - 5) + 'px;border-radius:2px;width:' + (Math.abs(r.v) / mx * (pw - 52 - 50)).toFixed(1) + 'px;background:' + (hi ? YEL : P.g40) + (hi ? ';outline:1px solid ' + P.ink : '') + '"></i>', mini, 'height:' + p + 'px;display:flex;align-items:center') });
-  var fr = H('div', null, null, mini, 'position:absolute;left:-6px;right:-6px;top:' + (start * p - 2) + 'px;height:' + (VIS * p + 4) + 'px;border:2px solid ' + P.main + ';border-radius:5px;box-sizing:border-box;pointer-events:none');
+    H('div', null, '<span style="flex:0 0 40px;font-size:13px;font-weight:700;color:' + (hi ? P.ink : P.mute) + '">' + lab + '</span><i style="display:block;height:' + Math.max(6, p - 5) + 'px;border-radius:2px;width:' + (Math.abs(r.v) / mx * (pw - 52 - 50)).toFixed(1) + 'px;background:' + (hi ? YEL : P.g40) + (hi ? ';outline:1px solid ' + P.ink : '') + '"></i>', mini, 'height:' + p + 'px;display:flex;align-items:center') });
+  var fr = H('div', null, null, mini, 'position:absolute;left:-6px;right:-6px;top:' + (start * p - 2) + 'px;height:' + (VIS * p + 4) + 'px;border:2px solid ' + P.main + ';border-radius:6px;box-sizing:border-box;pointer-events:none');
   if (start > 0) items.push({ el: fr, at: 300, ms: 2200, ease: 'cubic-bezier(.45,0,.25,1)', kf: [{ transform: 'translateY(' + (-start * p) + 'px)' }, { transform: 'translateY(0px)' }] });
   pn.insertAdjacentHTML('beforeend', legendBox([['transparent', '테두리 = 지금 화면에 보이는 구간', P.main], [YEL, '노랑 = 짚은 행'], [P.g40, '막대 길이 = 값 크기']], P));
   pn.setAttribute('data-key', '위치'); pn.setAttribute('data-at', 0); pn.setAttribute('data-fx', 'fade'); pn.setAttribute('data-ms', 500);
@@ -90,12 +90,12 @@ function scroll(bd, s, ctx) { var P = ctx.P, rows = s.rows || [], n = rows.lengt
 /* ── two ── */
 function two(bd, s, ctx) { var P = ctx.P, ps = (s.panels || []).slice(0, 2), items = [], PW = 572, nn = Math.max.apply(null, ps.map(function (q) { return (q.rows || []).length })) || 1, rh = Math.min(46, Math.floor((512 - 52 - 34) / nn));
   ps.forEach(function (q, pi) { var rows = q.rows || [], mx = maxOf(rows, q), x0 = pi * (PW + 24), st = q.start || 1, t0 = pi * 900;
-    var pc = H('div', null, null, bd, 'position:absolute;left:' + x0 + 'px;top:0;width:' + PW + 'px;height:' + (52 + nn * rh) + 'px;color:' + P.ink + ';background:' + P.paper + ';border:1px solid ' + P.line + ';border-radius:10px;overflow:hidden');
+    var pc = H('div', null, null, bd, 'position:absolute;left:' + x0 + 'px;top:0;width:' + PW + 'px;height:' + (52 + nn * rh) + 'px;color:' + P.ink + ';background:' + P.paper + ';border:1px solid ' + P.line + ';border-radius:6px;overflow:hidden');
     pc.setAttribute('data-key', q.title || ''); pc.setAttribute('data-at', t0); pc.setAttribute('data-fx', 'fade'); pc.setAttribute('data-ms', 450);
     H('div', 'rr-ttl', esc(q.title || ''), pc, 'height:52px;background:' + P.dark + ';color:' + (ctx.dark ? '#003D2B' : '#fff'));
     var bx = H('div', null, null, pc, 'padding:0 14px');
     rows.forEach(function (r, i) { var hi = !!r.hi, w = Math.abs(r.v) / mx;
-      var e = H('div', 'rr-row', (hi ? '<i class="rr-band" style="left:-6px;right:-6px"></i>' : '') + '<span class="rr-n" style="flex:0 0 50px;font-size:17px">' + (st + i) + '</span><span class="rr-nm" style="flex:1 1 0;font-size:17px">' + esc(r.name) + '</span><span class="rr-tr" style="flex:0 0 250px;justify-content:flex-end"><i class="rr-bar" style="width:' + (w * 150).toFixed(1) + 'px;height:14px;background:' + (hi ? P.main : P.g40) + ';transform-origin:100% 50%"></i><b class="rr-v" style="flex:0 0 86px;text-align:right;font-size:17px">' + h.nf(r.v, q.dec || 0) + esc(q.unit || '') + '</b></span>', bx, 'height:' + rh + 'px;' + (hi ? 'color:' + INK : ''));
+      var e = H('div', 'rr-row', (hi ? '<i class="rr-band" style="left:-6px;right:-6px"></i>' : '') + '<span class="rr-n" style="flex:0 0 50px;font-size:16px">' + (st + i) + '</span><span class="rr-nm" style="flex:1 1 0;font-size:16px">' + esc(r.name) + '</span><span class="rr-tr" style="flex:0 0 250px;justify-content:flex-end"><i class="rr-bar" style="width:' + (w * 150).toFixed(1) + 'px;height:14px;background:' + (hi ? P.main : P.g40) + ';transform-origin:100% 50%"></i><b class="rr-v" style="flex:0 0 86px;text-align:right;font-size:16px">' + h.nf(r.v, q.dec || 0) + esc(q.unit || '') + '</b></span>', bx, 'height:' + rh + 'px;' + (hi ? 'color:' + INK : ''));
       e.setAttribute('data-key', (q.title || '') + ' ' + r.name);
       items.push({ el: e.querySelector('.rr-bar'), at: t0 + 300 + i * 90, ms: 650, kf: [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%' }] });
       if (hi) items.push({ el: e.querySelector('.rr-band'), at: t0 + 300 + rows.length * 90 + 150, ms: 700, kf: GROW }) }) });

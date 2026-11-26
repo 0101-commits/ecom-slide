@@ -5,9 +5,9 @@
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 function gauge(v, g) { var W = 236, X = h.lin(g.lo, g.hi, 8, W - 8), c = v > g.cur ? C.cmp : (v < g.cur ? C.main : C.mute);
-  return '<svg viewBox="0 0 ' + W + ' 34" width="' + W + '" height="34" data-b="6" data-fx="fade"><line x1="8" x2="' + (W - 8) + '" y1="12" y2="12" stroke="#DDE3E0" stroke-width="6" stroke-linecap="round"/>'
-    + (v !== g.cur ? '<line x1="' + X(g.cur) + '" x2="' + X(v) + '" y1="12" y2="12" stroke="' + c + '" stroke-width="6" stroke-linecap="round"/>' : '') + '<line x1="' + X(g.cur) + '" x2="' + X(g.cur) + '" y1="3" y2="21" stroke="#1D2521" stroke-width="1.5"/><circle cx="' + X(v) + '" cy="12" r="6.5" fill="' + c + '" stroke="#fff" stroke-width="2"/>'
-    + '<text x="8" y="32" font-size="11.5" fill="#6B7570">' + h.nf(g.lo, 2) + '</text><text x="' + X(g.cur) + '" y="32" font-size="11.5" fill="#1D2521" text-anchor="middle" font-weight="700">' + h.esc(g.curLabel || ('현재 ' + h.nf(g.cur, 2))) + '</text><text x="' + (W - 8) + '" y="32" font-size="11.5" fill="#6B7570" text-anchor="end">' + h.nf(g.hi, 2) + h.esc(g.unit || '') + '</text></svg>' }
+  return '<svg viewBox="0 0 ' + W + ' 34" width="' + W + '" height="34" data-b="6" data-fx="fade"><line x1="8" x2="' + (W - 8) + '" y1="12" y2="12" stroke="#DDE3E0" stroke-width="5" stroke-linecap="round"/>'
+    + (v !== g.cur ? '<line x1="' + X(g.cur) + '" x2="' + X(v) + '" y1="12" y2="12" stroke="' + c + '" stroke-width="5" stroke-linecap="round"/>' : '') + '<line x1="' + X(g.cur) + '" x2="' + X(g.cur) + '" y1="3" y2="21" stroke="#1D2521" stroke-width="1.5"/><circle cx="' + X(v) + '" cy="12" r="6.5" fill="' + c + '" stroke="#fff" stroke-width="3"/>'
+    + '<text x="8" y="32" font-size="13" fill="#6B7570">' + h.nf(g.lo, 2) + '</text><text x="' + X(g.cur) + '" y="32" font-size="13" fill="#1D2521" text-anchor="middle" font-weight="700">' + h.esc(g.curLabel || ('현재 ' + h.nf(g.cur, 2))) + '</text><text x="' + (W - 8) + '" y="32" font-size="13" fill="#6B7570" text-anchor="end">' + h.nf(g.hi, 2) + h.esc(g.unit || '') + '</text></svg>' }
 ECOM.parts.quadrant = function (bd, s, ctx) {
   var svg = ctx.svg(512), root = ctx.root, c1 = 150, cw = 484, gp = 20, r1 = 84, rh = 183, px = c1 + cw + gp / 2, py = r1 + rh + gp / 2, K = ['tl', 'tr', 'bl', 'br'], cells = [];
   (s.cells || []).slice(0, 4).forEach(function (q, i) { var d = document.createElement('div'), x = c1 + (i % 2) * (cw + gp), y = r1 + Math.floor(i / 2) * (rh + gp);

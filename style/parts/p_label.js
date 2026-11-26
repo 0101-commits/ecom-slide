@@ -10,8 +10,8 @@ ECOM.parts.label = function (el, s, ctx) {
   if (ly === 'facts') { var it = (s.items || []).slice(0, 4), n = Math.max(1, it.length), rh = Math.min(116, Math.floor(440 / n)), top = 14, out = '';
     it.forEach(function (x, i) { var y = top + i * (rh + 10), at = 200 + i * 650;
       out += D('left:0;top:' + y + 'px;width:330px;height:' + rh + 'px;background:' + YEL + ';border-radius:6px;transform-origin:0 50%', '', 'data-at="' + at + '" data-fx="growx" data-ms="650" data-o="0% 50%"')
-        + D('left:26px;top:' + y + 'px;height:' + rh + 'px;width:290px;display:flex;align-items:center;font-size:30px;font-weight:800;letter-spacing:-.03em;color:' + INK, md(x.label || ''), 'data-at="' + (at + 330) + '" data-fx="fade" data-ms="350" data-key="' + esc(String(x.label || '').replace(/\*\*/g, '')) + '"')
-        + D('left:370px;top:' + y + 'px;right:0;height:' + rh + 'px;display:flex;align-items:center;font-size:27px;font-weight:500;line-height:1.45;color:' + P.ink + ';border-bottom:1.5px solid ' + (dk ? 'rgba(255,255,255,.16)' : C.line), md(x.text || ''), 'data-at="' + (at + 420) + '" data-fx="rise" data-ms="550"') });
+        + D('left:26px;top:' + y + 'px;height:' + rh + 'px;width:290px;display:flex;align-items:center;font-size:26px;font-weight:800;letter-spacing:-.03em;color:' + INK, md(x.label || ''), 'data-at="' + (at + 330) + '" data-fx="fade" data-ms="350" data-key="' + esc(String(x.label || '').replace(/\*\*/g, '')) + '"')
+        + D('left:370px;top:' + y + 'px;right:0;height:' + rh + 'px;display:flex;align-items:center;font-size:26px;font-weight:500;line-height:1.45;color:' + P.ink + ';border-bottom:1.5px solid ' + (dk ? 'rgba(255,255,255,.16)' : C.line), md(x.text || ''), 'data-at="' + (at + 420) + '" data-fx="rise" data-ms="550"') });
     el.innerHTML = out + D('left:0;bottom:-6px;font-size:13px;color:' + P.mute, '노랑 칸 = 항목 이름', 'data-at="2600" data-fx="fade"'); return }
   /* term */
   var f = s.fig || {}, svg = E('svg', { viewBox: '0 0 460 512', width: 460, height: 512, style: 'position:absolute;left:0;top:0' }, el);
@@ -32,9 +32,9 @@ ECOM.parts.label = function (el, s, ctx) {
   var lines = (s.lines || []).slice(0, 3), lh = 86, y0 = 150;
   el.insertAdjacentHTML('beforeend',
     D('left:520px;top:20px;width:520px;height:84px;background:' + YEL + ';border-radius:6px;transform-origin:0 50%', '', 'data-at="300" data-fx="growx" data-ms="650" data-o="0% 50%"')
-    + D('left:548px;top:20px;height:84px;display:flex;align-items:center;font-size:46px;font-weight:800;letter-spacing:-.04em;color:' + INK, md(s.term || ''), 'data-at="800" data-fx="fade" data-ms="350"')
-    + lines.map(function (t, i) { return D('left:520px;right:0;top:' + (y0 + i * lh) + 'px;height:' + (lh - 8) + 'px;display:flex;align-items:center;font-size:28px;font-weight:500;line-height:1.45;color:' + P.ink + ';border-bottom:1.5px solid ' + (dk ? 'rgba(255,255,255,.16)' : C.line), md(t), 'data-at="' + (1100 + i * 380) + '" data-fx="rise" data-ms="550"') }).join('')
-    + (s.eg ? D('left:520px;right:0;bottom:6px;height:84px;border-radius:10px;background:' + (dk ? Cd.g08 : C.g08) + ';padding:0 24px;display:flex;align-items:center;font-size:22px;line-height:1.45;color:' + sub, '<b style="color:' + P.main + ';margin-right:14px;flex:0 0 auto;white-space:nowrap">보기</b><span>' + md(s.eg) + '</span>'      , 'data-at="2400" data-fx="rise" data-ms="550"') : '')
+    + D('left:548px;top:20px;height:84px;display:flex;align-items:center;font-size:36px;font-weight:800;letter-spacing:-.04em;color:' + INK, md(s.term || ''), 'data-at="800" data-fx="fade" data-ms="350"')
+    + lines.map(function (t, i) { return D('left:520px;right:0;top:' + (y0 + i * lh) + 'px;height:' + (lh - 8) + 'px;display:flex;align-items:center;font-size:26px;font-weight:500;line-height:1.45;color:' + P.ink + ';border-bottom:1.5px solid ' + (dk ? 'rgba(255,255,255,.16)' : C.line), md(t), 'data-at="' + (1100 + i * 380) + '" data-fx="rise" data-ms="550"') }).join('')
+    + (s.eg ? D('left:520px;right:0;bottom:6px;height:84px;border-radius:6px;background:' + (dk ? Cd.g08 : C.g08) + ';padding:0 24px;display:flex;align-items:center;font-size:20px;line-height:1.45;color:' + sub, '<b style="color:' + P.main + ';margin-right:14px;flex:0 0 auto;white-space:nowrap">보기</b><span>' + md(s.eg) + '</span>'      , 'data-at="2400" data-fx="rise" data-ms="550"') : '')
     + D('left:520px;top:112px;font-size:13px;color:' + P.mute, '노랑 칸 = 용어', 'data-at="1000" data-fx="fade"')) };
 ECOM.parts.label.layouts = ['default', 'term', 'facts'];
 ECOM.parts.label.dark = ['default', 'term', 'facts'];

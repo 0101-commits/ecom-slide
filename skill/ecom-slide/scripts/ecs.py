@@ -957,7 +957,8 @@ def run_browser(br, url, extra, timeout=180):
 DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 걸침", "고칠 것"), ("hidden", "상자-자료 가림", "고칠 것"),
         ("farLabel", "이름표 거리", "고칠 것"), ("gap", "선 끊김(결측)", "고칠 것"), ("outAxis", "축 밖 값", "고칠 것"),
         ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
-        ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"))
+        ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"),
+        ("specFs", "글자 단계 밖", "확인할 것"), ("specSw", "선 굵기 밖", "확인할 것"), ("specHero", "대표 숫자 여러 곳", "확인할 것"))
 
 
 def screen_check(br, page, timeout=600):

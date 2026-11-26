@@ -61,7 +61,7 @@ function freeSpot(r, segs, boxes, area, pad) { pad = pad == null ? 8 : pad; var 
   if (ok(r.l, r.t)) return { l: r.l, t: r.t };
   for (var t = area.t; t + r.h <= area.b; t += 8) for (var l = area.l; l + r.w <= area.r; l += 12) if (ok(l, t)) { var d = (l - r.l) * (l - r.l) + (t - r.t) * (t - r.t) * 2; if (d < bd2) { bd2 = d; best = { l: l, t: t } } }
   return best }
-function label(g, x, y, s, o) { o = o || {}; var fs = o.size || 13, e = T(g, x, y, s, { 'text-anchor': o.anchor || 'start', 'font-size': fs, 'font-weight': o.bold === false ? 400 : 700, fill: h.col(o.color || 'ink') });
+function label(g, x, y, s, o) { o = o || {}; var fs = h.snapFs(o.size || 13), e = T(g, x, y, s, { 'text-anchor': o.anchor || 'start', 'font-size': fs, 'font-weight': o.bold === false ? 400 : 700, fill: h.col(o.color || 'ink') });
   if (o.pt) e.setAttribute('data-pt', Math.round(o.pt[0]) + ',' + Math.round(o.pt[1])); if (o.leader) e.setAttribute('data-leader', 1);
   return { el: e, x: x, y: y, w: h.textW(s, fs, o.bold !== false), h: fs, anchor: o.anchor || 'start', dir: o.dir } }
 function legendHTML(bd, items, top) { var d = h.H('div', 'leg', null, bd, 'position:absolute;left:0;right:0;top:' + (top || 0) + 'px'); d.setAttribute('data-b', 1);
