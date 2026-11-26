@@ -1,0 +1,899 @@
+{
+ "about": "6판 설명 유형 26종 — 장 하나가 전달하려는 내용의 형식(주제와 무관). kinds = 화면 종류 → [주 유형, 보조 유형]. 표지(cover)는 유형 없음",
+ "types": [
+  {
+   "code": "trend",
+   "name": "추이, 변화",
+   "q": "시간에 따라 어떻게 변했나",
+   "draw": "꺾은선",
+   "mockups": 63,
+   "mockups_any": 70
+  },
+  {
+   "code": "rank",
+   "name": "크기, 순위",
+   "q": "무엇이 더 큰가",
+   "draw": "막대",
+   "mockups": 31,
+   "mockups_any": 33
+  },
+  {
+   "code": "share",
+   "name": "비중, 구성비",
+   "q": "전체 중 얼마인가",
+   "draw": "쌓은 막대, 도넛, 100칸",
+   "mockups": 34,
+   "mockups_any": 35
+  },
+  {
+   "code": "dist",
+   "name": "분포",
+   "q": "얼마나 퍼져 있나",
+   "draw": "점 분포 + 상자",
+   "mockups": 14,
+   "mockups_any": 15
+  },
+  {
+   "code": "pair",
+   "name": "전후, 양자 비교",
+   "q": "바꾸기 전과 후",
+   "draw": "가운데 축 비교",
+   "mockups": 26,
+   "mockups_any": 35
+  },
+  {
+   "code": "multi",
+   "name": "다자 비교",
+   "q": "여러 대상을 같은 기준으로",
+   "draw": "머리글 표",
+   "mockups": 43,
+   "mockups_any": 43
+  },
+  {
+   "code": "proc",
+   "name": "과정, 절차",
+   "q": "어떤 순서로 진행되나",
+   "draw": "차례 화살",
+   "mockups": 9,
+   "mockups_any": 9
+  },
+  {
+   "code": "cause",
+   "name": "인과, 영향",
+   "q": "무엇이 무엇을 일으키나",
+   "draw": "상자 + 직각 연결선",
+   "mockups": 36,
+   "mockups_any": 39
+  },
+  {
+   "code": "lane",
+   "name": "주체별 처리 순서",
+   "q": "누가 하고 누구에게 넘기나",
+   "draw": "상자 + 주체별 줄",
+   "mockups": 9,
+   "mockups_any": 9
+  },
+  {
+   "code": "branch",
+   "name": "조건에 따른 갈림",
+   "q": "예, 아니오로 어디로 가나",
+   "draw": "상자 + 이름표 연결선",
+   "mockups": 12,
+   "mockups_any": 15
+  },
+  {
+   "code": "layer",
+   "name": "구조, 계층",
+   "q": "무엇 위에 무엇이 있나",
+   "draw": "층 쌓기",
+   "mockups": 17,
+   "mockups_any": 17
+  },
+  {
+   "code": "contain",
+   "name": "포함 관계",
+   "q": "무엇이 무엇을 포함하나",
+   "draw": "포함 겹",
+   "mockups": 3,
+   "mockups_any": 3
+  },
+  {
+   "code": "event",
+   "name": "사건 순서, 일정",
+   "q": "언제 무슨 일이 있었나",
+   "draw": "시간 축 + 사건 카드",
+   "mockups": 25,
+   "mockups_any": 39
+  },
+  {
+   "code": "cycle",
+   "name": "상태 전환, 순환",
+   "q": "어떤 조건에서 바뀌나",
+   "draw": "상자 + 고리 연결선",
+   "mockups": 7,
+   "mockups_any": 7
+  },
+  {
+   "code": "scale",
+   "name": "규모 환산",
+   "q": "익숙한 단위로 몇 개인가",
+   "draw": "그림 단위",
+   "mockups": 14,
+   "mockups_any": 18
+  },
+  {
+   "code": "define",
+   "name": "정의, 구성 요소",
+   "q": "무엇으로 나뉘나",
+   "draw": "카드 열",
+   "mockups": 16,
+   "mockups_any": 16
+  },
+  {
+   "code": "proof",
+   "name": "근거 제시",
+   "q": "실제 서류의 어디인가",
+   "draw": "실제 그림 + 확대 풀이",
+   "mockups": 9,
+   "mockups_any": 10
+  },
+  {
+   "code": "kpi",
+   "name": "핵심 수치",
+   "q": "한 숫자가 답인 질문",
+   "draw": "숫자 칸",
+   "mockups": 26,
+   "mockups_any": 29
+  },
+  {
+   "code": "ask",
+   "name": "질문 제시",
+   "q": "이 묶음에서 무엇을 묻나",
+   "draw": "질문 대문 장",
+   "mockups": 19,
+   "mockups_any": 19
+  },
+  {
+   "code": "route",
+   "name": "위치, 경로",
+   "q": "어디를 거쳐 어디로 가나",
+   "draw": "지도",
+   "mockups": 26,
+   "mockups_any": 26
+  },
+  {
+   "code": "region",
+   "name": "지역별 값",
+   "q": "어느 지역이 얼마나",
+   "draw": "지도 + 값 기둥",
+   "mockups": 30,
+   "mockups_any": 30
+  },
+  {
+   "code": "space",
+   "name": "공간 배치",
+   "q": "시설이 어떻게 놓이나",
+   "draw": "등각 모형, 평면도",
+   "mockups": 0,
+   "mockups_any": 0
+  },
+  {
+   "code": "inside",
+   "name": "내부 구조",
+   "q": "속이 어떻게 생겼나",
+   "draw": "단면도, 분해도",
+   "mockups": 7,
+   "mockups_any": 7
+  },
+  {
+   "code": "system",
+   "name": "설비 계통",
+   "q": "무엇이 어디로 흐르나",
+   "draw": "계통도",
+   "mockups": 2,
+   "mockups_any": 2
+  },
+  {
+   "code": "body",
+   "name": "몸의 부위",
+   "q": "몸의 어디에 작용하나",
+   "draw": "인체 그림",
+   "mockups": 2,
+   "mockups_any": 2
+  },
+  {
+   "code": "tiles",
+   "name": "요약 타일",
+   "q": "핵심을 한눈에",
+   "draw": "벤토 타일",
+   "mockups": 6,
+   "mockups_any": 6
+  }
+ ],
+ "kinds": {
+  "anatomy": [
+   "inside"
+  ],
+  "axis": [
+   "pair"
+  ],
+  "balance": [
+   "pair"
+  ],
+  "bar": [
+   "rank"
+  ],
+  "brbubble": [
+   "rank"
+  ],
+  "brbullet": [
+   "pair",
+   "kpi"
+  ],
+  "brdiv": [
+   "rank"
+  ],
+  "brdumb": [
+   "pair"
+  ],
+  "brgroup": [
+   "multi"
+  ],
+  "brico": [
+   "scale"
+  ],
+  "bridge": [
+   "share",
+   "cause"
+  ],
+  "brlolli": [
+   "rank"
+  ],
+  "brmeko": [
+   "share"
+  ],
+  "brprog": [
+   "kpi"
+  ],
+  "brrange": [
+   "dist"
+  ],
+  "brshare": [
+   "share"
+  ],
+  "brstack": [
+   "share",
+   "trend"
+  ],
+  "brtorn": [
+   "pair"
+  ],
+  "calendar": [
+   "event"
+  ],
+  "chainfire": [
+   "cause"
+  ],
+  "clip": [
+   "proof"
+  ],
+  "cobacklog": [
+   "trend"
+  ],
+  "cocards": [
+   "multi"
+  ],
+  "cochain": [
+   "proc"
+  ],
+  "cocust": [
+   "share"
+  ],
+  "codonuts": [
+   "share"
+  ],
+  "columns": [
+   "multi"
+  ],
+  "combo": [
+   "trend"
+  ],
+  "comirror": [
+   "pair"
+  ],
+  "copos": [
+   "dist"
+  ],
+  "coscore": [
+   "multi"
+  ],
+  "cotbl": [
+   "multi"
+  ],
+  "cotimeline": [
+   "event",
+   "trend"
+  ],
+  "cotreemap": [
+   "share"
+  ],
+  "coval": [
+   "dist"
+  ],
+  "curve": [
+   "pair",
+   "trend"
+  ],
+  "cycle": [
+   "cycle"
+  ],
+  "czchain": [
+   "cause"
+  ],
+  "czdomino": [
+   "cause"
+  ],
+  "czfan": [
+   "cause",
+   "branch"
+  ],
+  "czfish": [
+   "cause"
+  ],
+  "czloop": [
+   "cycle"
+  ],
+  "cznet": [
+   "cause"
+  ],
+  "czrings": [
+   "cause"
+  ],
+  "czvstep": [
+   "cause"
+  ],
+  "discuss": [
+   "ask"
+  ],
+  "donut": [
+   "share"
+  ],
+  "drivers": [
+   "cause"
+  ],
+  "dxauct": [
+   "multi"
+  ],
+  "dxdecomp": [
+   "share",
+   "trend"
+  ],
+  "dxdual": [
+   "trend"
+  ],
+  "dxend": [
+   "trend",
+   "pair"
+  ],
+  "dxgap": [
+   "trend",
+   "pair"
+  ],
+  "dxholder": [
+   "share"
+  ],
+  "dxmat": [
+   "rank"
+  ],
+  "dxpath": [
+   "dist",
+   "trend"
+  ],
+  "dxquad": [
+   "dist"
+  ],
+  "dxratio": [
+   "trend"
+  ],
+  "dxscat": [
+   "dist"
+  ],
+  "dxstack": [
+   "trend"
+  ],
+  "dxzero": [
+   "trend",
+   "pair"
+  ],
+  "events": [
+   "trend",
+   "event"
+  ],
+  "flow": [
+   "lane"
+  ],
+  "formula": [
+   "define"
+  ],
+  "further": [
+   "ask"
+  ],
+  "gapbar": [
+   "rank"
+  ],
+  "headline": [
+   "kpi"
+  ],
+  "heatmap": [
+   "multi"
+  ],
+  "hub": [
+   "cause"
+  ],
+  "hxcal": [
+   "event"
+  ],
+  "hxflow": [
+   "lane"
+  ],
+  "hxpills": [
+   "scale"
+  ],
+  "hxpipe": [
+   "proc"
+  ],
+  "kpi": [
+   "kpi"
+  ],
+  "label": [
+   "define"
+  ],
+  "ladder": [
+   "branch"
+  ],
+  "line": [
+   "trend"
+  ],
+  "lnarrow": [
+   "trend"
+  ],
+  "lnband": [
+   "trend",
+   "dist"
+  ],
+  "lnbars": [
+   "trend"
+  ],
+  "lncards": [
+   "event"
+  ],
+  "lndd": [
+   "trend"
+  ],
+  "lnend": [
+   "trend",
+   "kpi"
+  ],
+  "lnfan": [
+   "trend"
+  ],
+  "lnfill": [
+   "trend"
+  ],
+  "lnidx": [
+   "trend"
+  ],
+  "lnlag": [
+   "trend"
+  ],
+  "lnlog": [
+   "trend"
+  ],
+  "lnma": [
+   "trend"
+  ],
+  "lnmirror": [
+   "trend",
+   "pair"
+  ],
+  "lnpair": [
+   "pair"
+  ],
+  "lnproj": [
+   "trend"
+  ],
+  "lnring": [
+   "cycle"
+  ],
+  "lnyears": [
+   "trend"
+  ],
+  "map": [
+   "route"
+  ],
+  "mapbadge": [
+   "route"
+  ],
+  "mapspread": [
+   "region",
+   "event"
+  ],
+  "mapval": [
+   "region"
+  ],
+  "mfbom": [
+   "proc"
+  ],
+  "mfbook": [
+   "define"
+  ],
+  "mfchord": [
+   "route",
+   "share"
+  ],
+  "mfdays": [
+   "proc"
+  ],
+  "mfdep": [
+   "share"
+  ],
+  "mfexch": [
+   "lane"
+  ],
+  "mffunnel": [
+   "proc"
+  ],
+  "mflev": [
+   "layer"
+  ],
+  "mfneck": [
+   "proc"
+  ],
+  "mfring": [
+   "route"
+  ],
+  "mfroute": [
+   "route"
+  ],
+  "mfshift": [
+   "pair"
+  ],
+  "mfsmap": [
+   "route"
+  ],
+  "mftank": [
+   "system"
+  ],
+  "mfvalue": [
+   "proc"
+  ],
+  "mfvert": [
+   "multi"
+  ],
+  "mfzig": [
+   "route"
+  ],
+  "minis": [
+   "multi"
+  ],
+  "morph": [
+   "trend"
+  ],
+  "mpduo": [
+   "region",
+   "pair"
+  ],
+  "mprank": [
+   "region",
+   "rank"
+  ],
+  "mptile": [
+   "region"
+  ],
+  "odo": [
+   "kpi"
+  ],
+  "overlay": [
+   "trend"
+  ],
+  "part": [
+   "ask"
+  ],
+  "pile": [
+   "scale"
+  ],
+  "pills": [
+   "scale"
+  ],
+  "pipe": [
+   "system"
+  ],
+  "pyramid": [
+   "layer"
+  ],
+  "qtbubble": [
+   "event"
+  ],
+  "qtcard": [
+   "proof"
+  ],
+  "qtcareer": [
+   "event"
+  ],
+  "qtcomp": [
+   "multi"
+  ],
+  "qtdiff": [
+   "pair",
+   "proof"
+  ],
+  "qtdonut2": [
+   "share",
+   "pair"
+  ],
+  "qtexpand": [
+   "share"
+  ],
+  "qtgauge": [
+   "kpi"
+  ],
+  "qtmark": [
+   "trend",
+   "event"
+  ],
+  "qtnet": [
+   "layer"
+  ],
+  "qtpack": [
+   "contain"
+  ],
+  "qtscale": [
+   "dist"
+  ],
+  "qtstack100": [
+   "share",
+   "trend"
+  ],
+  "qtsun": [
+   "contain"
+  ],
+  "qtvote": [
+   "multi"
+  ],
+  "quadrant": [
+   "dist"
+  ],
+  "rank": [
+   "rank"
+  ],
+  "rankroll": [
+   "rank"
+  ],
+  "relay": [
+   "cause"
+  ],
+  "sankey": [
+   "share"
+  ],
+  "scaxis": [
+   "dist"
+  ],
+  "sccard": [
+   "multi"
+  ],
+  "sccol3": [
+   "multi"
+  ],
+  "scfan": [
+   "trend",
+   "branch"
+  ],
+  "scfork": [
+   "branch"
+  ],
+  "scgrid": [
+   "multi"
+  ],
+  "scheat": [
+   "multi"
+  ],
+  "scicicle": [
+   "branch"
+  ],
+  "scissue": [
+   "branch"
+  ],
+  "scmatrix": [
+   "multi"
+  ],
+  "scpayoff": [
+   "pair"
+  ],
+  "scradar": [
+   "multi"
+  ],
+  "scrank": [
+   "rank"
+  ],
+  "scscatter": [
+   "dist"
+  ],
+  "scscore": [
+   "multi"
+  ],
+  "scseat": [
+   "share"
+  ],
+  "scshare": [
+   "share"
+  ],
+  "scshift": [
+   "pair"
+  ],
+  "scstake": [
+   "multi"
+  ],
+  "slope": [
+   "pair"
+  ],
+  "split": [
+   "share"
+  ],
+  "st3q": [
+   "define"
+  ],
+  "stbefore": [
+   "pair"
+  ],
+  "stbuild": [
+   "define"
+  ],
+  "stcalc": [
+   "scale"
+  ],
+  "stcmp": [
+   "pair"
+  ],
+  "stdecide": [
+   "branch"
+  ],
+  "stmap": [
+   "contain"
+  ],
+  "stproc": [
+   "proc"
+  ],
+  "structure": [
+   "layer"
+  ],
+  "stscale": [
+   "dist"
+  ],
+  "sttax": [
+   "define"
+  ],
+  "stairs": [
+   "cause"
+  ],
+  "statement": [
+   "tiles"
+  ],
+  "table": [
+   "multi"
+  ],
+  "term": [
+   "define"
+  ],
+  "tilemap": [
+   "region"
+  ],
+  "timeline": [
+   "event"
+  ],
+  "tlbill": [
+   "proc"
+  ],
+  "tlcards": [
+   "event"
+  ],
+  "tlclock": [
+   "event"
+  ],
+  "tlcount": [
+   "event",
+   "kpi"
+  ],
+  "tleras": [
+   "event"
+  ],
+  "tlgantt": [
+   "event"
+  ],
+  "tlmile": [
+   "event"
+  ],
+  "tlpar": [
+   "event"
+  ],
+  "tlterm": [
+   "event"
+  ],
+  "tlvert": [
+   "event"
+  ],
+  "tlzoom": [
+   "event"
+  ],
+  "tree": [
+   "branch"
+  ],
+  "treemap": [
+   "share"
+  ],
+  "waffle": [
+   "share",
+   "scale"
+  ],
+  "wipe": [
+   "trend"
+  ],
+  "xpband": [
+   "dist"
+  ],
+  "xpbig": [
+   "kpi"
+  ],
+  "xpbump": [
+   "rank",
+   "trend"
+  ],
+  "xpcards": [
+   "tiles"
+  ],
+  "xpdot": [
+   "dist"
+  ],
+  "xpdots": [
+   "dist"
+  ],
+  "xpmin": [
+   "trend",
+   "event"
+  ],
+  "xpprob": [
+   "share",
+   "pair"
+  ],
+  "xpqa": [
+   "ask"
+  ],
+  "xprank10": [
+   "rank"
+  ],
+  "xpratio": [
+   "scale"
+  ],
+  "xprow": [
+   "multi"
+  ],
+  "xpsched": [
+   "event"
+  ],
+  "xptable": [
+   "multi"
+  ],
+  "xpwatch": [
+   "tiles"
+  ],
+  "zoom": [
+   "trend"
+  ],
+  "fullmap": [
+   "route"
+  ],
+  "body": [
+   "body"
+  ],
+  "cover": []
+ }
+}

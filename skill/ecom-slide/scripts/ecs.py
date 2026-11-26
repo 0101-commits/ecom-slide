@@ -277,13 +277,32 @@ def cmd_mockup(a):
             say({"error": f"목업 없음 : {a.id}"}, 1)
         say({"id": hit["id"], "kind": hit.get("kind"), "family": hit.get("family"), "slide": hit["slide"]})
     q = (a.q or "").lower()
+    xt = load(lib_dir() / "library" / "mockups" / "xtypes.json") or {"types": [], "kinds": {}}
+    tk = xt["kinds"]
+    want = None
+    if getattr(a, "type", None):  # 설명 유형 : 코드(trend) 또는 이름 일부(추이)
+        want = [y["code"] for y in xt["types"] if a.type in (y["code"],) or a.type in y["name"]]
+        if not want:
+            say({"error": f"설명 유형 없음 : {a.type}", "types": [y["name"] for y in xt["types"]]}, 1)
     hits = [x for x in items if (not a.family or a.family in (x.get("kind"), x.get("family")))
+            and (not want or any(c in want for c in tk.get(x.get("kind"), [])))
             and (not q or q in json.dumps([x.get("title"), x.get("tags"), x.get("variant")], ensure_ascii=False).lower())]
+    if want:  # 주 유형이 맞는 것 먼저
+        hits.sort(key=lambda x: 0 if tk.get(x.get("kind"), [""])[:1] and tk[x["kind"]][0] in want else 1)
     fams = {}
     for x in items:
         fams[x.get("kind") or x.get("family")] = fams.get(x.get("kind") or x.get("family"), 0) + 1
-    say({"count": len(hits), "items": [{"id": x["id"], "kind": x.get("kind"), "layout": x.get("layout"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
-         "families": fams if not (a.family or q) else None})
+    tn = {y["code"]: y["name"] for y in xt["types"]}
+    say({"count": len(hits), "items": [{"id": x["id"], "kind": x.get("kind"), "types": [tn.get(c, c) for c in tk.get(x.get("kind"), [])], "layout": x.get("layout"), "variant": x.get("variant"), "title": x.get("title")} for x in hits[:a.n]],
+         "families": fams if not (a.family or q or want) else None})
+
+
+def cmd_types(a):
+    """설명 유형 26종 — 장이 전달하려는 내용의 형식. 주제와 무관하게 이 유형으로 목업을 고름(mockup --type)"""
+    xt = load(lib_dir() / "library" / "mockups" / "xtypes.json")
+    if not xt:
+        say({"error": "설명 유형 표가 없어요 — setup 먼저"}, 1)
+    say({"types": [{"code": y["code"], "name": y["name"], "question": y["q"], "draw": y["draw"], "mockups": y["mockups_any"]} for y in xt["types"]]})
 
 
 # ───────── find ─────────
@@ -1053,7 +1072,8 @@ def main():
     x = sp.add_parser("read"); x.add_argument("name")
     x = sp.add_parser("series"); x.add_argument("--q")
     x = sp.add_parser("fetch"); x.add_argument("name"); x.add_argument("id"); x.add_argument("--since", default="2021.01")
-    x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family", help="화면 종류(kind) 또는 판 2 묶음 이름"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20)
+    x = sp.add_parser("mockup"); x.add_argument("id", nargs="?"); x.add_argument("--family", help="화면 종류(kind) 또는 판 2 묶음 이름"); x.add_argument("--q"); x.add_argument("--n", type=int, default=20); x.add_argument("--type", help="설명 유형 코드 또는 이름 일부(예: trend, 추이, 과정)")
+    sp.add_parser("types")
     x = sp.add_parser("find")
     for k in ("layout", "kind", "struct"):
         x.add_argument("--" + k)
