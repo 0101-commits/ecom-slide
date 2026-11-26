@@ -32,6 +32,9 @@
 | `note` | 결론 띠 | `t` · `tag` · `tone:"soft"` |
 | `table` | 다자 비교 | `cols[{t, w, align:"c"}]` `rows[[글 또는 {t, s, tone, b, fs}]]` · `hi[]` `hot[]` `maxh` |
 | `bars` | 크기, 순위 | `items[{label, sub, v, vt, tone, segs[[이름, 값]], hero, note}]` · `unit` `max` `labw` · `delta{a, b, t}` · `ref{v, t}` |
+| `timeline` | 사건 순서, 일정 | `t0` `t1` · `events[{at, t, d, s, side:"up|down", tone, dx, w}]` · `phases[{a, b, t, tone}]` · `ticks[[값, 글]]` · `ew` `pad` |
+| `layers` | 구조, 계층 / 포함 관계 | `layers[{t, n, s, chips[], tone, to}]` · `mode:"nest"`(포함 겹) · `flow`(층 사이 화살) · `tw` `sw` |
+| `pict` | 규모 환산 | `rows[{label, sub, n, on, v, unit, tone, delta}]` · `icon:"drum|box|person|doc"` · `sz` `labw` `valw` `key` `box` |
 
 - `tone`: `strong`(짙은 면, 결론 칸) · `soft`(중간 면) · `ghost` · `warn` · `mid` · `hot`. 없으면 옅은 면.
 - 숫자 크기: `stat` 은 36px, `big:true` 는 52px(장에 1곳). `bars` 의 `hero:true` 는 52px.
@@ -40,6 +43,6 @@
 
 ## 아직 옮기지 않은 블록(판 6 기획안 견본에는 있음)
 
-`nodes`(상자 + 직각 연결선) · `timeline`(시간 축 + 사건 카드) · `layers`(층 쌓기) · `pict`(그림 단위) · `dist`(점 분포) · `tiles`(벤토 타일) · `shot`(실제 그림 + 확대 풀이) · `matrix` · `line` · `doc`, 카드 머리 그림(`icon`), 색 틀(남색 등). 쓰면 「모르는 블록」으로 표시된다.
+`nodes`(상자 + 직각 연결선) · `dist`(점 분포) · `tiles`(벤토 타일) · `shot`(실제 그림 + 확대 풀이) · `matrix` · `line` · `doc`, 카드 머리 그림(`icon`), 색 틀(남색 등). 쓰면 「모르는 블록」으로 표시된다.
 
-시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 8장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
+시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 15장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
