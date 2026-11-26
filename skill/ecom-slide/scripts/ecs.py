@@ -873,6 +873,9 @@ def engine(lib, v3=True, brand=True, extra=None):
     js = (st / "deck.js").read_text(encoding="utf-8") + "\n" + "\n".join(f.read_text(encoding="utf-8") for f in sorted((st / "parts").glob("*.js")))
     if extra:  # 회차 파생 부품(덱당 3개까지) — 기존 부품 뒤에 붙여 같은 이름이면 덮어씀
         js += "\n" + "\n".join(f"/* 파생 부품 {Path(f).name} */\n" + Path(f).read_text(encoding="utf-8") for f in extra)
+    tfd = st / "tossface"
+    if tfd.is_dir():  # Tossface 원본 SVG — 바꾸지 않고 덱을 만들 때만 그림(data:)으로 넣음(저장소에는 원본 파일과 라이선스 전문만)
+        js += "\nECOM.TF = " + json.dumps({f.stem: "data:image/svg+xml;base64," + base64.b64encode(f.read_bytes()).decode() for f in sorted(tfd.glob("*.svg"))}) + ";"
     logo = {}
     if not brand:
         return (st / "deck.css").read_text(encoding="utf-8"), js, logo

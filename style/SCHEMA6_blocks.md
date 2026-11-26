@@ -39,14 +39,20 @@
 | `line` | 추이, 변화 | `x[]` · `y{min, max, step, unit}` · `series[{name, v[], tone, dash, show[], ldy, vdy}]` · `bands[{a, b, t}]` · `ref{v, t}` · `notes[{i, v, t, dx, dy}]` · `xstep` `rpad` |
 | `dist` | 분포 | `groups[{label, dots{값: 개수}, box[q1, 중앙, q3], lo, hi}]` · `y{min, max, step, unit}` · `ref{v, t}` |
 | `matrix` | 2×2 나눔 | `quads[{t, s, items[], tone}]`(왼위, 오른위, 왼아래, 오른아래) · `xaxis` `yaxis` |
+| `tiles` | 요약 타일(벤토) | `grid[열, 줄]` · `items[{c, r, cs, rs, icon, ic, k, fig, big, t, fs, s, tone, bars[[이름, 값, 강조]], bottom}]` · `arrows[[a, b]]` · `gap` |
+| `shot` | 근거 제시 | `img`(덱 기준 경로 또는 data:) · `ar`(원본 가로 ÷ 세로) · `crop[l, t, r, b]`(0~1) · `box[x, y, w, h]`(잘라 낸 그림 안 0~1) · `title` `mark` · `calls[{k, t, s, hot}]` · `dw` |
+| `list` | 번호 목록(그림 번호와 짝) | `items[{n, t, s, fig, hot, tone}]` |
 
 - `tone`: `strong`(짙은 면, 결론 칸) · `soft`(중간 면) · `ghost` · `warn` · `mid` · `hot`. 없으면 옅은 면.
 - 숫자 크기: `stat` 은 36px, `big:true` 는 52px(장에 1곳). `bars` 의 `hero:true` 는 52px.
 - `stat` 의 `n`(숫자) · `dec` 를 주면 숫자가 굴러 올라감. `spark` 는 칸 아래 작은 추이선(`sl` = 양 끝 이름, `rng` = 세로 범위).
 - 움직임: 블록마다 차례로 떠오름(카드, 줄, 단계 하나씩). 마우스 올림 카드는 칸 이름(`data-key`)으로 붙음.
 
-## 아직 옮기지 않은 블록(판 6 기획안 견본에는 있음)
+## 아이콘과 색 틀
 
-`tiles`(벤토 타일, 4단계 벤토 틀과 함께) · `shot`(실제 그림 + 확대 풀이) · `doc`, 카드 머리 그림(`icon`), 색 틀(남색 등). 쓰면 「모르는 블록」으로 표시된다.
+- 카드(`cards`)와 타일(`tiles`)의 `icon`: 라인 아이콘 이름(`style/icons`, Lucide, ISC: database, cpu, shield-check 등 24종) 또는 `tf:<코드>`(Tossface 원본 그림, `style/tossface`, 예: `tf:u1F33E`).
+- Tossface 사용 조건(토스 저작권 안내, 라이선스 전문 = `style/tossface/LICENSE.txt`): 누구나 무료, 변형 금지, 소스코드로 변환해 게재 금지, 출처 표기. 그래서 저장소에는 원본 파일만 두고 `ecs.py` 가 덱을 만들 때 그림으로 넣으며, 쓴 장의 각주 끝에 「이모지: 토스팀에서 제공한 토스페이스」가 자동으로 붙는다.
+- `skin`: `navy`(남색) · `plain`(회색). 없으면 ECOM 초록. 벤토 틀(`bentoG` · `bentoL`)은 4단계 틀과 함께.
+- 아직 없는 것: `doc`(문서 그림), 벤토 틀.
 
-시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 23장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).
+시험 덱: `style/demo6_blocks.json`(판 6 기획안 견본 중 공개 자료 주제 25장, `python -X utf8 tools/check5.py style/demo6_blocks.json`).

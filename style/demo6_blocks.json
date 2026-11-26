@@ -11,6 +11,7 @@
  "slides": [
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "앞으로",
     "topic": "12월 이후 지켜볼 여섯 질문",
@@ -153,6 +154,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "통화정책",
     "topic": "기준금리 인상의 전달 경로",
@@ -277,6 +279,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "통화량",
     "topic": "통화, 유동성 지표의 포함 관계",
@@ -367,6 +370,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "연준",
     "topic": "FOMC 점도표의 연말 정책금리 전망 분포",
@@ -494,6 +498,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "경기",
     "topic": "경기 국면 전이도",
@@ -631,6 +636,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "유가",
     "topic": "경유와 휘발유 소매 가격 비교",
@@ -704,6 +710,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "해협 봉쇄",
     "topic": "호르무즈 해협 하루 석유 통과량",
@@ -769,6 +776,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "비만",
     "topic": "한국 성인 비만율",
@@ -832,6 +840,227 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
+   "eyebrow": {
+    "group": "",
+    "topic": "",
+    "basis": " · 견본 b2"
+   },
+   "head": "언어 모델은 다음 토큰을 하나씩 예측해 답을 만듦",
+   "layout": "T6B4",
+   "blocks": [
+    {
+     "type": "tiles",
+     "grid": [
+      5,
+      1
+     ],
+     "gap": 36,
+     "arrows": [
+      [
+       0,
+       1
+      ],
+      [
+       1,
+       2
+      ],
+      [
+       2,
+       3
+      ],
+      [
+       3,
+       4
+      ]
+     ],
+     "items": [
+      {
+       "c": 0,
+       "r": 0,
+       "icon": "tf:u2702",
+       "t": "토큰 분리",
+       "s": "문장을 처리 단위로 나눔"
+      },
+      {
+       "c": 1,
+       "r": 0,
+       "icon": "tf:u1F522",
+       "t": "벡터 변환",
+       "s": "토큰을 숫자 묶음으로 바꿈"
+      },
+      {
+       "c": 2,
+       "r": 0,
+       "icon": "tf:u1F9E0",
+       "t": "문맥 계산",
+       "s": "앞 토큰과의 관련도 계산",
+       "tone": "soft"
+      },
+      {
+       "c": 3,
+       "r": 0,
+       "icon": "tf:u1F4CA",
+       "t": "확률 산출",
+       "s": "다음 토큰 후보별 확률"
+      },
+      {
+       "c": 4,
+       "r": 0,
+       "icon": "tf:u2705",
+       "t": "토큰 선택",
+       "s": "후보 중 하나를 선택"
+      }
+     ]
+    },
+    {
+     "type": "tiles",
+     "grid": [
+      3,
+      1
+     ],
+     "items": [
+      {
+       "c": 0,
+       "r": 0,
+       "cs": 2,
+       "t": "선택한 토큰을 입력 끝에 붙여 처음부터 반복",
+       "s": "답은 토큰 하나씩 순서대로 생성됨"
+      },
+      {
+       "c": 2,
+       "r": 0,
+       "t": "종료 토큰이 나오면 끝",
+       "s": "답의 길이는 미리 정해지지 않음"
+      }
+     ]
+    }
+   ],
+   "foot": {
+    "source": "",
+    "notes": []
+   }
+  },
+  {
+   "kind": "blocks",
+   "skin": null,
+   "eyebrow": {
+    "group": "",
+    "topic": "",
+    "basis": " · 견본 b3"
+   },
+   "head": "조선 수군, 의병, 명군이 일본군의 보급과 병력을 제약",
+   "layout": "full",
+   "blocks": [
+    {
+     "type": "nodes",
+     "cols": 3,
+     "rows": 3,
+     "gx": 96,
+     "gy": 22,
+     "maxh": 132,
+     "colhead": [
+      "요인",
+      "일본군에 미친 영향",
+      "*결과"
+     ],
+     "nodes": [
+      {
+       "id": "f1",
+       "c": 0,
+       "r": 0,
+       "t": "조선 수군의 제해권 확보",
+       "s": "옥포, 한산도 등 해전 연승"
+      },
+      {
+       "id": "f2",
+       "c": 0,
+       "r": 1,
+       "t": "의병 봉기",
+       "s": "전국 각지에서 후방 공격"
+      },
+      {
+       "id": "f3",
+       "c": 0,
+       "r": 2,
+       "t": "명군 참전",
+       "s": "1593년 1월 평양성 탈환"
+      },
+      {
+       "id": "e1",
+       "c": 1,
+       "r": 0,
+       "t": "서해를 통한 보급 차단",
+       "s": "수륙 병진 계획 좌절"
+      },
+      {
+       "id": "e2",
+       "c": 1,
+       "r": 1,
+       "t": "점령지 통제 약화",
+       "s": "보급로와 연락망 불안"
+      },
+      {
+       "id": "e3",
+       "c": 1,
+       "r": 2,
+       "t": "북부 전선 붕괴",
+       "s": "평양에서 한양으로 후퇴"
+      },
+      {
+       "id": "r1",
+       "c": 2,
+       "r": 1,
+       "tone": "strong",
+       "fig": "1593.4",
+       "t": "일본군의 한양 철수",
+       "s": "남해안으로 후퇴, 강화 교섭 시작"
+      }
+     ],
+     "edges": [
+      {
+       "a": "f1",
+       "b": "e1",
+       "style": "main"
+      },
+      {
+       "a": "f2",
+       "b": "e2",
+       "style": "main"
+      },
+      {
+       "a": "f3",
+       "b": "e3",
+       "style": "main"
+      },
+      {
+       "a": "e1",
+       "b": "r1",
+       "pa": "r",
+       "pb": "t"
+      },
+      {
+       "a": "e2",
+       "b": "r1"
+      },
+      {
+       "a": "e3",
+       "b": "r1",
+       "pa": "r",
+       "pb": "b"
+      }
+     ],
+     "fs": 16
+    }
+   ],
+   "foot": {
+    "source": "",
+    "notes": []
+   }
+  },
+  {
+   "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "원리",
     "topic": "답 생성의 다섯 단계",
@@ -941,6 +1170,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "원리",
     "topic": "언어 모델의 내부 구성",
@@ -1037,6 +1267,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "원리",
     "topic": "다음 토큰 후보별 확률",
@@ -1111,6 +1342,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "원리",
     "topic": "학습 단계와 추론 단계 비교",
@@ -1170,6 +1402,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "원리",
     "topic": "한 번에 읽을 수 있는 분량",
@@ -1237,6 +1470,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "한계",
     "topic": "사실과 다른 답이 생성되는 과정",
@@ -1356,6 +1590,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "활용",
     "topic": "생성된 답의 사용 전 확인 절차",
@@ -1475,6 +1710,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "흐름",
     "topic": "임진왜란 7년의 전개",
@@ -1631,6 +1867,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "침공",
     "topic": "일본군의 초기 진격 경로",
@@ -1734,6 +1971,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "반격",
     "topic": "전세가 바뀐 세 가지 요인",
@@ -1851,6 +2089,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "구도",
     "topic": "조선, 일본, 명의 전쟁 목적과 전력 비교",
@@ -1926,6 +2165,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "해전",
     "topic": "명량 해전의 전력 차이",
@@ -1990,6 +2230,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "해전",
     "topic": "주요 해전의 일본 전선 피해",
@@ -2045,6 +2286,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "교섭",
     "topic": "강화 교섭이 결렬된 과정",
@@ -2138,6 +2380,7 @@
   },
   {
    "kind": "blocks",
+   "skin": null,
    "eyebrow": {
     "group": "결과",
     "topic": "전쟁이 세 나라에 남긴 변화",
@@ -2150,6 +2393,7 @@
      "type": "cards",
      "items": [
       {
+       "icon": "tf:u1F33E",
        "k": "조선",
        "t": "국토 황폐와 인구 감소",
        "items": [
@@ -2159,6 +2403,7 @@
        ]
       },
       {
+       "icon": "tf:u1F3EF",
        "k": "일본",
        "t": "정권 교체",
        "items": [
@@ -2169,6 +2414,7 @@
        "tone": "soft"
       },
       {
+       "icon": "tf:u1F4B0",
        "k": "명",
        "t": "재정 악화와 국력 약화",
        "items": [

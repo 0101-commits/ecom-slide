@@ -1,13 +1,14 @@
 /* 6판 조립 블록 — 화면 종류 blocks. 본문 칸(1168×512)을 layout 으로 나누고 blocks[] 를 차례로 채움. 형식 = style/SCHEMA6_blocks.md
    layout : full · L6R4(좌우 6:4) · T7B3(위아래 7:3) · T6B4:L6R6(위 한 칸 + 아래 좌우) · L7R5:T5B5(왼쪽 한 칸 + 오른쪽 위아래)
-   블록   : steps 차례 띠 · compare 가운데 축 비교 · stat 숫자 칸(+ 작은 추이선) · cards 카드 열 · note 결론 띠 · table 머리글 표 · bars 가로 막대 · timeline 시간 축 · layers 층 쌓기, 포함 겹 · pict 그림 단위 · nodes 상자 + 직각 연결선 · line 선 차트 · dist 점 분포 · matrix 2×2
+   블록   : steps 차례 띠 · compare 가운데 축 비교 · stat 숫자 칸(+ 작은 추이선) · cards 카드 열 · note 결론 띠 · table 머리글 표 · bars 가로 막대 · timeline 시간 축 · layers 층 쌓기, 포함 겹 · pict 그림 단위 · nodes 상자 + 직각 연결선 · line 선 차트 · dist 점 분포 · matrix 2×2 · tiles 벤토 타일 · shot 실제 그림 + 확대 풀이 · list 번호 목록. 아이콘 = 라인 아이콘 이름 또는 tf:<코드>(Tossface, 쓴 장 각주에 출처). skin navy · plain
    칸은 테두리 없이 면 색(옅은 면 · 중간 면 · 짙은 면 = 결론), 글자는 6판 7단계 */
 (function () {
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 var COL = { ink: C.ink, sub: C.sub, mute: C.mute, g: C.g65, gdk: C.dark, gon: '#CDEFE0', g18: C.g18, g40: C.g40, card: C.g08, well: '#DCEAE3',
   light: C.light, white: '#FFFFFF', line: C.line, warn: C.warn, warn08: C.warnsoft, yel: '#FFF3C4', g65: C.g65, gmid: '#0A6444', gold: '#C98F35', axis: C.axis, gray: C.gray, grid: C.grid, paper: '#FFFFFF', on: C.on };
-function col(k) { return COL[k] || k }
+var SK = null;
+function col(k) { return (SK && SK[k]) || COL[k] || k }
 var TONE = { strong: ['gdk', 'white', 'gon'], soft: ['g18', 'ink', 'sub'], ghost: ['well', 'sub', 'mute'], warn: ['warn08', 'warn', 'sub'], mid: ['g40', 'ink', 'sub'], hot: ['yel', 'ink', 'sub'] };
 function tone(t) { return TONE[t] || ['card', 'ink', 'sub'] }
 
@@ -86,7 +87,8 @@ function cards(svg, z, b, t0) { var x = z[0], y0 = z[1], w = z[2], H0 = z[3], it
     k.rect(xx, y, cw, hh, ts[0]); var items = [];
     if (a.k) items.push([a.k, 16, 700, st ? 'gon' : 'g']); if (a.fig) items.push([a.fig, 26, 800, st ? 'white' : 'gdk']); items.push([a.t, 20, 700, ts[1]]);
     if (a.s) items.push([a.s, 18, 400, st ? ts[2] : 'sub']); (a.items || []).forEach(function (l) { items.push(['- ' + l, 18, 400, st ? ts[2] : 'sub']) });
-    k.stack(xx, y, cw, hh, items, { pad: 18, align: 'start', valign: b.valign || 'middle', gap: 10 }) }) }
+    if (a.icon) { iconSvg(g, a.icon, xx + 18, y + 22, 46, st ? 'gon' : 'g'); k.stack(xx, y + 76, cw, hh - 76, items, { pad: 18, align: 'start', valign: 'top', gap: 10 }) }
+    else k.stack(xx, y, cw, hh, items, { pad: 18, align: 'start', valign: b.valign || 'middle', gap: 10 }) }) }
 
 /* note : 결론 띠 — t(한 문장) · tag · tone:'soft' 면 옅은 띠 */
 function note(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], soft = b.tone === 'soft', g = grp(svg, t0, b.tag || '결론', 'fade'), k = K(g), tx = x + 20;
@@ -267,12 +269,61 @@ function matrix(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], lab
   var g0 = grp(svg, t0, null, 'fade'); K(g0).text(gx + gw / 2, y + H - 8, b.xaxis || '', 16, 600, 'mute', 'middle');
   T(g0, 0, 0, b.yaxis || '', { transform: 'translate(' + (x + 14) + ',' + (y + gh / 2) + ') rotate(-90)', 'font-size': 16, 'font-weight': 600, fill: C.mute, 'text-anchor': 'middle' }) }
 
-var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix };
+/* 아이콘 — 라인 아이콘(Lucide 이름) 또는 'tf:<코드>' = Tossface 원본 그림. Tossface 를 쓴 장은 각주에 출처 문구가 붙음 */
+var usedTF = false;
+function iconSvg(g, name, x, y, size, color) { name = String(name || '');
+  if (name.indexOf('tf:') === 0) { var src = (ECOM.TF || {})[name.slice(3)]; if (!src) return; E('image', { href: src, x: x, y: y, width: size + 2, height: size + 2, 'data-k': 'emoji' }, g); usedTF = true; return }
+  var body = (ECOM.ICONS || {})[name]; if (!body) return;
+  var w = E('g', { transform: 'translate(' + x + ',' + y + ') scale(' + (size / 24).toFixed(3) + ')', fill: 'none', stroke: col(color || 'g'), 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-k': 'icon' }, g); w.innerHTML = body }
+
+/* tiles : 벤토 타일 — grid[열, 줄] · items[{c, r, cs, rs, icon, ic, k, fig, big, t, fs, s, tone, bars[[이름, 값, 강조]], bottom}] · arrows[[a, b]] · gap */
+function tiles(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], cols = b.grid[0], rows = b.grid[1], gap = b.gap == null ? 16 : b.gap, cw = (w - gap * (cols - 1)) / cols, rh = (H - gap * (rows - 1)) / rows, G = {};
+  (b.items || []).forEach(function (t, i) { var g = grp(svg, t0 + i * 260, t.t), k = K(g), cs = t.cs || 1, rs = t.rs || 1, tx = x + t.c * (cw + gap), ty = y + t.r * (rh + gap), tw = cw * cs + gap * (cs - 1), th = rh * rs + gap * (rs - 1), hot = t.tone === 'strong', soft = t.tone === 'soft', pad = 26, yy = ty + pad, brs = t.bars || [], bh = 62 * brs.length;
+    k.rect(tx, ty, tw, th, hot ? 'gdk' : (soft ? 'g18' : 'card')); G[i] = [tx, ty, tw, th];
+    if (t.icon) { iconSvg(g, t.icon, tx + pad, yy, 38, hot ? 'gon' : (t.ic || 'g')); yy += 54 }
+    if (brs.length) { var mx = Math.max.apply(null, brs.map(function (q) { return q[1] }));
+      brs.forEach(function (q, j) { var by = ty + th - pad - bh + j * 62 + 8, L = (tw - pad * 2) * q[1] / mx; k.text(tx + pad, by + 12, q[0], 16, 700, hot ? 'white' : 'sub'); k.rect(tx + pad, by + 22, L, 26, hot ? (q[2] ? 'gon' : 'gmid') : (q[2] ? 'gdk' : 'g40'), 2) }); th -= bh + 6 }
+    var R = []; if (t.k) R.push([t.k, 16, 600, hot ? 'gon' : 'mute']); if (t.fig) R.push([t.fig, t.big ? 52 : 36, 800, hot ? 'white' : 'ink']); R.push([t.t, t.fs || 20, 700, hot ? 'white' : 'ink']); if (t.s) R.push([t.s, 16, 400, hot ? 'gon' : 'sub']);
+    if (t.icon) k.stack(tx, yy - 12, tw, th - (yy - ty) + 4, R, { pad: pad, align: 'start', valign: 'top', gap: 6 }); else k.stack(tx, ty, tw, th, R, { pad: pad, align: 'start', gap: 6 }) });
+  var ga = grp(svg, t0 + (b.items || []).length * 260, null, 'fade');
+  (b.arrows || []).forEach(function (q) { var A = G[q[0]], B = G[q[1]]; if (!A || !B) return;
+    if (Math.abs(A[1] - B[1]) < 1) { var yy = A[1] + Math.min(A[3], B[3]) / 2; link(ga, [[A[0] + A[2] + 2, yy], [B[0] - 2, yy]], 'g65', { arrow: true }) }
+    else { var xx = A[0] + Math.min(A[2], B[2]) / 2; link(ga, [[xx, A[1] + A[3] + 2], [xx, B[1] - 2]], 'g65', { arrow: true }) } }) }
+
+/* shot : 실제 그림 + 확대 풀이 — img(덱 기준 경로 또는 data:) · ar(원본 가로 ÷ 세로) · crop[l, t, r, b](0~1) · box[x, y, w, h](잘라 낸 그림 안 0~1) · title · mark · calls[{k, t, s, hot}] · dw(그림 칸 비율) */
+var shid = 0;
+function shot(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], dw = w * (b.dw || .52), cr = b.crop || [0, 0, 1, 1], ar = b.ar || 1, cwid = (cr[2] - cr[0]) * ar, chgt = cr[3] - cr[1];
+  var kk = Math.min((dw - 24) / cwid, (H - 54) / chgt), iw = cwid * kk, ih = chgt * kk, ix = x + (dw - iw) / 2, iy = y + 42 + (H - 54 - ih) / 2, g0 = grp(svg, t0, b.title, 'fade'), k0 = K(g0);
+  k0.rect(x, y, dw, H, 'card'); k0.text(x + 16, y + 28, b.title || '', 18, 700, 'ink');
+  var mk = b.mark || '시험 자료(가상)'; k0.chip(x + dw - h.textW(mk, 13, true) - 36, y + 12, mk, 'well', 'mute', 13, 22);
+  var id = 'bsh' + (++shid), vs = E('svg', { x: ix, y: iy, width: iw, height: ih, viewBox: (cr[0] * ar) + ' ' + cr[1] + ' ' + cwid + ' ' + chgt, preserveAspectRatio: 'none', 'data-k': 'shot', style: 'overflow:hidden' }, g0);
+  E('image', { href: b.img || '', x: 0, y: 0, width: ar, height: 1, preserveAspectRatio: 'none' }, vs);
+  var bx = b.box || [0, 0, 0, 0], X0 = ix + iw * bx[0], Y0 = iy + ih * bx[1], BW = iw * bx[2], BH = ih * bx[3];
+  if (BW > 0) E('rect', { x: X0, y: Y0, width: BW, height: BH, rx: 0, fill: 'none', stroke: C.warn, 'stroke-width': 3 }, g0);
+  var cx = x + dw + 56, cwd = w - dw - 56, cs = b.calls || [], gp = 12, ch = (H - gp * (cs.length - 1)) / Math.max(1, cs.length);
+  cs.forEach(function (c, i) { var g = grp(svg, t0 + 400 + i * 300, c.t), k = K(g), yy = y + i * (ch + gp), hot = c.hot;
+    k.rect(cx, yy, cwd, ch, hot ? 'gdk' : 'card'); k.stack(cx, yy, cwd, ch, [[c.k, 16, 700, hot ? 'gon' : 'g'], [c.t, 20, 700, hot ? 'white' : 'ink'], [c.s, 16, 400, hot ? 'gon' : 'sub']], { pad: 20, align: 'start', gap: 6 });
+    if (hot && BW > 0) link(g, [[X0 + BW, Y0 + BH / 2], [x + dw + 28, Y0 + BH / 2], [x + dw + 28, yy + ch / 2], [cx, yy + ch / 2]], 'warn', { arrow: true }) }) }
+
+/* list : 번호 목록 — items[{n, t, s, fig, hot, tone}] (그림 위 번호와 짝) */
+function pin(g, cx, cy, n, tn) { E('circle', { cx: cx, cy: cy, r: 11, fill: col(tn || 'gdk'), stroke: '#FFFFFF', 'stroke-width': 3 }, g); T(g, cx, cy + 4.5, String(n), { 'font-size': 13, 'font-weight': 700, fill: '#FFFFFF', 'text-anchor': 'middle' }) }
+function list(svg, z, b, t0) { var x = z[0], y = z[1], w = z[2], H = z[3], it = b.items || [], n = it.length, gap = 8, ch = (H - gap * (n - 1)) / Math.max(1, n);
+  it.forEach(function (q, i) { var g = grp(svg, t0 + i * 260, q.t), k = K(g), yy = y + i * (ch + gap), px = 16; k.rect(x, yy, w, ch, q.hot ? 'g18' : 'card');
+    if (q.n != null) { pin(g, x + 24, yy + ch / 2, q.n, q.tone); px = 46 }
+    k.stack(x + px - 12, yy, w - px + 12, ch, [[q.fig, 20, 800, 'gdk'], [q.t, 18, 700, 'ink'], [q.s, 16, 400, 'sub']], { pad: 12, align: 'start', gap: 3 }) }) }
+
+/* 색 틀(skin) — 명세의 skin 이 navy · plain 이면 블록 색을 그 틀로(벤토 틀 bentoG · bentoL 은 4단계 틀과 함께) */
+var SKINS = { navy: { g: '#1F4E8C', gdk: '#143A6B', g65: '#5E82B0', g40: '#A5BAD4', g18: '#CFDBEC', card: '#EDF2F8', gon: '#A9C6EA', gmid: '#1C4A82', gray: '#AEB9C6', line: '#C3D0E2', well: '#DCE5F1', grid: '#D3DDEB', light: '#C9D5E6', axis: '#7C8AA0' },
+  plain: { g: '#3E4743', gdk: '#1D2521', g65: '#6B7570', g40: '#9AA3A0', g18: '#DDE3E0', card: '#F3F5F4', gon: '#C9D1CD', gmid: '#3E4743' } };
+
+var BLOCKS = { steps: steps, compare: compare, stat: stat, cards: cards, note: note, table: table, bars: bars, timeline: timeline, layers: layers, pict: pict, nodes: nodes, line: line, dist: dist, matrix: matrix, tiles: tiles, shot: shot, list: list };
 ECOM.parts.blocks = function (bd, s, ctx) {
-  var svg = ctx.svg(512), Z = zones(s.layout, 1168, 512, s.gap), bl = s.blocks || [];
+  var svg = ctx.svg(512), Z = zones(s.layout, 1168, 512, s.gap), bl = s.blocks || []; SK = SKINS[s.skin] || null; usedTF = false;
   bl.forEach(function (b, i) { var f = BLOCKS[b.type], z = Z[Math.min(i, Z.length - 1)];
     if (!f) { T(svg, z[0] + 12, z[1] + 28, '모르는 블록 : ' + b.type, { 'font-size': 16, fill: C.warn }); return }
     f(svg, z, b, 200 + i * 900) });
+  SK = null;
+  if (usedTF) { var fn = ctx.root.querySelector('.fn'); if (fn) fn.insertAdjacentHTML('beforeend', '<span data-k="tf-credit"> · ' + (ECOM.TF_CREDIT || '이모지: 토스팀에서 제공한 토스페이스') + '</span>') }
   ctx.root.setAttribute('data-gap', 380) };
 ECOM.parts.blocks.types = Object.keys(BLOCKS);
 })();

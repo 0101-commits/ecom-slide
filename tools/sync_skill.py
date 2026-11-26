@@ -9,7 +9,7 @@ LIB_FILES = ["style/deck.css", "style/deck.js", "style/SCHEMA3.md", "style/SCHEM
              "style/v2/deck.css", "style/v2/deck.js", "style/v2/SCHEMA.md", "style/v2/SCHEMA2.md",
              "rules/plan.md", "rules/write.md", "rules/design_grammar.md", "rules/mockup_map.md", "style/SCHEMA4.md", "style/SCHEMA6_blocks.md", "terms/glossary.json",
              "library/mockups/mockups.json", "library/mockups/xtypes.json", "library/mockups/index.md", "library/catalog.json", "data/series_ids.json"]
-LIB_DIRS = ["style/parts", "style/brand", "style/fonts", "style/geo", "style/vendor"]
+LIB_DIRS = ["style/parts", "style/brand", "style/fonts", "style/geo", "style/vendor", "style/icons", "style/tossface"]
 
 
 def lib_items():
