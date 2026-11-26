@@ -160,7 +160,7 @@ ECOM.parts.dxdecomp = function (bd, s, ctx) {
     T(gn, X(i), yy + 5, q.text, Object.assign({ 'text-anchor': 'middle', 'font-size': 14.5, 'font-weight': 700, fill: q.kind === 'real' ? C.dark : C.g65 }, u.halo)) });
   (s.marks || []).forEach(function (m, k) { var arr = m.s === 'real' ? R : N; mark(svg, X(m.at), Y(arr[m.at]), m.tone === 'warn' ? C.warn : C.dark, m.text, 1600 + k * 150, m) });
   /* 오른쪽 식 카드 */
-  var gc = h.at(svg, 1900, { 'data-fx': 'fade' }), cx = x1 + 34, cw = W - cx, rows = [['명목금리', N[n - 1], C.dark, null], ['실질금리', R[n - 1], C.main, C.g40], ['기대물가', B[n - 1], C.g65, C.g18]], ry = [64, 214, 346], rh = [112, 104, 104];
+  var gc = h.at(svg, 1900, { 'data-fx': 'fade' }), cx = x1 + 46, cw = W - cx, rows = [['명목금리', N[n - 1], C.dark, null], ['실질금리', R[n - 1], C.main, C.g40], ['기대물가', B[n - 1], C.g65, C.g18]], ry = [64, 214, 346], rh = [112, 104, 104];
   rows.forEach(function (r, k) { E('rect', { x: cx, y: ry[k], width: cw, height: rh[k], rx: 10, fill: k === 0 ? C.dark : '#fff', stroke: k === 0 ? C.dark : C.axis, 'stroke-width': 1.6 }, gc);
     if (k) { E('rect', { x: cx + 14, y: ry[k] + 14, width: 22, height: 14, rx: 3, fill: r[3], stroke: r[2], 'stroke-width': 1.5 }, gc) }
     T(gc, cx + (k ? 44 : 16), ry[k] + 27, r[0] + (k === 0 ? ' (10년물)' : k === 1 ? ' (물가연동 10년물)' : ' (명목 − 실질)'), { 'font-size': 13.5, 'font-weight': 700, fill: k === 0 ? '#fff' : C.mute });

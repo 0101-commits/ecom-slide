@@ -9,7 +9,7 @@
 var h = ECOM.h, C = ECOM.C, H = h.H, esc = h.esc, YEL = '#FFE066', MINT = '#8FE0C0', ROW = '#FFE88A';
 if (!document.getElementById('p-clip-css')) { var st = document.createElement('style'); st.id = 'p-clip-css';
   st.textContent = [
-    '.pc-card{position:absolute;box-sizing:border-box;background:#fff;border:1px solid #DDE3E0;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;color:#1D2521}',
+    '.pc-card{position:absolute;box-sizing:border-box;background:var(--g08);border:1px solid #DDE3E0;border-radius:6px;display:flex;flex-direction:column;overflow:hidden;color:#1D2521;border-color:transparent}',
     '.pc-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 22px;border-bottom:1px solid #E1E6E3;background:#F5F7F6;font-size:16px}',
     '.pc-hd b{font-weight:800;display:flex;align-items:center}.pc-hd>span{font-size:13px;color:#6B7570;white-space:nowrap}',
     '.pc-tag{font-style:normal;font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;margin-right:10px;color:#1D2521;white-space:nowrap}',

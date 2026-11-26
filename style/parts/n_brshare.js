@@ -15,7 +15,7 @@ ECOM.parts.brshare = function (bd, s, ctx) {
     if (r.sub) T(g, x0 + w + 10 + tw + 12, cy + 5, r.sub, { 'font-size': 13, fill: C.mute }) });
   if (tp > 0 && tp < n) { var sum = 0; for (var q = 0; q < tp; q++) sum += R[q].value; var y0 = top + pitch * 0 + (pitch - bh) / 2, y1 = top + pitch * (tp - 1) + pitch / 2 + bh / 2, gb = h.at(svg, 150 + n * 160 + 300, { 'data-fx': 'fade' });
     E('path', { d: 'M' + (bx - 10) + ' ' + y0 + ' h8 v' + (y1 - y0) + ' h-8', fill: 'none', stroke: C.dark, 'stroke-width': 2 }, gb);
-    T(gb, bx + 6, (y0 + y1) / 2 - 2, s.topName || ('상위 ' + tp + '곳 합'), { 'font-size': 14, 'font-weight': 700, fill: C.mute }); T(gb, bx + 6, (y0 + y1) / 2 + 30, h.nf(sum, dec) + '%', { 'font-size': 32, 'font-weight': 700, fill: C.dark }) }
+    T(gb, bx + 6, (y0 + y1) / 2 - 2, s.topName || ('상위 ' + tp + '곳 합'), { 'font-size': 14, 'font-weight': 700, fill: C.mute }); T(gb, bx + 6, (y0 + y1) / 2 + 36, h.nf(sum, dec) + '%', { 'font-size': 32, 'font-weight': 700, fill: C.dark }) }
   ctx.root.setAttribute('data-gap', 300);
 };
 })();

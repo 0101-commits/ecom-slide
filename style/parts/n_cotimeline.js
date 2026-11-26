@@ -4,7 +4,7 @@
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
 ECOM.parts.cotimeline = function (bd, s, ctx) {
-  var Lb = s.labels || [], m = Lb.length, S = (s.series || []).slice(0, 3), ev = (s.events || []).slice(0, 6); if (m < 2 || !S.length) return; var svg = ctx.svg(512), L = 52, Rr = 1070, top = 128, bot = 462, X = h.lin(0, m - 1, L, Rr);
+  var Lb = s.labels || [], m = Lb.length, S = (s.series || []).slice(0, 3), ev = (s.events || []).slice(0, 6); if (m < 2 || !S.length) return; var svg = ctx.svg(512), L = 52, Rr = 1050, top = 128, bot = 462, X = h.lin(0, m - 1, L, Rr);
   var all = []; S.forEach(function (q) { q.data.forEach(function (v) { all.push(v) }) }); var nt = h.niceTicks(0, Math.max.apply(null, all), 5), Y = h.lin(nt.lo, nt.hi, bot, top), g0 = h.at(svg, 0, { 'data-fx': 'fade' });
   for (var v = nt.lo; v <= nt.hi + 1e-9; v += nt.step) { E('line', { x1: L, x2: Rr, y1: Y(v), y2: Y(v), stroke: v === nt.lo ? C.axis : C.grid, 'stroke-dasharray': v === nt.lo ? null : '3 4' }, g0); T(g0, L - 8, Y(v) + 4.5, h.nf(v, 0), { 'text-anchor': 'end', 'font-size': 12.5, fill: C.mute }) }
   Lb.forEach(function (l, i) { if (/-01$/.test(l) && i % 12 === 0) { E('line', { x1: X(i), x2: X(i), y1: bot, y2: bot + 5, stroke: C.axis }, g0); T(g0, X(i), bot + 21, l.slice(0, 4), { 'text-anchor': 'middle', 'font-size': 12.5, fill: C.mute }) } });

@@ -31,9 +31,12 @@ function specA(t, a) { var o = null; function set(k, v) { if (!o) o = Object.ass
   if (!tx && a['stroke-width'] != null && num(a['stroke-width'])) { var w0 = parseFloat(a['stroke-width']), w = snapSw(w0); if (w !== w0) set('stroke-width', w) }
   if (t === 'rect' && a.rx != null && num(a.rx)) { var r = parseFloat(a.rx), mn = Math.min(parseFloat(a.width) || 1e9, parseFloat(a.height) || 1e9);
     if (r > 0 && r < mn / 2 - .5) { var r2 = r <= 3 ? SPEC.rxBar : SPEC.rx; if (r2 !== r) { set('rx', r2); if (a.ry != null) set('ry', r2) } } }
+  /* 흰 테두리 칸(60×40 이상 흰 면 + 선) → 테두리 없는 옅은 면. 전면 지도 위 이름표는 그대로 */
+  if (t === 'rect' && WHITES.test(String(a.fill || '')) && a.stroke && a.stroke !== 'none' && (parseFloat(a.width) || 0) >= 60 && (parseFloat(a.height) || 0) >= 40 && !specA.pic && !(specA.p && specA.p.closest && specA.p.closest('.fl'))) { set('fill', C.g08); set('stroke', 'none') }
   return o || a }
+var WHITES = /^(#fff|#ffffff|white|#F5F7F6)$/i;
 ECOM.fs = snapFs;
-function E(t, a, p) { var e = document.createElementNS(NS, t); if (a) a = specA(t, a); if (a) for (var k in a) if (a[k] !== undefined && a[k] !== null && k !== 'lh') e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
+function E(t, a, p) { var e = document.createElementNS(NS, t); specA.p = p; if (a) a = specA(t, a); if (a) for (var k in a) if (a[k] !== undefined && a[k] !== null && k !== 'lh') e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e }
 function T(p, x, y, s, a) { a = a || {}; var e = E('text', Object.assign({ x: x, y: y }, a), p), L = String(s == null ? '' : s).split('\n');
   if (L.length === 1) e.textContent = L[0]; else L.forEach(function (t, i) { var ts = E('tspan', { x: x, dy: i ? (a.lh || 1.3) + 'em' : 0 }, e); ts.textContent = t }); return e }
 function H(tag, cls, html, p, css) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; if (css) e.style.cssText = css; if (p) p.appendChild(e); return e }
@@ -155,6 +158,7 @@ function footHTML(s) { var f = s.foot || {}, out = [], n = f.notes || [];
 function pageOf(i) { var x = S[i]; return x.apx ? x.s.appendix : String(x.page) }
 function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
+  specA.pic = /map|body|anatomy|build|iso|plan/.test(kind + ' ' + (s.layout || ''));   /* 지도 · 그림 장은 그림 안 흰 칸을 그대로 둠 */
   /* 6판 : 모든 장 흰 바탕. 예전 bg deep · mint 는 흰 바탕으로 그림, 전면 지도(bg map)는 밝은 지도 + 헤드 · 각주 자리 흰 흐림 */
   var bg = (s.bg === 'map' || kind === 'fullmap') ? 'map' : '';
   /* 짙은 바탕은 그 배치가 짙은 색표를 아는 때만(ECOM.parts.<kind>.dark = ['배치', …]) — 모르면 흰 바탕으로 그리고 점검에 남김 */
@@ -488,7 +492,7 @@ function runCheck() {
       el.querySelectorAll('.bd svg,.bd img,.bd canvas,.fl svg,.fl img').forEach(function (e) { if (!visible(e)) return; var q = toS(e.getBoundingClientRect()); big = Math.max(big, (q.r - q.l) * (q.b - q.t) / bA);
         if (e.tagName === 'IMG' && e.naturalWidth && e.naturalWidth < (q.r - q.l) * .95) blur.push(e.naturalWidth + 'px 원본을 ' + Math.round(q.r - q.l) + 'px 로') });
       if (top.length > 5) rec.qCards = ['칸 ' + top.length + '개'];
-      if (wb.length) rec.qWhite = wb.slice(0, 4).map(function (q) { return Math.round(q.l) + ',' + Math.round(q.t) + ' ' + Math.round(q.r - q.l) + '×' + Math.round(q.b - q.t) });
+      if (wb.length && !/map|body|anatomy|build|iso|plan/.test((x.s.kind || '') + ' ' + (x.s.layout || ''))) rec.qWhite = wb.slice(0, 4).map(function (q) { return Math.round(q.l) + ',' + Math.round(q.t) + ' ' + Math.round(q.r - q.l) + '×' + Math.round(q.b - q.t) });
       if (/map|shot|img|photo|pict|body|plan|iso|clip/.test(x.s.kind || '') && big < .35) rec.qPic = ['가장 큰 그림이 본문 칸의 ' + Math.round(big * 100) + '%'];
       if (blur.length) rec.qBlur = blur.slice(0, 4) })();
     var offF = Object.keys(hz).filter(function (v) { return +v <= 62 && SPEC.fs.indexOf(+v) < 0 }), offW = Object.keys(wz).filter(function (v) { return +v <= 8.5 && SPEC.sw.indexOf(+v) < 0 }), nHero = Object.keys(hz).reduce(function (a, v) { return a + (+v >= 48 && +v <= 62 ? hz[v] : 0) }, 0);
