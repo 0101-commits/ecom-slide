@@ -16,7 +16,7 @@ def lib_items():
     out = [ROOT / f for f in LIB_FILES if (ROOT / f).exists()]
     out += sorted((ROOT / "style").glob("SCHEMA4_*.md"))
     for d in LIB_DIRS:
-        out += sorted(p for p in (ROOT / d).rglob("*") if p.is_file())
+        out += sorted(p for p in (ROOT / d).rglob("*") if p.is_file() and not ({"__pycache__", ".omc"} & set(p.parts)))
     return out
 
 
