@@ -1,5 +1,5 @@
 # 7판 새 칸 시험 덱 — 보기 단추(views), 위쪽 묶음 탭(meta.rail), 각주 번호(foot.notes {t, at}), 확대 차트 전체 보기 사건 표시(zoom full),
-# 국기 아이콘(axis icon tf:), 의석 반원 두 회차(scseat rounds), 행정구역 색칠(fullmap areas), 갈래 색(tree tone), 토의 고를 답(discuss topics)
+# 국기 그림(axis icon tf:), 의석 반원 두 회차(scseat rounds), 행정구역 색칠(fullmap areas), 갈래 색(tree tone), 토의 고를 답(discuss topics)
 # 숫자는 공개 통계(FRED, ECOS 스냅숏)만, 의석과 시나리오는 예시(concept 칩)
 # 실행: python -X utf8 tools/make_demo7.py  → style/demo7_review.json
 import json
@@ -28,7 +28,7 @@ z["full"] = [{"at": L[hi], "text": f"{L[hi]} {V[hi]:,.1f}원", "pos": "above", "
              {"at": L[0], "text": f"{L[0]} {V[0]:,.1f}원", "pos": "below", "anchor": "start", "dx": 6}]
 z["foot"]["notes"] = [{"t": "최근 12개월 평균은 ECOM 계산, 세로 눈금은 전체 기간과 같게 고정", "at": "12개월 평균"}]
 
-# 2. 가운데 축 카드 : 국기 아이콘 + 보기 단추(둘 다, 한국, 미국)
+# 2. 가운데 축 카드 : 국기 그림 + 보기 단추(둘 다, 한국, 미국)
 gap_k, gap_u = kr_r[1] - kr_c[1], us_r[1] - us_c[1]
 axis = {"kind": "axis", "layout": "cards",
         "eyebrow": {"group": "환율과 금리", "topic": "한국과 미국의 정책금리와 물가", "basis": "정책금리 월 값, 물가는 전년 같은 달 대비, 단위: %"},
