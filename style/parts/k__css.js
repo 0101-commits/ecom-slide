@@ -9,7 +9,7 @@ var CSS = [
 '.k-dimx{transition:filter .35s ease}.k-dim{filter:opacity(.24) saturate(.3)}',
 '.k-axcc span b,.k-cot span b,.k-lgo.on span b{color:var(--gon)}',
 /* axis */
-'.k-axp{border-radius:6px;background:var(--g08);overflow:hidden}.k-axp.r{background:var(--paper)}',
+'.k-axp{border-radius:6px 0 0 6px;background:var(--g08);overflow:hidden}.k-axp.r{border-radius:0 6px 6px 0;background:var(--paper)}',
 '.k-axh{position:absolute;top:18px}.k-axt{font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.3}',
 '.k-axd{font-size:16px;font-weight:700;color:var(--ink);margin-top:6px;line-height:1.42}.k-axs{font-size:13px;color:var(--mute);margin-top:4px;line-height:1.45}',
 '.k-axc{border-radius:6px;background:#fff;box-shadow:0 2px 12px rgba(0,60,40,.09)}',

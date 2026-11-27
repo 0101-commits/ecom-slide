@@ -69,5 +69,11 @@ function label(g, x, y, s, o) { o = o || {}; var fs = h.snapFs(o.size || 13), lw
 function legendHTML(bd, items, top) { var d = h.H('div', 'leg', null, bd, 'position:absolute;left:0;right:0;top:' + (top || 0) + 'px'); d.setAttribute('data-b', 1);
   d.innerHTML = items.map(function (it) { if (it.type === 'sep') return '<span style="color:#6B7570">|</span>'; if (it.type === 'ph') return '<span class="ph"><i>' + it.n + '</i>' + h.esc(it.text) + '</span>';
     return '<span><i class="' + (it.type === 'box' ? 'bx' : 'ln') + '" style="background:' + h.col(it.color) + (it.type === 'dash' ? ';background:repeating-linear-gradient(90deg,' + h.col(it.color) + ' 0 5px,transparent 5px 9px)' : '') + '"></i>' + h.esc(it.text) + '</span>' }).join(''); return d }
-ECOM.u = { short: short, yScale: yScale, yAxis: yAxis, xTicks: xTicks, xLabels: xLabels, phaseBands: phaseBands, laneMarks: laneMarks, avoid: avoid, label: label, legendHTML: legendHTML, segHit: segHit, segsOf: segsOf, freeSpot: freeSpot };
+/* 이모지 · 국기 그림('tf:<코드>' = Tossface) — 칸의 icon 필드용. 쓰면 각주에 출처 문구가 한 번 붙음 */
+function tfSrc(name, ctx) { name = String(name || ''); if (name.indexOf('tf:') !== 0) return null; var src = (ECOM.TF || {})[name.slice(3)]; if (!src) return null;
+  var fn = ctx && ctx.root && ctx.root.querySelector('.fn'); if (fn && !fn.querySelector('[data-k="tf-credit"]')) fn.insertAdjacentHTML('beforeend', '<span data-k="tf-credit">' + (fn.textContent.trim() ? ', ' : '') + (ECOM.TF_CREDIT || '이모지: 토스팀에서 제공한 토스페이스') + '</span>');
+  return src }
+function tfSvg(g, name, x, y, size, ctx) { var src = tfSrc(name, ctx); if (!src) return false; E('image', { href: src, x: x, y: y, width: size, height: size, 'data-k': 'emoji' }, g); return true }
+function tfHTML(name, size, ctx, style) { var src = tfSrc(name, ctx); return src ? '<img src="' + src + '" data-k="emoji" style="width:' + size + 'px;height:' + size + 'px;flex:0 0 auto;' + (style || '') + '" alt="">' : '' }
+ECOM.u = { tfSrc: tfSrc, tfSvg: tfSvg, tfHTML: tfHTML, short: short, yScale: yScale, yAxis: yAxis, xTicks: xTicks, xLabels: xLabels, phaseBands: phaseBands, laneMarks: laneMarks, avoid: avoid, label: label, legendHTML: legendHTML, segHit: segHit, segsOf: segsOf, freeSpot: freeSpot };
 })();

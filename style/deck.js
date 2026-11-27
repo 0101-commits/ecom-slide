@@ -167,9 +167,21 @@ function conceptChip(s) { var c = conceptOf(s); return c ? '<i class="cc">' + es
 function eyebrow(s) { var e = s.eyebrow; if (!e) return conceptChip(s); if (typeof e === 'string') return '<b>' + esc(e) + '</b>' + conceptChip(s);
   return '<b>' + esc(e.group || '') + '</b>' + (e.topic ? '<span>' + esc(e.topic) + '</span>' : '') + (e.basis ? '<em>' + esc(e.basis) + '</em>' : '') + conceptChip(s) }
 function footHTML(s) { var f = s.foot || {}, out = [], n = f.notes || [];
-  if (n.length) out.push('주: ' + n.map(function (x, i) { return (i + 1) + ') ' + esc(x) }).join(' &nbsp;'));
+  /* 7판 : 각주 번호는 본문에 같은 번호가 있을 때만 — notes 항목 {t, at} 은 본문의 at 낱말 뒤에 작은 번호를 달고 「k) 」로, 글만 주면 번호 없이 */
+  var k = 0, old = /[\u00B9\u00B2\u00B3\u2070-\u2079]\u207E/.test(JSON.stringify(Object.assign({}, s, { foot: null })));   /* 옛 덱 : 본문에 손으로 쓴 ¹⁾ 표시가 있으면 모든 각주에 차례 번호(6판까지 방식) */
+  var items = n.map(function (x, i) { if (old) return (i + 1) + ') ' + esc(x && typeof x === 'object' ? x.t || '' : x); if (x && typeof x === 'object') { if (x.at) { k++; return k + ') ' + esc(x.t || '') } return esc(x.t || '') } return esc(x) });
+  if (items.length) out.push('주: ' + items.join(' &nbsp;&nbsp;'));
   var cm = CONCEPT[conceptOf(s)];
   if (f.source) out.push('출처: ' + esc(f.source) + (f.asof ? ' (' + esc(f.asof) + ' 기준)' : '') + (cm ? ', ' + cm : '')); else if (cm) out.push(cm); return out.join('<br>') }
+function noteMarks(el, s) { var n = (s.foot && s.foot.notes) || [], k = 0;
+  n.forEach(function (x) { if (!x || typeof x !== 'object' || !x.at) return; k++; var lab = k + ')', at = String(x.at), done = false;
+    [el.querySelector('.hm'), el.querySelector('.bd')].forEach(function (r) { if (!r || done) return; var w = document.createTreeWalker(r, NodeFilter.SHOW_TEXT), tn;
+      while (!done && (tn = w.nextNode())) { var i = tn.nodeValue.indexOf(at), p = tn.parentNode; if (i < 0 || (p.closest && p.closest('[data-count]'))) continue;
+        var rest = tn.splitText(i + at.length);
+        if (p.namespaceURI === NS) { var ts = document.createElementNS(NS, 'tspan'); ts.setAttribute('baseline-shift', 'super'); ts.setAttribute('font-size', Math.max(11.5, (parseFloat(getComputedStyle(p).fontSize) || parseFloat(p.getAttribute('font-size')) || 14) * .62).toFixed(1)); ts.setAttribute('class', 'fnm'); ts.textContent = lab; p.insertBefore(ts, rest) }
+        else { var sp = document.createElement('sup'); sp.className = 'fnm'; sp.textContent = lab; p.insertBefore(sp, rest) }
+        done = true } });
+    if (!done) console.warn('각주 표시 자리를 못 찾음: ' + at) }) }
 function pageOf(i) { var x = S[i]; return x.apx ? x.s.appendix : String(x.page) }
 function buildSlide(x) {
   var s = x.s, el = document.createElement('div'), kind = s.kind || 'line', part = ECOM.parts[kind]; el.className = 'sl'; el._s = s; x.el = el;
@@ -187,21 +199,29 @@ function buildSlide(x) {
   if (kind === 'end') el.classList.add('sl-end');
   if (kind === 'cover' || kind === 'part' || kind === 'end' || s.bare) { try { if (part) part(el, s, ctx); } catch (err) { el.innerHTML = '<p style="padding:40px;color:#B4461E">' + esc(kind) + ' 오류: ' + esc(err.message) + '</p>'; console.error(err) } }
   else {
-    var lk = '';
+    var lk = '', vw = '', vws = s.views && s.views.length > 1 ? s.views : null;
+    /* 보기 전환 단추(views) : 바뀜 단계(beats)를 바로 고르는 알약 단추 — views[0] = 처음 모습, views[k] = beats[k-1] */
+    if (vws) vw = '<span class="ecn-vw">' + vws.map(function (t, k) { return '<span class="ecn-v' + (k ? '' : ' on') + '" data-v="' + k + '">' + esc(t) + '</span>' }).join('') + '</span>';
     if (x.apx) lk = '<a data-back="1">← 본문으로</a>';
     else if (s.links && s.links.length) lk = s.links.map(function (l) { return '<a data-to="' + esc(l.to) + '">' + esc(l.text || l.to) + ' →</a>' }).join('');
     el.innerHTML = (bento ? '<div class="bt mv">' + md([].concat(s.title || s.head || '').join('\n')) + '</div>' + (s.sub || conceptOf(s) ? '<div class="bs mv">' + md(s.sub || '') + conceptChip(s) + '</div>' : '')
       : '<div class="tag ch">' + eyebrow(s) + '</div><div class="hm mv">' + md(s.head || '') + '</div>') + '<div class="bd mv"></div><div class="fn ch">' + footHTML(s) + '</div>'
-      + '<div class="lg ch">' + logoImg(ctx.dark) + '<span>' + esc(ctx.page) + '</span></div>' + (lk ? '<div class="lk ch">' + lk + '</div>' : '');
+      + '<div class="lg ch">' + logoImg(ctx.dark) + '<span>' + esc(ctx.page) + '</span></div>' + ((lk || vw) ? '<div class="lk ch">' + vw + lk + '</div>' : '');
     ctx.bd = el.querySelector('.bd');
+    /* 오른쪽 위 칸(보기 단추 + 부록 고리)이 넓으면 꼬리표 오른쪽 끝을 그만큼 당김(기본 330px) */
+    if (lk || vw) { var lw = 0; if (vws) { vws.forEach(function (t) { lw += textW(t, 13, true) + 22 }); lw += 10 }
+      (x.apx ? ['← Slide 00'] : (s.links || []).map(function (l) { return (l.text || l.to) + ' →' })).forEach(function (t) { lw += textW(t, 13, true) + 34 });
+      var tg = el.querySelector('.tag'); if (tg && lw + 72 > 330) tg.style.right = Math.ceil(lw + 72) + 'px' }
     if (!part) ctx.bd.innerHTML = '<p style="color:#B4461E">모르는 화면 종류 : ' + esc(kind) + '</p>';
     else try { part(ctx.bd, s, ctx) } catch (err) { ctx.bd.innerHTML = '<p style="color:#B4461E">' + esc(kind) + ' 그리기 오류 : ' + esc(err.message) + '</p>'; console.error(err) }
   }
   el.querySelectorAll('[data-count]').forEach(function (e) { e.textContent = cText(e, +e.getAttribute('data-count')) });
   try { bridgeGaps(el) } catch (err) { console.error(err) }
+  try { noteMarks(el, s) } catch (err) { console.error(err) }
   try { autoTips(el, s) } catch (err) { console.error(err) }
   el.querySelectorAll('.lk a').forEach(function (a) { a.addEventListener('click', function (ev) { ev.stopPropagation();
     if (a.getAttribute('data-back')) { back(); return } var j = S.findIndex(function (y) { return y.apx && y.s.appendix === a.getAttribute('data-to') }); if (j >= 0) { origin = cur; go(j, 1) } }) });
+  el.querySelectorAll('.ecn-v').forEach(function (v) { v.addEventListener('click', function (ev) { ev.stopPropagation(); setView(el, +v.getAttribute('data-v')) }) });
   return el }
 /* 6판 : 대표 숫자(48~62px)는 장에 1곳 — 숫자가 든 글이 2곳 이상이면 모두 큰 숫자 36px. 장을 붙인 뒤 계산된 크기로 셈(CSS 로 정한 크기 포함).
    숫자판 자릿수(clip-path 묶음 안) · 숫자 없는 글(신문 제목, 단위)은 세지 않음. 62px 넘는 글(표지 · 대문 · 숫자판)은 그대로 */
@@ -254,11 +274,13 @@ function pick(f, t, dir) {
   return newGroup ? (B ? 'push' : 'line') : (B ? 'line' : 'push') }
 function rectIn(el) { var r = el.getBoundingClientRect(), s = deckEl.getBoundingClientRect(); return { x: (r.left - s.left) / scaleK, y: (r.top - s.top) / scaleK, w: r.width / scaleK, h: r.height / scaleK } }
 function clearT() { timers.forEach(clearTimeout); timers = [] }
-function enter(to, skip) { var b = S[to].el; beatK = 0; if (b._beat) b._beat(0); play(b, skip); post(); hud() }
+function enter(to, skip) { var b = S[to].el; beatK = 0; if (b._beat) b._beat(0); play(b, skip); syncViews(); updNav(); post(); hud() }
 function go(to, dir, how) {
   if (to < 0 || to >= S.length || to === cur) return; dir = dir || (to > cur ? 1 : -1);
+  if (!S[to].apx) origin = null;   /* 본문 장으로 가면 부록 「돌아갈 장」 기억을 지움(고리로 부록에 갈 때만 남음) */
   tipHide(); if (trans) skipTrans(); clearT(); var from = cur, a = from >= 0 ? S[from].el : null, b = S[to].el, t = how || pick(from, to, dir); cur = to; beatK = 0;
   try { history.replaceState(null, '', '#' + (to + 1)) } catch (e) { }
+  updNav();
   S.forEach(function (x) { if (x.el !== a && x.el !== b) { stopPlay(x.el); x.el.classList.remove('on'); x.el.style.cssText = '' } });
   if (a) finish(a); prep(b);
   var fired = false;
@@ -315,10 +337,50 @@ function skipTrans() { var t = trans; trans = null; clearT(); [t.a, t.b].forEach
 function building() { var el = cur >= 0 && S[cur].el; return el && el._until && performance.now() < el._until }
 function next() { if (cur < 0) return; if (trans) { skipTrans(); return } var el = S[cur].el;
   if (building()) { finish(el); if (el._beat) el._beat(beatK); toast('쌓기를 바로 끝 상태로'); post(); return }
-  if (beatK < nBeats(cur)) { beatK++; if (el._beat) el._beat(beatK); post(); hud(); return }
-  if (S[cur].s.kind === 'end' && (cur === S.length - 1 || S[cur + 1].apx)) { toast('마지막 장이에요 — 부록은 오른쪽 위 고리 · O 모아 보기로'); return }
+  if (beatK < nBeats(cur)) { beatK++; if (el._beat) el._beat(beatK); syncViews(); post(); hud(); return }
+  if (S[cur].apx && origin != null) { back(); return }   /* 본문 고리로 온 부록 : 다음 넘김 = 떠난 본문 장으로 */
+  if (S[cur].s.kind === 'end' && (cur === S.length - 1 || S[cur + 1].apx)) { toast('마지막 장이에요. 부록은 위쪽 부록 탭이나 O 장 목록으로'); return }
   if (cur < S.length - 1) go(cur + 1, 1) }
-function prev() { if (trans) skipTrans(); if (cur > 0) go(cur - 1, -1) }
+function prev() { if (trans) skipTrans(); if (cur >= 0 && S[cur].apx && origin != null) { back(); return } if (cur > 0) go(cur - 1, -1) }
+/* 보기 전환 단추 : 누른 칸의 바뀜 단계로 바로(쌓는 중이면 끝 상태로 먼저) */
+function setView(el, k) { if (cur < 0 || S[cur].el !== el) return; if (trans) skipTrans(); if (building()) finish(el);
+  beatK = Math.max(0, Math.min(nBeats(cur), k)); if (el._beat) el._beat(beatK); syncViews(); post(); hud(); stage.focus() }
+function syncViews() { if (cur < 0) return; S[cur].el.querySelectorAll('.ecn-v').forEach(function (v) { v.classList.toggle('on', +v.getAttribute('data-v') === beatK) }) }
+/* ───────── 화면 장치(6판 추가) : 좌우 반원 넘김 · 위쪽 묶음 탭 · 사이드 장 목록 ───────── */
+function railName(s) { if (!s || s.kind === 'cover' || s.kind === 'end') return null; var e = s.eyebrow, g = e && (typeof e === 'string' ? e : e.group); if (!g) return null;
+  var m = D && D.meta && D.meta.rail; return (m && typeof m === 'object' && m[g]) || g }
+function backTo() { return origin != null ? origin : S.findIndex(function (y) { return !y.apx && y.s.links && y.s.links.some(function (l) { return l.to === S[cur].s.appendix }) }) }
+function navInit() {
+  var m = D.meta && D.meta.rail, tabs = [], seen = {};
+  if (m !== false) S.forEach(function (x, i) { var n = x.apx ? '부록' : railName(x.s); if (!n || seen[n]) return; seen[n] = 1; tabs.push({ n: n, i: i }) });
+  if (tabs.length > 1) { var nv = H('nav', null, null, deckEl); nv.id = 'ecn-rail'; document.body.classList.add('ecn-has-rail');
+    tabs.forEach(function (t) { var a = H('a', 'ecn-tab', esc(t.n), nv); a.addEventListener('click', function (ev) { ev.stopPropagation(); origin = null; go(t.i); stage.focus() }) }) }
+  ['l', 'r'].forEach(function (d) { var z = H('div', 'ecn-z ' + d, '<span class="ecn-b" role="button" aria-label="' + (d === 'l' ? '이전 Slide' : '다음 Slide') + '"></span><span class="ecn-lb"></span>', deckEl);
+    z.querySelector('.ecn-b').addEventListener('click', function (ev) { ev.stopPropagation(); if (d === 'l') prev(); else next(); stage.focus() }) });
+  var sd = H('div', null, '<div class="ecn-sh"><b>장 목록</b><span class="ecn-x" role="button" aria-label="닫기">×</span></div><div class="ecn-list"></div>', document.body); sd.id = 'ecn-side';
+  var sc = H('div', null, null, document.body); sc.id = 'ecn-scrim'; sc.addEventListener('click', function () { side(false) });
+  sd.querySelector('.ecn-x').addEventListener('click', function () { side(false) }) }
+function updNav() { if (!deckEl || cur < 0) return; var x = S[cur], rl = document.getElementById('ecn-rail');
+  if (rl) { var n = x.apx ? '부록' : railName(x.s); rl.classList.toggle('off', x.s.kind === 'cover'); rl.querySelectorAll('.ecn-tab').forEach(function (a) { a.classList.toggle('on', a.textContent === n) }) }
+  if (x.apx) { var bk = x.el.querySelector('.lk a[data-back]'), j = backTo(); if (bk) bk.textContent = '← ' + (j >= 0 ? 'Slide ' + pageOf(j) : '본문으로') }
+  var L = deckEl.querySelector('.ecn-z.l'), R = deckEl.querySelector('.ecn-z.r'); if (!L) return;
+  var ret = x.apx && origin != null, stop = x.s.kind === 'end' && (cur === S.length - 1 || S[cur + 1].apx), rt = ret ? '돌아가기, Slide ' + pageOf(origin) : '';
+  L.classList.toggle('off', !ret && cur === 0); R.classList.toggle('off', !ret && (cur === S.length - 1 || stop));
+  L.querySelector('.ecn-lb').textContent = rt || '이전 Slide'; R.querySelector('.ecn-lb').textContent = rt || '다음 Slide' }
+function sideOpen() { return document.body.classList.contains('ecn-open') }
+function side(on) { var sd = document.getElementById('ecn-side'); if (!sd) return; if (on == null) on = !sideOpen(); tipHide();
+  var ls = sd.querySelector('.ecn-list');
+  if (!on) { document.body.classList.remove('ecn-open'); setTimeout(function () { if (!sideOpen()) ls.innerHTML = '' }, 300); if (stage) stage.focus(); return }
+  ls.innerHTML = ''; var last = null, curIt = null;
+  S.forEach(function (x, i) { var g = x.apx ? '부록' : railName(x.s); if (g && g !== last) { H('div', 'ecn-g', esc(g), ls); last = g }
+    var it = H('div', 'ecn-it' + (i === cur ? ' cur' : ''), null, ls), th = H('div', 'ecn-th', null, it), e = x.s.eyebrow;
+    var nm = (e && typeof e === 'object' && (e.topic || e.group)) || (typeof e === 'string' ? e : '') || x.s.title || (x.s.kind === 'end' ? '끝' : x.s.kind === 'cover' ? '표지' : x.s.kind);
+    H('div', 'ecn-cap', '<b>' + esc(pageOf(i)) + '</b>' + esc(nm), it);
+    var c = x.el.cloneNode(true); c.classList.add('on'); c.style.cssText = ''; c.querySelectorAll('[data-b],[data-at]').forEach(function (q) { q.style.opacity = '' }); th.appendChild(c);
+    if (i === cur) curIt = it;
+    it.addEventListener('click', function () { side(false); origin = null; go(i) }) });
+  document.body.classList.add('ecn-open');
+  requestAnimationFrame(function () { ls.querySelectorAll('.ecn-it > .ecn-th').forEach(function (th) { var c = th.firstChild; if (c) c.style.transform = 'scale(' + (th.clientWidth / 1280) + ')' }); if (curIt) curIt.scrollIntoView({ block: 'center' }) }) }
 function back() { var j = origin != null ? origin : S.findIndex(function (y) { return !y.apx && y.s.links && y.s.links.some(function (l) { return l.to === S[cur].s.appendix }) }); origin = null; go(j >= 0 ? j : 0, -1) }
 
 /* ───────── 화면 맞춤 · 키 · 알림 · 개요 · 발표자 창 ───────── */
@@ -327,13 +389,14 @@ function toast(t) { var e = document.getElementById('toast'); if (!e) return; e.
 var numBuf = '';
 function onKey(e) {
   if (e.target && /INPUT|TEXTAREA|BUTTON/.test(e.target.tagName)) return; var k = e.key;
+  if (sideOpen()) { if (k === 'Escape' || k === 'o' || k === 'O') side(false); return }
   if (document.getElementById('ov').classList.contains('on')) { if (k === 'Escape' || k === 'o' || k === 'O') overview(); return }
   if (/^[0-9]$/.test(k)) { numBuf += k; toast(numBuf + '장으로 — Enter'); return }
   if (k === 'Enter' && numBuf) { var n = +numBuf; numBuf = ''; var j = S.findIndex(function (y) { return !y.apx && y.page === n }); if (j >= 0) go(j); e.preventDefault(); return }
   if (k === 'ArrowRight' || k === ' ' || k === 'Enter' || k === 'PageDown') { e.preventDefault(); next() }
   else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); prev() }
   else if (k === 'Home') go(0); else if (k === 'End') go(S.length - 1);
-  else if (k === 'o' || k === 'O') overview(); else if (k === 'p' || k === 'P') window.open(location.pathname + '?presenter#' + (cur + 1), 'ecom-presenter', 'width=1200,height=760');
+  else if (k === 'o' || k === 'O') { if (document.getElementById('ecn-side')) side(true); else overview() } else if (k === 'p' || k === 'P') window.open(location.pathname + '?presenter#' + (cur + 1), 'ecom-presenter', 'width=1200,height=760');
   else if (k === 'f' || k === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen() }
   else if (k === 'Escape') { numBuf = ''; tipHide() } }
 function overview() { tipHide(); var ov = document.getElementById('ov'); if (ov.classList.contains('on')) { ov.classList.remove('on'); ov.innerHTML = ''; return }
@@ -465,6 +528,27 @@ function deepCheck(el, bd, k, r0, toS, visible, R) {
     if (e.namespaceURI !== NS && cs.transform && cs.transform !== 'none' && Array.prototype.some.call(e.childNodes, function (n) { return n.nodeType === 3 && n.textContent.trim() })) { var mm = /matrix\(([^,]+),\s*([^,]+)/.exec(cs.transform); if (mm) { var an = Math.atan2(+mm[2], +mm[1]) * 180 / Math.PI, rr = ((an % 90) + 90) % 90; if (rr > 2 && rr < 88) push(o.deco, '기울인 글 「' + nm(e) + '」 ' + Math.round(an) + '°') } } });
   Sh.forEach(function (s) { if (/^(rect|circle|ellipse)$/.test(s.e.tagName) && !s.st && s.fl && s.fo > 0 && s.fo <= .15 && s.w * s.h >= 8000 && !lab.some(function (a) { return hit(a[1], s.b, 24) })) push(o.deco, '옅은 장식 도형(' + s.e.tagName + ' ' + Math.round(s.b.l) + ',' + Math.round(s.b.t) + ')') });
   Sh.forEach(function (s) { delete s.e._b });
+  // ⑩ 7판 : 상자 글 넘침(칸 안 글이 칸 밖으로 나가거나 잘림) · 칸 겹침(배경이나 테두리가 있는 칸끼리 겹침, 사용자 「도형 겹침 없어야 함」)
+  o.boxOver = []; o.boxOverlap = []; var boxes = [];
+  bd.querySelectorAll('div,section,li,span,b,em').forEach(function (e) { if (!visible(e) || e.closest('[data-ok]')) return; var cs = getComputedStyle(e), bg = rgbA(cs.backgroundColor), bw = parseFloat(cs.borderTopWidth) || 0;
+    if (!((bg && bg[3] > .05) || bw > 0)) return; var r = e.getBoundingClientRect(); if (r.width < 20 || r.height < 14) return;
+    var rad = parseFloat(cs.borderTopLeftRadius) || 0; boxes.push({ e: e, b: toS(r), round: rad >= Math.min(r.width, r.height) / k * .4, rr: rad >= 4 }) });
+  bd.querySelectorAll('svg rect').forEach(function (rc) { if (!visible(rc) || rc.closest('[data-ok]') || !((+rc.getAttribute('rx') || 0) >= 4)) return; var cs = getComputedStyle(rc), fc = rgbA(cs.fill), fo = parseFloat(cs.fillOpacity);
+    if (!fc || fc[3] === 0 || fo < .5 || !rc.parentNode.querySelector('text')) return; boxes.push({ e: rc, b: toS(rc.getBoundingClientRect()), g: rc.parentNode, rr: true }) });
+  R.forEach(function (a) { var t = a[0], q = a[1]; if (!bd.contains(t)) return;
+    if (t.namespaceURI !== NS) { for (var n = t; n && n !== bd; n = n.parentElement) { var hb = null; for (var j = 0; j < boxes.length; j++) if (boxes[j].e === n) { hb = boxes[j]; break }
+        if (hb) { var h = hb.b; if (q.r > h.r + 2 || q.b > h.b + 2 || q.l < h.l - 2 || q.t < h.t - 2) push(o.boxOver, a[2]); break } } return }
+    var g = t.parentNode; if (!g || !g.children) return;
+    Array.prototype.forEach.call(g.children, function (rc) { if (rc.tagName !== 'rect' || rc === t) return; var cs = getComputedStyle(rc), fc = rgbA(cs.fill), fo = parseFloat(cs.fillOpacity); if (!fc || fc[3] === 0 || fo === 0) return;
+      var rb = toS(rc.getBoundingClientRect()); if (rb.r - rb.l < 30 || rb.b - rb.t < 14) return;
+      if (q.l >= rb.l - 1 && q.t >= rb.t - 1 && q.l <= rb.r && q.t <= rb.b && (q.r > rb.r + 2 || q.b > rb.b + 2)) push(o.boxOver, a[2]) }) });
+  boxes.forEach(function (A, i) { var a = A.b; if ((a.r - a.l) * (a.b - a.t) < 3000) return;
+    for (var j = i + 1; j < boxes.length; j++) { var B = boxes[j], b = B.b; if ((b.r - b.l) * (b.b - b.t) < 3000 || A.e.contains(B.e) || B.e.contains(A.e) || A.round || B.round || (A.g && A.g === B.g)) continue;
+      if ((b.l >= a.l - 1 && b.r <= a.r + 1 && b.t >= a.t - 1 && b.b <= a.b + 1) || (a.l >= b.l - 1 && a.r <= b.r + 1 && a.t >= b.t - 1 && a.b <= b.b + 1)) continue;   /* 뒤판 안에 든 칸은 겹침이 아님 */
+      var ix = Math.min(a.r, b.r) - Math.max(a.l, b.l), iy = Math.min(a.b, b.b) - Math.max(a.t, b.t), lim = A.rr && B.rr ? -3 : 4;   /* 둥근 카드끼리는 붙어도(틈 3px 밑) 겹침으로 셈 */
+      var pa = A.g ? A.g.parentNode : A.e.parentNode, pb = B.g ? B.g.parentNode : B.e.parentNode, al = function (d) { return Math.abs(d) <= 1.5 }, row = pa === pb && ((al(a.t - b.t) && al(a.b - b.b)) || (al(a.l - b.l) && al(a.r - b.r))), line1 = pa === pb && [a.t - b.t, a.b - b.b, a.l - b.l, a.r - b.r].some(al);
+      /* 짜임으로 붙인 칸은 뺌 : 한 판을 둘로 나눈 칸(같은 부모, 위아래나 좌우 끝이 같고 둘 다 둥근 카드는 아님) · 한 변이 나란한 타일 줄에서 틈이 1px 넘음 */
+      if (ix > lim && iy > 4 && !((row && ix <= 4 && !(A.rr && B.rr)) || (line1 && ix <= -1))) push(o.boxOverlap, nm(A.e) + ' × ' + nm(B.e) + (ix <= 4 ? '(붙음)' : '')) } });
   return o }
 
 /* ───────── 점검(?check) ───────── */
@@ -579,6 +663,7 @@ var TIP = null, tipCur = null;
 function tipDec(arr) { var d = 0; (arr || []).forEach(function (v) { if (typeof v === 'number' && isFinite(v)) { var m = String(v).split('.')[1]; if (m) d = Math.max(d, Math.min(2, m.length)) } }); return d }
 function tipNum(v, dec, suf) { return v == null || !isFinite(v) ? '—' : nf(v, dec) + (suf || '') }
 function tipSigned(v, dec) { v = +(+v).toFixed(dec || 0); return (v > 0 ? '+' : v < 0 ? '−' : '±') + nf(Math.abs(v), dec) }
+function tipNorm(s) { return String(s == null ? '' : s).replace(/[\s·,.:;()\[\]「」'"…|\-–—→]/g, '') }
 function tipClean(s) { return String(s == null ? '' : s).replace(/\*\*|==/g, '').replace(/[¹²³⁴⁵⁶⁷⁸⁹⁰⁽⁾]+\)?/g, '').trim() }
 function tipSuf(s) { var y = s.y || {}, u = y.suf || (y.unit && String(y.unit).length <= 3 ? y.unit : '') || (s.unit && String(s.unit).length <= 3 ? s.unit : ''); return u || '' }
 function tipSrc(s) { var f = s.foot || {}, o = []; if (f.asof) o.push('기준 ' + tipClean(f.asof)); if (f.source) o.push('출처 ' + tipClean(f.source).slice(0, 44)); return o }
@@ -620,6 +705,10 @@ function autoTips(el, s) {
     e.setAttribute('data-tip', [title || '숫자'].concat(lines, tipSrc(s)).join('|')); n++ });
   if (!n) n += tipPairs(el, s);
   if (!n) n += tipBigNums(el, s);
+  /* 7판 : 말풍선이 본문에 이미 보이는 말만 되풀이하면 띄우지 않음(본문에 없는 세부가 있을 때만) */
+  el.querySelectorAll('[data-tip]').forEach(function (e) { if (e.classList.contains('tipcol')) return;
+    var parts = e.getAttribute('data-tip').split('|').filter(function (q) { return !/^(기준|출처) /.test(q) }).map(function (q) { return tipNorm(q.replace(/^값 /, '')) }).filter(Boolean), vis = tipNorm(e.textContent);
+    if (parts.length && vis && parts.every(function (q) { return vis.indexOf(q) >= 0 })) e.removeAttribute('data-tip') });
   if (!dry) el.querySelectorAll('[data-tip]').forEach(function (e) { if (!e.hasAttribute('tabindex')) e.setAttribute('tabindex', '0') });
   el._tips = n; return n }
 /* 대체 경로 : x축 기록이 없는 차트는 계열 선(path)의 꼭짓점에서 x 자리를 읽고, 그래도 없으면 큰 숫자 글자에 값 카드 */
@@ -654,7 +743,7 @@ function tipPlace(x, y) { var b = TIP; if (!b) return; var w = b.offsetWidth, h 
   if (L + w > 1272) L = x - 16 - w; if (Tt + h > 712) Tt = y - 16 - h; b.style.left = Math.round(Math.max(8, Math.min(1272 - w, L))) + 'px'; b.style.top = Math.round(Math.max(8, Math.min(712 - h, Tt))) + 'px' }
 function tipHide() { if (TIP) TIP.classList.remove('on'); tipCur = null }
 function tipXY(e) { var r = deckEl.getBoundingClientRect(); return [(e.clientX - r.left) / scaleK, (e.clientY - r.top) / scaleK] }
-function tipTarget(t) { var el = t && t.closest && t.closest('[data-tip]'); return el && cur >= 0 && S[cur].el.contains(el) && !document.getElementById('ov').classList.contains('on') ? el : null }
+function tipTarget(t) { var el = t && t.closest && t.closest('[data-tip]'); return el && cur >= 0 && S[cur].el.contains(el) && !document.getElementById('ov').classList.contains('on') && !sideOpen() ? el : null }
 function tipInit() { if (STILL || CHECK || PRES) return;
   deckEl.addEventListener('pointerover', function (e) { var el = tipTarget(e.target); if (el) { var p = tipXY(e); tipShow(el, p[0], p[1]) } });
   deckEl.addEventListener('pointermove', function (e) { if (tipCur) { var p = tipXY(e); tipPlace(p[0], p[1]) } });
@@ -676,7 +765,9 @@ function init() {
   if (PRES) { presenterUI(); cur = start; hud(); if (chan) chan.onmessage = function (ev) { if (ev.data && ev.data.i != null) { cur = ev.data.i; beatK = ev.data.k; hud() } }; return }
   if (chan) chan.onmessage = function (ev) { if (!ev.data) return; if (ev.data.cmd === 'next') next(); else if (ev.data.cmd === 'prev') prev() };
   fit(); addEventListener('resize', fit); document.addEventListener('keydown', onKey); tipInit();
-  stage.addEventListener('click', function (e) { if (e.target.closest('a,button,input,.vote')) return; stage.focus(); next() });
+  /* 장 안을 눌러도 넘기지 않음(넘김 = 좌우 반원 · 키보드 · 리모컨 · 터치 밀기). 오른쪽 아래 장 번호를 누르면 장 목록 */
+  navInit(); updNav();
+  stage.addEventListener('click', function (e) { if (e.target.closest('.sl .lg')) { side(true); return } if (e.target.closest('a,button,input,.vote')) return; stage.focus() });
   var tx = null; stage.addEventListener('touchstart', function (e) { tx = e.touches[0].clientX }, { passive: true });
   stage.addEventListener('touchend', function (e) { if (tx == null) return; var d = e.changedTouches[0].clientX - tx; if (Math.abs(d) > 50) { if (d < 0) next(); else prev() } tx = null });
   document.addEventListener('visibilitychange', function () { if (document.hidden && cur >= 0) finish(S[cur].el) });

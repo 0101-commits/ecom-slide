@@ -245,3 +245,49 @@ body.still .tip3,.tip3:empty{display:none}
 .sl.bento .bd{top:186px;bottom:64px}
 .sl.bento .fn{bottom:22px}
 .sl.bento .lg img,.sl.bento .lg svg{display:none}
+/* 6판 화면 장치 : 위쪽 묶음 탭(#ecn-rail) · 좌우 반원 넘김(.ecn-z) · 보기 전환 단추(.ecn-vw) · 사이드 장 목록(#ecn-side) */
+#ecn-rail{position:absolute;top:4px;right:56px;z-index:40;display:flex;gap:2px;font-family:var(--font)}
+#ecn-rail.off{display:none}
+#ecn-rail .ecn-tab{font-size:12px;line-height:14px;font-weight:600;padding:2px 9px;border-radius:999px;color:var(--mute);background:rgba(255,255,255,.88);cursor:pointer;white-space:nowrap;user-select:none;transition:color .2s,background .2s}
+#ecn-rail .ecn-tab:hover{color:var(--gdk);background:var(--g08)}
+#ecn-rail .ecn-tab.on{background:var(--gdk);color:#fff;font-weight:700}
+body.ecn-has-rail .sl .lk{top:25px}
+.sl .lg{cursor:pointer}
+.ecn-z{position:absolute;top:40px;bottom:40px;width:48px;z-index:35;display:flex;align-items:center}
+.ecn-z.l{left:0;justify-content:flex-start}
+.ecn-z.r{right:0;justify-content:flex-end}
+.ecn-z.off{display:none}
+.ecn-z .ecn-b{position:relative;width:38px;height:76px;background:#D9E2DE;opacity:0;cursor:pointer;transition:opacity .2s,background .2s}
+.ecn-z.l .ecn-b{border-radius:0 76px 76px 0}
+.ecn-z.r .ecn-b{border-radius:76px 0 0 76px}
+.ecn-z .ecn-b::before{content:'';position:absolute;top:50%;width:11px;height:11px;margin-top:-7px;border-top:2.5px solid var(--gdk);border-right:2.5px solid var(--gdk)}
+.ecn-z.l .ecn-b::before{left:11px;transform:rotate(-135deg)}
+.ecn-z.r .ecn-b::before{right:13px;transform:rotate(45deg)}
+.ecn-z:hover .ecn-b{opacity:.92}
+.ecn-z .ecn-b:hover{background:#C6D3CD}
+.ecn-z .ecn-lb{position:absolute;top:50%;margin-top:46px;background:#1F2623;color:#fff;font-size:13px;font-weight:600;line-height:18px;padding:3px 9px;border-radius:4px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s}
+.ecn-z.l .ecn-lb{left:8px}
+.ecn-z.r .ecn-lb{right:8px}
+.ecn-z .ecn-b:hover + .ecn-lb{opacity:1}
+.sl .lk .ecn-vw{display:inline-flex;gap:2px;padding:2px;border:1px solid #C9D2CD;border-radius:999px;background:#fff;margin-right:4px}
+.sl .lk .ecn-v{font-size:13px;font-weight:700;line-height:18px;padding:1px 10px;border-radius:999px;color:var(--sub);cursor:pointer;white-space:nowrap;user-select:none}
+.sl .lk .ecn-v:hover{color:var(--gdk)}
+.sl .lk .ecn-v.on{background:var(--gdk);color:#fff}
+#ecn-side{position:fixed;left:0;top:0;bottom:0;width:300px;z-index:56;background:#fff;box-shadow:4px 0 24px rgba(0,40,25,.16);transform:translateX(-104%);transition:transform .25s ease;display:flex;flex-direction:column;font-family:var(--font)}
+body.ecn-open #ecn-side{transform:none}
+#ecn-scrim{position:fixed;inset:0;z-index:55;background:rgba(20,30,25,.18);opacity:0;pointer-events:none;transition:opacity .25s}
+body.ecn-open #ecn-scrim{opacity:1;pointer-events:auto}
+#ecn-side > .ecn-sh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;font-size:15px;color:var(--ink);border-bottom:1px solid var(--line)}
+#ecn-side .ecn-x{cursor:pointer;font-size:22px;line-height:1;color:var(--mute);padding:0 4px}
+#ecn-side > .ecn-list{flex:1;overflow:auto;padding:4px 14px 20px}
+#ecn-side .ecn-list > .ecn-g{font-size:12.5px;font-weight:700;color:var(--g);margin:14px 2px 6px}
+#ecn-side .ecn-list > .ecn-it{cursor:pointer;margin-bottom:10px}
+#ecn-side .ecn-it > .ecn-th{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:5px;border:1px solid var(--line);background:#fff}
+#ecn-side .ecn-it > .ecn-th > .sl{display:block;transform-origin:0 0;pointer-events:none}
+#ecn-side .ecn-it.cur > .ecn-th{outline:3px solid var(--g);outline-offset:-1px}
+#ecn-side .ecn-it:hover > .ecn-th{border-color:var(--g)}
+#ecn-side .ecn-it > .ecn-cap{font-size:12.5px;color:var(--sub);font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#ecn-side .ecn-cap > b{color:var(--ink);margin-right:6px}
+body.pres #ecn-side,body.pres #ecn-scrim{display:none}
+@media print{#ecn-rail,.ecn-z,#ecn-side,#ecn-scrim,.sl .lk .ecn-vw{display:none}}
+.sl sup.fnm{font-size:max(11.5px,.58em);line-height:0;vertical-align:super;color:var(--mute);font-weight:600;margin-left:1px}

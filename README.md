@@ -1,12 +1,12 @@
 # ecom-slide
 
-ECOM 경제 스터디 발표를 **HTML 파일 하나**로 만드는 스킬의 공개 재료 창고(6판 · 2026-11-26).
-사용자 Kick-off · CW44 발표 자료의 짜임 — **꼬리표 → 헤드메시지 2줄 → 꽉 찬 주석 차트 · 도식 → 왼쪽 아래 각주 · 오른쪽 아래 로고** — 를 기본 틀로, 장에 들어오면 저절로 쌓이고 장 넘김 8종으로 이어진다.
+ECOM 경제 스터디 발표를 **HTML 파일 하나**로 만드는 스킬의 공개 재료 창고(7판 · 2026-11-27).
+사용자 Kick-off · CW44 발표 자료의 짜임 — **꼬리표 → 헤드메시지 2줄 → 꽉 찬 주석 차트 · 도식 → 왼쪽 아래 각주 · 오른쪽 아래 로고** — 를 기본 틀로, 장에 들어오면 저절로 쌓이고 장 넘김 8종으로 이어진다. 7판부터 화면 장치 4종(좌우 반원 넘김, 위쪽 묶음 탭 `meta.rail`, 장 안 보기 전환 단추 `views`, 사이드 장 목록)과 각주 번호 표시(`foot.notes {t, at}`)가 들어간다.
 
 | 폴더 | 내용 |
 |---|---|
-| `style/` | 엔진 3판(`deck.js` · `deck.css`) + 화면 종류 부품(`parts/*.js`) · 형식 `SCHEMA3.md`(+ `SCHEMA3_charts.md` · `SCHEMA3_diagrams.md`) · 로고 자리 `brand/`(ECOM CI 그림은 공개 저장소에 두지 않고 스킬 zip · 작업 저장소에만) · 글꼴(Pretendard, OFL) · 시험 덱 `demo3*.json` · 2판 엔진은 `v2/`(옛 회차 빌드용) |
-| `rules/` | 이야기 계획(`plan.md`) · 문체(`write.md`, AI 말투 사전) · 화면 문법(`design_grammar.md`) 판 3 · 고객명 해시(검사용) · 2판 규칙은 `v2/` |
+| `style/` | 엔진 3판(`deck.js` · `deck.css`) + 화면 종류 부품(`parts/*.js`) · 형식 `SCHEMA3.md`(+ `SCHEMA3_charts.md` · `SCHEMA3_diagrams.md`) · 로고 자리 `brand/`(ECOM CI 그림은 공개 저장소에 두지 않고 스킬 zip · 작업 저장소에만) · 글꼴(Pretendard, OFL) · 시험 덱 `demo3*.json`, 7판 새 칸 시험 `demo7_review.json`(만들기 `tools/make_demo7.py`) · 2판 엔진은 `v2/`(옛 회차 빌드용) |
+| `rules/` | 이야기 계획(`plan.md`) · 문체(`write.md` 판 7, AI 말투 사전, 「7판 고친 방식」 10~23) · 화면 문법(`design_grammar.md`, 8절 = 7판 구조화 4기준과 움직임) · 고객명 해시(검사용) · 2판 규칙은 `v2/` |
 | `library/mockups/` | 목업 487종(6판 기준, 계열 20개, 3판에서 남긴 80 포함, `v4/` · 만들기 `tools/make_mockups4*.py`) — `mockups.json` · `index.md`, 3판 목록 `v3/` · 판 2 원본 `v2/` |
 | `library/` | HCG 레퍼런스 골격 3,920장(`catalog.json` · `skeletons/`) |
 | `gallery/` | 목업 264 모아 보기(`mockups.html`, O 키) · 골격 찾아보기(`index.html`) |

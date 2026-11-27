@@ -2,7 +2,7 @@
    labels · series[{name,data,color,step,width,dash,end}] · y{min,max,step,dec,unit,suf} · ticks[idx]
    band{a,b,from,legend,labels:[{at|[i0,i1],text,carry}]} · phases[{from,to,name,now}] · avg[{s,from,to,x0,x1,label}]
    values[{s,at,text,pos:'above|below',dx,dy,anchor}] · events[{at,v,text,sub,anchor,dx,dy,leader:[v0,v1]}] · arrows[{at,a,b,text,sub,side}]
-   box{title,items,x0,x1,top} · lanes[{name,sub,color,marks}] · future{n,xlabels,title,branches:[{s,at,to}],labels:[{v,text,color}],range:{text,sub,v}} */
+   box{title,items,x0,x1,top,bullet('dot' = 번호 대신 점, 국면 번호와 헷갈릴 때)}(시사점 상자: 연한 상자 안 머리 칩 + 번호 항목, 항목은 상자 너비에 맞춰 줄바꿈 · 높이는 글에 맞춤) · lanes[{name,sub,color,marks}] · future{n,xlabels,title,branches:[{s,at,to}],labels:[{v,text,color}],range:{text,sub,v}} */
 (function () {
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T, u;
@@ -269,16 +269,20 @@ ECOM.parts.line = function (bd, s, ctx) { if (s.layout && LAY[s.layout]) return 
     if (fut.range) { T(fb, xe + 8, Y(fut.range.v) - 2, fut.range.sub || '', { 'font-size': 12.5, fill: C.mute }); T(fb, xe + 8, Y(fut.range.v) + 17, fut.range.text, { 'font-size': 15, 'font-weight': 700, fill: C.dark }) } }
   var SEG = []; ser.forEach(function (q) { SEG = SEG.concat(u.segsOf(q.data, X, Y, q.step)) });
   /* 시사점 상자 : 정한 자리가 선 · 이름표를 덮으면 그림 칸 안 가까운 빈자리로(못 찾으면 그대로) */
-  var BX = null; if (s.box) { var bx0 = s.box, it0 = bx0.items || [], bw = X(bx0.x1) - X(bx0.x0), bh = 46 + it0.length * 30, LB = L.map(function (l) { var x0 = l.anchor === 'end' ? l.x - l.w : l.anchor === 'middle' ? l.x - l.w / 2 : l.x; return { l: x0, r: x0 + l.w, t: l.y - l.h, b: l.y + 4 } });
-    var spot = bx0.fixed ? null : u.freeSpot({ l: X(bx0.x0), t: Y(bx0.top), w: bw, h: bh }, SEG, LB, { l: ml + 6, t: top + 4, r: X(n - .5) - 4, b: bot - 4 });
-    BX = { l: spot ? spot.l : X(bx0.x0), t: spot ? spot.t : Y(bx0.top), w: bw, h: bh } }
+  var BX = null; if (s.box) { var bx0 = s.box, it0 = bx0.items || [], bw = X(bx0.x1) - X(bx0.x0), bxl = X(bx0.x0), bxt = Y(bx0.top), itL = it0.map(function (t) { return h.wrap(String(t), 14, bw - 62, 0) }), bh = 58 + itL.reduce(function (a2, l2) { return a2 + l2.length * 19 + 9 }, 0) + 4;
+    if (bxt + bh > bot - 4) { var aL = ml + 6, aR = X(n - .5) - 4, need = Math.max.apply(null, it0.map(function (t) { return h.textW(String(t), 14, 0) + 66 })), nw = Math.min(Math.max(bw, need), aR - aL);   /* 7판 : 아래로 넘치면 넓혀서 줄 수를 줄임 */
+      if (nw > bw) { bw = nw; bxl = Math.max(aL, Math.min(bxl, aR - bw)); itL = it0.map(function (t) { return h.wrap(String(t), 14, bw - 62, 0) }); bh = 58 + itL.reduce(function (a2, l2) { return a2 + l2.length * 19 + 9 }, 0) + 4 }
+      if (bxt + bh > bot - 4) bxt = Math.max(top + 4, bot - 4 - bh) }
+    var LB = L.map(function (l) { var x0 = l.anchor === 'end' ? l.x - l.w : l.anchor === 'middle' ? l.x - l.w / 2 : l.x; return { l: x0, r: x0 + l.w, t: l.y - l.h, b: l.y + 4 } });
+    var spot = bx0.fixed ? null : u.freeSpot({ l: bxl, t: bxt, w: bw, h: bh }, SEG, LB, { l: ml + 6, t: top + 4, r: X(n - .5) - 4, b: bot - 4 });
+    BX = { l: spot ? spot.l : bxl, t: spot ? spot.t : bxt, w: bw, h: bh } }
   u.avoid(L, 15, SEG, BX ? [{ l: BX.l, t: BX.t, r: BX.l + BX.w, b: BX.t + BX.h }] : []);
   /* 시사점 상자 */
   if (s.box) { var bx = s.box, g5 = h.lv(svg, 7), xa = BX.l, xb2 = BX.l + BX.w, ya = BX.t, items = bx.items || [], hh = BX.h;
-    E('rect', { x: xa, y: ya, width: xb2 - xa, height: hh, rx: 10, fill: '#fff', stroke: C.gray }, g5);
-    E('rect', { x: xa, y: ya, width: 92, height: 28, rx: 10, fill: C.dark }, g5); T(g5, xa + 46, ya + 19, bx.title || '시사점', { 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 700, fill: '#fff' });
-    items.forEach(function (t, k) { var yy = ya + 52 + k * 30; E('circle', { cx: xa + 22, cy: yy - 5, r: 9.5, fill: C.main }, g5); T(g5, xa + 22, yy - 1, String(k + 1), { 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#fff' });
-      T(g5, xa + 40, yy, t, { 'font-size': 14, fill: C.ink }) }) }
+    E('rect', { x: xa, y: ya, width: xb2 - xa, height: hh, rx: 10, fill: C.g08, stroke: C.g40 }, g5);
+    var tcw = h.textW(bx.title || '시사점', 13.5, 1) + 28; E('rect', { x: xa + 12, y: ya + 12, width: tcw, height: 28, rx: 14, fill: C.dark }, g5); T(g5, xa + 12 + tcw / 2, ya + 31, bx.title || '시사점', { 'text-anchor': 'middle', 'font-size': 13.5, 'font-weight': 700, fill: '#fff' });
+    var yy = ya + 64; items.forEach(function (t, k) { var ls = itL[k] || [String(t)]; if (bx.bullet === 'dot') E('circle', { cx: xa + 24, cy: yy - 5, r: 4, fill: C.main }, g5); else { E('circle', { cx: xa + 24, cy: yy - 5, r: 9.5, fill: C.main }, g5); T(g5, xa + 24, yy - 1, String(k + 1), { 'text-anchor': 'middle', 'font-size': 11.5, 'font-weight': 700, fill: '#fff' }) }
+      ls.forEach(function (l, j) { T(g5, xa + 42, yy + j * 19, l, { 'font-size': 14, fill: C.ink }) }); yy += ls.length * 19 + 9 }) }
   /* 결정 줄 */
   if (lanes.length) { T(h.lv(svg, 1), ml, bot + 46, s.lanesTitle || '결정 일지', { 'font-size': 13, 'font-weight': 700, fill: C.sub }); u.laneMarks(svg, lanes, function (i) { return X(i) }, bot + 46, ml, X(nAll - .5), 5) }
   ctx.root.setAttribute('data-gap', s.gap || 360); ctx.root.setAttribute('data-stg', 70);

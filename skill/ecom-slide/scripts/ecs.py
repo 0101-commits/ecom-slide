@@ -761,6 +761,24 @@ def part_handles(lib):
     return out
 
 
+
+_STRUCT_KEYS = {"foot", "eyebrow", "note", "layout", "kind", "chart", "id", "icon", "tone", "style", "form", "transition", "a", "b", "pa", "pb", "bg", "frame", "concept", "views", "beats"}
+def _has_fact_digits(o, key=None):
+    """보이는 글이나 자료 값에 숫자가 있나(칸 번호 c, r, 폭 같은 구조 숫자는 정수라 셈하지 않고, 실수 자료 값과 글 속 숫자만)"""
+    if key in _STRUCT_KEYS:
+        return False
+    if isinstance(o, dict):
+        return any(_has_fact_digits(v, k) for k, v in o.items())
+    if isinstance(o, list):
+        return any(_has_fact_digits(v, key) for v in o)
+    if isinstance(o, str):
+        return bool(re.search(r"\d", o))
+    if isinstance(o, float):
+        return True
+    if isinstance(o, int) and not isinstance(o, bool):
+        return key in ("data", "v", "value", "values", "seats")
+    return False
+
 def lint3(deck, lib, extra=None):
     iss = []
     def add(i, item, sev, msg):
@@ -845,13 +863,20 @@ def lint3(deck, lib, extra=None):
         elif ends_nominal(h) is False:
             add(i, "헤드메시지 문체", "확인할 것", "보고서체(~함 · ~임 · ~됨)로 끝내기")
         f = s.get("foot") or {}
-        if re.search(r"\d", json.dumps({k2: v for k2, v in s.items() if k2 not in ("foot", "eyebrow", "note")}, ensure_ascii=False)) and not f.get("source"):
+        if _has_fact_digits(s) and not f.get("source"):  # 7판 : 칸 위치, 배치 이름 같은 구조 숫자는 빼고 보이는 글, 자료 값만 셈
             add(i, "출처", "고칠 것", "숫자가 있는데 foot.source 없음")
         if f.get("source") and not f.get("asof"):
             add(i, "기준일", "확인할 것", "foot.asof(기준일) 없음")
+        body_txt = json.dumps({k2: v2 for k2, v2 in s.items() if k2 not in ("foot", "note")}, ensure_ascii=False)
+        for nt in (s.get("foot") or {}).get("notes") or []:  # 7판 : 각주 번호는 본문 표시와 함께 — {t, at} 의 at 이 본문에 있어야 함
+            if isinstance(nt, dict) and nt.get("at") and nt["at"] not in body_txt:
+                add(i, "각주 표시 자리", "고칠 것", f"at 「{nt['at']}」 이 헤드, 본문에 없음")
         b = s.get("beats") or []
-        if len(b) > 2:
-            add(i, "바뀜 단계", "고칠 것", f"{len(b)}개 — 2개까지")
+        vw = s.get("views") or []
+        if vw and len(vw) != len(b) + 1:  # 보기 전환 단추 : views[0] = 처음 모습, views[k] = beats[k-1]
+            add(i, "보기 전환 단추", "고칠 것", f"views {len(vw)}칸 = beats {len(b)}개 + 1 이어야 함")
+        if len(b) > (4 if vw else 2):
+            add(i, "바뀜 단계", "고칠 것", f"{len(b)}개 — {'보기 전환 단추가 있으면 4개' if vw else '2개'}까지")
         for l in s.get("links") or []:
             if l.get("to") not in apx_ids:
                 add(i, "부록 고리", "고칠 것", f"없는 부록 {l.get('to')}")
@@ -1139,7 +1164,7 @@ def run_browser(br, url, extra, timeout=180):
 DEEP = (("textLine", "글-선 겹침", "고칠 것"), ("textShape", "글-도형 걸침", "고칠 것"), ("hidden", "상자-자료 가림", "고칠 것"),
         ("farLabel", "이름표 거리", "고칠 것"), ("gap", "선 끊김(결측)", "고칠 것"), ("outAxis", "축 밖 값", "고칠 것"),
         ("flowRev", "흐름 방향", "고칠 것"), ("flowCross", "흐름 띠 교차", "확인할 것"), ("meaning", "뜻 표시 누락", "고칠 것"),
-        ("deco", "장식 도형", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"),
+        ("deco", "장식 도형", "고칠 것"), ("boxOver", "상자 글 넘침", "고칠 것"), ("boxOverlap", "칸 겹침", "고칠 것"), ("noTip", "마우스 올림 없음", "확인할 것"), ("error", "점검 오류", "확인할 것"),
         ("specFs", "글자 단계 밖", "확인할 것"), ("specSw", "선 굵기 밖", "확인할 것"), ("specHero", "대표 숫자 여러 곳", "확인할 것"),
         ("qCards", "칸 수 많음", "확인할 것"), ("qWhite", "흰 테두리 칸", "확인할 것"), ("qPic", "그림 크기", "확인할 것"), ("qBlur", "그림 선명도", "고칠 것"), ("lowC", "밝은 바탕 위 밝은 글", "고칠 것"), ("newCode", "새 코드 필요", "고칠 것"),
         ("connDiag", "대각 연결선", "고칠 것"), ("connCross", "연결선이 칸을 지남", "고칠 것"), ("connTip", "화살 꼭지 색", "확인할 것"), ("connText", "연결선이 글을 지남", "고칠 것"), ("connW", "연결선 굵기", "확인할 것"), ("partErr", "그리기 오류", "고칠 것"))

@@ -2,7 +2,7 @@
    문장 안 **핵심어** 가 강조. 기본 DOM = 끝 모습, 색 바뀜 · 띠 긋기 · 단어 등장은 _hook 안에서만.
    배치 card  : 출처 줄 → 노랑 세로선 → 제목 2줄 줄별 등장 → 핵심어 붉게 → 숫자 칸 셋
                 칸 src{name,date} · title[줄1, 줄2] · by · hl('red' 기본 | 'mark' 노랑 형광) · facts[{label,value,unit,dec,sub}] · legend
-   배치 stack : 헤드라인 3~4개가 흰 띠로 시간 순 쌓임 + 날짜 칩 + 맨 끝 요약 · 칸 items[{date,src,title}] · summary{label,text}
+   배치 stack : 헤드라인 3~4개가 흰 띠로 시간 순 쌓임 + 날짜 칩 + 맨 끝 요약 · 칸 items[{date,title,src(매체 — 카드 글 끝 작은 회색 괄호),text(제목 밑 한 줄 설명, 선택)}] · summary{label,text}(번호 · 매체 머리줄은 없음)
    배치 type  : (짙은 바탕 권장) 날짜 먼저 → 제목이 단어 단위로 찍힘 → 주황 띠가 핵심어에 길어짐 · 칸 src{name,date} · title(문자열) · by · facts · legend */
 (function () {
 'use strict';
@@ -21,6 +21,7 @@ if (!document.getElementById('p-headline-css')) { var st = document.createElemen
     '.ph-band small{font-size:13px;font-weight:700;color:#6B7570;margin-bottom:3px}.ph-band div{font-weight:800;letter-spacing:-.02em;line-height:1.35}',
     '.ph-no{font-style:normal;background:' + C.main + ';color:#fff;border-radius:6px;padding:1px 9px;margin-right:9px;font-size:13px;font-weight:800}',
     '.ph-band b{color:' + C.warn + '}',
+    '.ph-sr{font-size:13px;font-weight:400;letter-spacing:0;color:#6B7570;white-space:nowrap}.ph-tx{font-size:16px!important;font-weight:600!important;color:#3E4743;margin-top:3px;letter-spacing:-.01em}',
     '.ph-chip{position:absolute;box-sizing:border-box;width:128px;height:34px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;letter-spacing:.02em}',
     '.ph-w{display:inline-block;white-space:pre}',
     '.ph-mk{font-style:normal;color:#fff;background:linear-gradient(' + ORG + ',' + ORG + ') no-repeat 0 100%/100% 100%;padding:2px 12px;margin:0 -4px;border-radius:6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}'
@@ -54,7 +55,7 @@ function stack(bd, s, ctx) { var P = ctx.P, it = (s.items || []).slice(0, 4), n 
   it.forEach(function (o, i) { var t = i * 520 + 250, y = i * pitch, cy = y + bh / 2 + 7;
     var chip = H('div', 'ph-chip', esc(o.date || ''), bd, 'left:0;top:' + (cy - 17) + 'px;background:' + P.main + ';color:' + (ctx.dark ? '#003D2B' : '#fff')); fx(chip, t, 'pop', 400);
     var d = H('div', 'ph-a', null, bd, 'left:' + (151 - 8) + 'px;top:' + (cy - 8) + 'px;width:16px;height:16px;border-radius:50%;background:' + P.main + ';border:3px solid ' + (ctx.dark ? '#003D2B' : '#fff')); fx(d, t, 'pop', 300);
-    var b = H('div', 'ph-band', '<small><em class="ph-no">' + (i + 1) + '</em>' + esc(o.src || '') + '</small><div style="font-size:' + ECOM.fs(fs) + 'px">' + h.esc(o.title || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</div>', bd, 'left:190px;top:' + y + 'px;width:978px;height:' + bh + 'px;margin-top:7px'); fx(b, t + 120, 'slide', 650, { 'data-dx': -36 }); b.setAttribute('data-key', o.date || '') });
+    var b = H('div', 'ph-band', '<div style="font-size:' + ECOM.fs(fs) + 'px">' + h.esc(o.title || '').replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + (o.src ? ' <span class="ph-sr">(' + esc(o.src) + ')</span>' : '') + '</div>' + (o.text ? '<div class="ph-tx">' + h.esc(o.text).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>') + '</div>' : ''), bd, 'left:190px;top:' + y + 'px;width:978px;height:' + bh + 'px;margin-top:7px'); fx(b, t + 120, 'slide', 650, { 'data-dx': -36 }); b.setAttribute('data-key', o.date || '') });
   var S = s.summary || {}, y0 = 512 - SH;
   var sc = H('div', 'ph-chip', esc(S.label || '요약'), bd, 'left:0;top:' + (y0 + SH / 2 - 17) + 'px;background:' + YEL + ';color:#1D2521'); fx(sc, n * 520 + 400, 'pop', 400);
   var sb = H('div', 'ph-a', '<div>' + h.esc(S.text || '').replace(/\*\*(.+?)\*\*/g, '<b style="color:' + YEL + '">$1</b>') + '</div>', bd, 'left:190px;top:' + y0 + 'px;width:978px;height:' + SH + 'px;border-radius:6px;padding:0 30px;display:flex;align-items:center;font-size:26px;line-height:1.4;font-weight:800;letter-spacing:-.02em;color:#fff;background:' + (ctx.dark ? '#0E4635' : C.dark) + ';border:' + (ctx.dark ? '2px solid ' + P.main : '0'));

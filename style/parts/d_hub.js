@@ -3,6 +3,7 @@
    mini : {type:'bars',labels,data,dec} | {type:'negbars',labels,data,dec} | {type:'line',data,first,last,marks:[{i,text,pos}],lo,hi,color}
           | {type:'lines',series:[{data,color,name}],first,last,lo,hi}
    layout(없으면 default = 위 그림, 같은 칸 그대로) : grid 2×2 맞붙은 네 칸 + 가운데 원(연결선 없음) · branch 맨 위 막대에서 가지가 갈라져 아래 네 칸 카드(위 → 아래)
+   branch 칸: tone(또는 color)을 주지 않으면 네 칸 모두 한 색 · 칸마다 icon:'tf:<코드>'(국기 · 이모지, 제목 앞에 그려짐)
    burst 가운데 원에서 값 크기대로 원이 하나씩 터져 나옴 {center{label,value,dec,unit,sub} · nodes[4~7]{title,value,dec,unit,size,tone:main|warn|cmp,text} · legend[{tone,text}]}
    tags 가운데 망 둘레로 질문 태그가 차례로 쳐짐 {center{label,sub} · tags[5~6]{q,kind:a|b|c} · kinds{a,b,c} 이름 · note} */
 (function () {
@@ -78,12 +79,13 @@ NEW.branch = function (bd, s, ctx) {
   if (c0.sub1) T(top, 342, 62, c0.sub1, { 'font-size': 13, fill: '#fff', 'fill-opacity': .85 }); if (c0.sub2) T(top, 342, 82, c0.sub2, { 'font-size': 12.5, fill: '#fff', 'fill-opacity': .75 });
   T(svg, 828, 68, h.nf(c0.value, c0.dec || 0) + (c0.unit || ''), { 'text-anchor': 'end', 'font-size': 46, 'font-weight': 700, fill: '#fff', 'data-b': 2, 'data-fx': 'count', 'data-count': c0.value, 'data-dec': c0.dec || 0, 'data-suf': c0.unit || '', 'data-carry': c0.carry || null });
   if (n) { E('path', { d: 'M584 100 V' + BY + ' M' + cxs[0] + ' ' + BY + ' H' + cxs[n - 1], fill: 'none', stroke: C.g65, 'stroke-width': 2.2, 'stroke-linejoin': 'round', 'data-b': 3, 'data-fx': 'draw', 'data-ms': 520 }, svg) }
-  nodes.forEach(function (o, k) { var x0 = cxs[k] - CWd / 2, col = o.color || (k === 0 || k === 3 ? 'main' : 'cmp'), cc = h.col(col), g = E('g', { 'data-b': 4, 'data-fx': 'rise', 'data-key': o.title || '' }, svg);
+  nodes.forEach(function (o, k) { var x0 = cxs[k] - CWd / 2, col = o.tone || o.color || 'main', cc = h.col(col), g = E('g', { 'data-b': 4, 'data-fx': 'rise', 'data-key': o.title || '' }, svg);   /* 색 = 칸의 tone(color)이 있을 때만 다르게, 없으면 모두 한 색 */
     E('path', { d: 'M' + cxs[k] + ' ' + BY + ' V' + (CY - 1), fill: 'none', stroke: cc, 'stroke-width': 2.2, 'data-b': 3, 'data-fx': 'draw', 'data-ms': 420 }, svg);
     E('path', { d: 'M' + (cxs[k] - 6) + ' ' + (CY - 11) + ' L' + cxs[k] + ' ' + (CY - 1) + ' L' + (cxs[k] + 6) + ' ' + (CY - 11), fill: 'none', stroke: cc, 'stroke-width': 2.2, 'data-b': 3, 'data-fx': 'fade' }, svg);
-    E('rect', { x: x0, y: CY, width: CWd, height: 512 - CY, rx: 14, fill: '#fff', stroke: C.line }, g); E('rect', { x: x0 + 18, y: CY, width: CWd - 36, height: 5, rx: 2.5, fill: cc }, g);
+    E('rect', { x: x0, y: CY, width: CWd, height: 512 - CY, rx: 14, fill: '#fff', stroke: C.line }, g); 
     E('circle', { cx: x0 + 30, cy: CY + 36, r: 12, fill: cc }, g); T(g, x0 + 30, CY + 40.5, String(k + 1), { 'text-anchor': 'middle', 'font-size': 13, 'font-weight': 700, fill: '#fff' });
-    T(g, x0 + 50, CY + 41, o.title, { 'font-size': fit2(o.title, 16.5, CWd - 66), 'font-weight': 700, fill: C.ink });
+    var ix = ECOM.u.tfSvg(g, o.icon, x0 + 50, CY + 21, 30, ctx) ? 36 : 0;
+    T(g, x0 + 50 + ix, CY + 41, o.title, { 'font-size': fit2(o.title, 16.5, CWd - 66 - ix), 'font-weight': 700, fill: C.ink });
     cval(g, x0 + 24, CY + 106, o, col);
     var dy = o.s1 ? sline(g, x0 + 24, CY + 138, o.s1, CWd - 44, 13, C.sub) : 0, dy2 = o.s2 ? sline(g, x0 + 24, CY + 138 + dy + 3, o.s2, CWd - 44, 13, C.mute) : 0;
     var my = CY + 138 + dy + dy2 + 14; mini(g, o.mini, x0 + 24, my, CWd - 48, 512 - 10 - my) });

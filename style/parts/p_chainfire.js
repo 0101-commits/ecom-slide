@@ -1,4 +1,4 @@
-/* p_chainfire.js — 연쇄 점화(영상 장면 문법). 마디가 차례로 켜지며 충격이 다음 마디로 번짐. 켜진 색은 늦게 전달될수록 옅어짐. 기본 DOM = 모두 켜진 끝 모습, 점화는 _hook 안에서만.
+/* p_chainfire.js — 연쇄 점화(영상 장면 문법). 마디가 차례로 켜지며 충격이 다음 마디로 번짐. 켜진 색은 늦게 전달될수록 옅어짐. 기본 DOM = 모두 켜진 끝 모습, 점화는 _hook 안에서만(카드 · 이름은 켜지기 전엔 안 보이고 차례로 나타남).
    배치 line : 한 줄 — 마디 4~7개가 시간 순으로 켜지고 아래 카드 · 시간 눈금 · 결과 띠 · 기본(default)
               칸 nodes[{title,text,value,lag(앞 마디에서 이 마디까지 걸린 말 · 첫 마디는 비움),t(시간 눈금)}] · result{label,text} · waves(범례 이름 4개, 기본 최초 충격 · 1차 · 2차 · 3차 이후)
    배치 net  : 망 — 한 마디(첫 번째)에서 시작해 이어진 마디로 번지고 오른쪽 칸에 전달 순서가 정리됨
@@ -42,7 +42,7 @@ function line(bd, s, ctx) {
     E('rect', { x: cx[i] - cw / 2, y: ctop, width: cw, height: 152, rx: 12, fill: P.paper, stroke: P.line }, cg);
     var tl = h.wrap(q.title || '', 17, cw - 22, 1).slice(0, 2); tl.forEach(function (l, j) { T(cg, cx[i], ctop + 32 + j * 21, l, { 'text-anchor': 'middle', 'font-size': 17, 'font-weight': 700, fill: P.ink }) });
     var ty = ctop + 32 + (tl.length - 1) * 21 + 10; h.wrap(q.text || '', 15, cw - 22).slice(0, 5).forEach(function (l, j) { T(cg, cx[i], ty + 18 + j * 20, l, { 'text-anchor': 'middle', 'font-size': 15, fill: P.sub }) });
-    items.push(fadeIt(cg, tt(i) + 100, 450, .22)) });
+    items.push(fadeIt(cg, tt(i) + 100, 450, 0)) });
   /* 시간 눈금 */
   var ay = 334; E('line', { x1: 12, x2: 1130, y1: ay, y2: ay, stroke: P.axis, 'stroke-width': 1.6 }, svg); K.head(svg, 1152, ay, 0, P.axis, 11, {});
   T(svg, 1156, ay - 10, '시간', { 'text-anchor': 'end', 'font-size': 12.5, fill: P.mute });
@@ -76,7 +76,7 @@ function net(bd, s, ctx) {
   nd.forEach(function (q) { var g = E('g', { 'data-key': q.label || q.id }, ng), r = rad(q), col = pl.shade(q._d), t = tt(q._d);
     node(g, q._x, q._y, r, col, pl, items, t);
     if (q.value != null) { var vt = T(g, q._x, q._y + 5, q.value, { 'text-anchor': 'middle', 'font-size': fit(q.value, 14, 2 * r - 8, 1), 'font-weight': 800, fill: pl.txt(q._d) }); items.push(fadeIt(vt, t + 80, 250)) }
-    var lg = E('g', {}, g), ll = h.wrap(q.label || '', 16, 140, 1).slice(0, 2); ll.forEach(function (l, j) { T(lg, q._x, q._y + r + 22 + j * 19, l, { 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 700, fill: P.ink }) }); items.push(fadeIt(lg, t, 400, .25)) });
+    var lg = E('g', {}, g), ll = h.wrap(q.label || '', 16, 140, 1).slice(0, 2); ll.forEach(function (l, j) { T(lg, q._x, q._y + r + 22 + j * 19, l, { 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 700, fill: P.ink }) }); items.push(fadeIt(lg, t, 400, 0)) });
   /* 오른쪽 칸 : 전달 순서 */
   var X0 = 800, W = 368, pg = E('g', { 'data-at': 200, 'data-fx': 'fade', 'data-ms': 400 }, svg);
   E('rect', { x: X0, y: 0, width: W, height: 512, rx: 14, fill: P.paper, stroke: P.line }, pg);
@@ -87,7 +87,7 @@ function net(bd, s, ctx) {
     E('circle', { cx: X0 + 34, cy: y + 18, r: 14, fill: pl.shade(d) }, g); T(g, X0 + 34, y + 23, String(d), { 'text-anchor': 'middle', 'font-size': 14, 'font-weight': 800, fill: pl.txt(d) });
     T(g, X0 + 60, y + 24, wv[d] || (d ? d + '차 전달' : '최초 충격'), { 'font-size': 15.5, 'font-weight': 700, fill: P.ink });
     nm.forEach(function (l, j) { T(g, X0 + 60, y + 46 + j * 19, l, { 'font-size': 14, fill: P.sub }) });
-    items.push(fadeIt(g, tt(d) + 100, 450, .25)); y += hh + 16 }
+    items.push(fadeIt(g, tt(d) + 100, 450, 0)); y += hh + 16 }
   if (pn.note) h.wrap(pn.note, 13.5, W - 48).slice(0, 4).forEach(function (l, j) { T(pg, X0 + 24, 512 - 78 + j * 19, l, { 'font-size': 13.5, fill: P.mute }) });
   hook(ctx, items, tt(maxD) + 900);
   ctx.root.setAttribute('data-gap', 300) }

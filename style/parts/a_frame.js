@@ -45,19 +45,19 @@ ECOM.parts.cover = function (el, s, ctx) { var st = String(s.style || (ctx.deck.
   ({ A: coverA, B: coverB, C: coverC, D: coverD, E: coverE }[st] || coverA)(el, s, ctx); if (/^[ADE]$/.test(st)) backdrop(el, s) };
 /* 마지막 장(end) : Kick-off 21쪽을 부품 11개로 — 판 테두리 그리기 → 판 안 아이콘 4 → 타일 6(작게 밀려 들어옴) → 문구 → 로고 · 쪽 번호.
    흔들림 · 흐림 · 회전 없음. 본문 맨 끝(토의 · 추후 분석 뒤) 한 장, 부록은 그 뒤 고리로. 그림이 없으면 문구만 */
-ECOM.parts.end = function (el, s, ctx) { var A = art() && art().end, foot = '<div class="lg" data-at="2900" data-fx="fade">' + ECOM.logo(false) + '<span>' + esc(ctx.page) + '</span></div>';
+ECOM.parts.end = function (el, s, ctx) { var A = art() && art().end, foot = '<div class="lg" data-at="1900" data-fx="fade">' + ECOM.logo(false) + '<span>' + esc(ctx.page) + '</span></div>';
   if (!A) { el.innerHTML = '<div data-b="1" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;letter-spacing:.02em;color:' + C.main + '">' + esc(s.text || 'Economic Connection Opportunity Momentum') + '</div>' + foot; return }
   var k = A.scale || .62, ox = (1280 - A.w * k) / 2, oy = (720 - A.h * k) / 2, SEQ = ['hand', 'eye', 'globe', 'people', 'pencil', 'net'];
   function place(t, at, fx, ms, from) { var b = t.b, d = h.H('i', 'ep', '<img alt="" src="' + t.src + '">', el, 'left:' + (ox + b[0] * k) + 'px;top:' + (oy + b[1] * k) + 'px;width:' + ((b[2] - b[0]) * k) + 'px');
     d.setAttribute('data-at', at); d.setAttribute('data-fx', fx); d.setAttribute('data-ms', ms); if (from) { d.setAttribute('data-dx', from[0]); d.setAttribute('data-dy', from[1]) } return d }
-  function tile(t) { var i = Math.max(0, SEQ.indexOf(t.n)); return place(t, 1300 + i * 130, 'slide', 620, t.from || [0, 18]) }
+  function tile(t) { var i = Math.max(0, SEQ.indexOf(t.n)); return place(t, 850 + i * 85, 'slide', 450, t.from || [0, 18]) }
   (A.under || []).forEach(tile);
   var P = A.panel, svg = E('svg', { viewBox: '0 0 1280 720', width: 1280, height: 720, style: 'position:absolute;left:0;top:0' }, el), px = ox + P[0] * k, py = oy + P[1] * k, pw = (P[2] - P[0]) * k, ph = (P[3] - P[1]) * k;
-  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: '#fff', 'data-at': 500, 'data-fx': 'fade', 'data-ms': 500 }, svg);
-  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: 'none', stroke: C.main, 'stroke-width': 2, 'data-at': 0, 'data-fx': 'draw', 'data-ms': 900 }, svg);
-  (A.icons || []).forEach(function (t, i) { place(t, 800 + i * 110, 'zoom', 450) });
+  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: '#fff', 'data-at': 330, 'data-fx': 'fade', 'data-ms': 350 }, svg);
+  E('rect', { x: px, y: py, width: pw, height: ph, rx: 8, fill: 'none', stroke: C.main, 'stroke-width': 2, 'data-at': 0, 'data-fx': 'draw', 'data-ms': 600 }, svg);
+  (A.icons || []).forEach(function (t, i) { place(t, 520 + i * 75, 'zoom', 320) });
   (A.tiles || []).forEach(tile);
-  if (A.motto) place(A.motto, 2500, 'wipe', 900);
+  if (A.motto) place(A.motto, 1650, 'wipe', 600);   /* 7판 : 마지막 장 움직임 약 ⅓ 짧게(사용자 「속도 조금만 빠르게」) */
   el.insertAdjacentHTML('beforeend', foot); el.setAttribute('aria-label', 'ECOM — Economic Connection Opportunity Momentum') };
 /* 간지 : {no:'PART 01', name, desc, parts:[이름], idx} */
 ECOM.parts.part = function (el, s, ctx) { if (s.layout && s.layout !== 'default' && ECOM.chapter) return ECOM.chapter(el, s, ctx); el.classList.add('pt');

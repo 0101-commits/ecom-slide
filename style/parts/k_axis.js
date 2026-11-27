@@ -12,7 +12,7 @@ var h = ECOM.h, C = ECOM.C, K = ECOM.kx;
              더 받는 칸 rows[i].lv · rows[i].rv(숫자) = 글에서 못 읽을 때 직접 지정
    overlay : 두 시기 겹친 선 — 줄마다 한 줄 위에 두 값을 점 둘 + 잇는 선으로 겹침(시계열 칸이 없어 항목 축). 값 읽기는 bars 와 같음, 오른쪽에 큰 쪽 ÷ 작은 쪽 배수.
              더 받는 칸 rows[i].lv · rows[i].rv
-   cards   : 카드 두 장 — 큰 카드 둘이 마주 보고 가운데 「vs」 원, 위에 가운데 제목. 카드 머리 = 제목 · 정의, 몸 = 줄 이름 + 글, 아래 = 결과 */
+   cards   : (left · right 의 icon:'tf:<코드>' = 카드 머리 제목 앞 국기 · 이모지) 카드 두 장 — 큰 카드 둘이 마주 보고 가운데 「vs」 원, 위에 가운데 제목. 카드 머리 = 제목 · 정의, 몸 = 줄 이름 + 글, 아래 = 결과 */
 var LAY = {}, E = h.E, T = h.T;
 function plain(s) { return String(s == null ? '' : s).replace(/\*\*/g, '') }
 function numOf(s) { var m = /-?\d[\d,]*(\.\d+)?/.exec(plain(s)); return m ? parseFloat(m[0].replace(/,/g, '')) : null }
@@ -77,16 +77,19 @@ LAY.overlay = function (bd, s, ctx) { var P = ctx.P, u = ECOM.u, L = s.left || {
   [0, 1].forEach(function (k) { var t = endText(s, k); if (!t) return; var K = ECOM.kx, o = k ? R : L, d = K.D(bd, 'kx', k ? 584 + 6 : 0, 512 - resH, 578, resH, h.md(t), { 'data-b': 6, 'data-fx': 'pop' }); d.style.cssText += ';background:' + toneDk(P, o, k) + ';color:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;font-size:16px;font-weight:700;line-height:1.4;padding:0 18px' });
   ctx.root.setAttribute('data-gap', 380); ctx.root.setAttribute('data-stg', 80) };
 
-LAY.cards = function (bd, s, ctx) { var P = ctx.P, K = ECOM.kx, L = s.left || {}, R = s.right || {}, rows = s.rows || [], cen = s.center || {}, svg = ctx.svg(512), cw = 570, ty = cen.title ? 40 : 0, H = 512 - ty - 4;
+LAY.cards = function (bd, s, ctx) { var cards = [], P = ctx.P, K = ECOM.kx, L = s.left || {}, R = s.right || {}, rows = s.rows || [], cen = s.center || {}, svg = ctx.svg(512), cw = 570, ty = cen.title ? 40 : 0, H = 512 - ty - 4;
   if (cen.title) { var g = E('g', { 'data-b': 1, 'data-fx': 'fade' }, svg), w = h.textW(cen.title, 16, true) + 36; E('line', { x1: 0, x2: 584 - w / 2, y1: 15, y2: 15, stroke: P.axis }, g); E('line', { x1: 584 + w / 2, x2: 1168, y1: 15, y2: 15, stroke: P.axis }, g); T(g, 584, 21, cen.title, { 'text-anchor': 'middle', 'font-size': 16, 'font-weight': 700, fill: P.ink }) }
   [[L, 0], [R, 1]].forEach(function (a) { var o = a[0], k = a[1], x = k ? 1168 - cw : 0, c = tone(P, o, k), dk = toneDk(P, o, k), res = endText(s, k);
-    var cd = K.D(bd, 'kx', x, ty, cw, H, null, { 'data-b': 1, 'data-fx': k ? 'left' : 'right', 'data-ms': 560, 'data-key': o.title });
+    var cd = K.D(bd, 'kx', x, ty, cw, H, null, { 'data-b': 1, 'data-fx': k ? 'left' : 'right', 'data-ms': 560, 'data-key': o.title }); cards[k] = cd;
     cd.style.cssText += ';border-radius:6px;background:' + (k ? P.paper : P.g08) + ';border:1.5px solid ' + (k ? P.light : P.g40) + ';overflow:hidden;display:flex;flex-direction:column';
     var pad = k ? '20px 26px 0 52px' : '20px 52px 0 26px';
-    cd.innerHTML = '<div style="background:' + dk + ';color:#fff;padding:' + (k ? '16px 26px 14px 52px' : '16px 52px 14px 26px') + '"><div style="font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.2">' + h.esc(o.title || '') + '</div>' + (o.def ? '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.9);margin-top:5px;line-height:1.35">' + h.md(o.def) + '</div>' : '') + '</div>'
+    cd.innerHTML = '<div style="background:' + dk + ';color:#fff;padding:' + (k ? '16px 26px 14px 52px' : '16px 52px 14px 26px') + '"><div style="font-size:26px;font-weight:700;letter-spacing:-.01em;line-height:1.2;display:flex;align-items:center;gap:12px">' + (o.icon ? ECOM.u.tfHTML(o.icon, 38, ctx, 'border-radius:4px;background:#fff;padding:2px') : '') + '<span>' + h.esc(o.title || '') + '</span></div>' + (o.def ? '<div style="font-size:16px;font-weight:600;color:rgba(255,255,255,.9);margin-top:5px;line-height:1.35">' + h.md(o.def) + '</div>' : '') + '</div>'
       + '<div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:' + (k ? '6px 26px 0 52px' : '6px 52px 0 26px') + '">' + rows.map(function (r) { return '<div style="flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:2px;border-top:1px solid ' + P.line + '"><div style="font-size:13px;font-weight:700;color:' + dk + '">' + h.esc(r.label || '') + '</div><div style="font-size:16px;font-weight:600;color:' + P.ink + ';line-height:1.4">' + h.md(k ? r.right : r.left) + '</div></div>' }).join('') + '</div>'
       + (res ? '<div data-b="3" data-fx="pop" style="margin:0 18px 16px ' + (k ? '44px' : '18px') + ';margin-right:' + (k ? '18px' : '44px') + ';background:#fff;border:2px solid ' + dk + ';color:' + dk + ';border-radius:6px;padding:10px 16px;font-size:16px;font-weight:700;line-height:1.4;text-align:center">' + h.md(res) + '</div>' : '') });
   var vd = K.D(bd, 'kx', 584 - 42, ty + H / 2 - 42, 84, 84, 'vs', { 'data-b': 2, 'data-fx': 'pop', 'data-ms': 420 }); vd.style.cssText += ';border-radius:50%;background:#fff;border:4px solid ' + P.dark + ';color:' + P.dark + ';display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;letter-spacing:-.02em';
+  /* 바뀜 단계 {spot:'left'|'right'} : 다른 쪽 카드를 흐리게(보기 전환 단추와 함께 씀) */
+  cards.forEach(function (c) { c.classList.add('k-dimx') });
+  ctx.root._beat = function (k) { var b = k > 0 && s.beats && s.beats[k - 1], sp = b ? (b.spot === 'right' ? 1 : b.spot === 'left' ? 0 : null) : null; cards.forEach(function (c, i) { c.classList.toggle('k-dim', sp != null && i !== sp) }) };
   ctx.root.setAttribute('data-gap', 380); ctx.root.setAttribute('data-stg', 70) };
 
 /* gap 격차 눈금 : 공통 눈금자 위에 두 값을 삼각 표시로 얹고, 사이 구간을 칠해 격차를 크게 보임. 양쪽 위 카드 = 두 값의 이름 · 값 · 풀이
@@ -140,7 +143,7 @@ ECOM.parts.axis = function (bd, s, ctx) { if (s.layout && LAY[s.layout]) return 
       + (o.def ? '<div class="k-axd">' + h.md(o.def) + '</div>' : '') + (o.sub ? '<div class="k-axs">' + h.md(o.sub) + '</div>' : '') + '</div>';
     grp[k].push(p) });
   // 가운데 기준 열(먼저)
-  var stB = hasEx ? exTop + 40 : rEnd + 10, st = K.D(bd, 'kx k-axc', c0, 8, CW, stB - 8, null, { 'data-b': 1, 'data-fx': 'fade', 'data-ms': 420 });
+  var stB = hasEx ? exTop + 40 : rEnd + 10, st = K.D(bd, 'kx k-axc', c0, 8, CW, stB - 8, null, { 'data-b': 1, 'data-fx': 'fade', 'data-ms': 420, 'data-ok': 1 });   /* 양쪽 칸 위에 일부러 얹은 기준 열 = 칸 겹침 점검 제외 */
   K.D(st, 'kx k-axct', 0, 0, CW, HH - 8, h.esc(cen.title || ''), { 'data-b': 1, 'data-fx': 'pop' });
   rows.forEach(function (r, i) { var last = i === rows.length - 1;
     K.D(st, 'kx k-axl', 0, ys[i] - 8, CW, rh[i], h.esc(r.label || ''), { 'data-b': 1, 'data-fx': 'pop' });

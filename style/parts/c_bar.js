@@ -120,7 +120,9 @@ ECOM.parts.bar = function (bd, s, ctx) { if (s.layout && LAY[s.layout]) return L
   /* 강조 · 바뀜 */
   function paint(k) { var st = k > 0 && s.beats && s.beats[k - 1] ? s.beats[k - 1] : null, rules = st && st.hi ? st.hi : (s.hi || []), dim = st && st.dim || s.dim0 || [];
     B.forEach(function (b) { var c = b.v < 0 ? C.light : C.gray; rules.forEach(function (r) { if (rule(r, b.i, b.v, n, mx)) c = h.col(r.color || 'dark') }); b.r.setAttribute('fill', c) });
-    BR.forEach(function (q) { q.style.opacity = dim.indexOf('brackets') >= 0 ? .3 : 1 }); NT.forEach(function (q) { q.style.opacity = dim.indexOf('notes') >= 0 ? .35 : 1 }); if (LS) LS.style.opacity = dim.indexOf('last') >= 0 ? .35 : 1 }
+    var kp = (st && st.keep) || {};   /* keep{brackets:[번호],notes:[번호]} : dim 안에서도 흐리지 않을 괄호 · 주석(보기 전환 단추용) */
+    BR.forEach(function (q, j) { q.style.opacity = dim.indexOf('brackets') >= 0 && !(kp.brackets && kp.brackets.indexOf(j) >= 0) ? .3 : 1 });
+    NT.forEach(function (q, j) { q.style.opacity = dim.indexOf('notes') >= 0 && !(kp.notes && kp.notes.indexOf(j) >= 0) ? .35 : 1 }); if (LS) LS.style.opacity = dim.indexOf('last') >= 0 ? .35 : 1 }
   root._beat = function (k) { root._bk = k; paint(k) }; paint(0);
   /* 재생 막대 */
   if (s.playback) { var ph = E('g', { style: 'display:none' }, svg); E('line', { x1: 0, x2: 0, y1: top - 8, y2: bot, stroke: C.dark, 'stroke-width': 1.5 }, ph); E('rect', { x: -66, y: top - 38, width: 132, height: 26, rx: 13, fill: C.dark }, ph);

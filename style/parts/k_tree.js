@@ -1,5 +1,6 @@
 /* tree — 논리 나무(왼쪽 → 오른쪽) : 뿌리 → 줄기 선 → 가지 상자 → 가지마다 잎 선 · 잎 상자
-   root{title,sub,value} · branches[2~4]{title,sub,tone,leaves:[{title,text,value}]} · beats[{spot:가지}] */
+   root{title,sub,value} · branches[2~4]{title,sub,tone(main|dark|g65|cmp|warn|#hex — 그 갈래 가지 · 잎 색),icon('tf:<코드>' topdown 갈래 머리 그림),leaves:[{title,text,value}]} · beats[{spot:가지}]
+   잎 앞 점은 한 개(상자 안 글머리 점) — 연결선 끝에는 점을 찍지 않음 */
 (function () {
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, K = ECOM.kx;
@@ -12,17 +13,16 @@ function treeDefault(bd, s, ctx) {
   var rh = Math.min(240, used), ry = 256 - rh / 2, cy = 256;
   K.D(bd, 'kx k-trr', RX, ry, RW, rh, '<b>' + h.md(rt.title || '') + '</b>' + (rt.value ? '<em>' + h.md(rt.value) + '</em>' : '') + (rt.sub ? '<span>' + h.md(rt.sub) + '</span>' : ''), { 'data-at': 0, 'data-fx': 'pop', 'data-ms': 420 });
   var t1 = 380, li = 0;
-  br.forEach(function (b, i) { var sp = spans[i], by = (sp[0] + sp[1]) / 2, bH = Math.min(sp[1] - sp[0], 128), tone = h.col(b.tone || (['main', 'dark', 'g65', 'cmp'][i] || 'main')), tb = t1 + 260 + i * 140;
+  br.forEach(function (b, i) { var sp = spans[i], by = (sp[0] + sp[1]) / 2, bH = Math.min(sp[1] - sp[0], 128), tone = h.col(b.tone || 'main')   /* 7판 : tone 이 없으면 한 색(뜻 없는 색 차이 금지) */, tb = t1 + 260 + i * 140;
     var pth = E('path', { d: 'M' + (RX + RW) + ' ' + cy + ' H' + (RX + RW + 30) + ' V' + by + ' H' + (BX - 2), fill: 'none', stroke: C.g65, 'stroke-width': 2, 'data-at': t1 + i * 140, 'data-fx': 'draw', 'data-ms': 360 }, svg);
     var bx = K.D(bd, 'kx k-trb', BX, by - bH / 2, BW, bH, '<b>' + h.md(b.title || '') + '</b>' + (b.sub ? '<span>' + h.md(b.sub) + '</span>' : ''), { 'data-at': tb, 'data-fx': 'left', 'data-ms': 380 }); bx.style.background = tone;
     grp[i].push(pth, bx);
     var ly = sp[0];
     (b.leaves || []).forEach(function (l, j) { var my = ly + lh / 2, tl = t1 + 260 + B * 140 + 200 + li * 150;
       var lp = E('path', { d: 'M' + (BX + BW) + ' ' + by + ' H' + (BX + BW + 26) + ' V' + my + ' H' + (LX - 2), fill: 'none', stroke: C.gray, 'stroke-width': 1.8, 'data-at': tl, 'data-fx': 'draw', 'data-ms': 300 }, svg);
-      var dt = E('circle', { cx: LX - 2, cy: my, r: 3.5, fill: tone, 'data-at': tl + 260, 'data-fx': 'fade' }, svg);
       var lb = K.D(bd, 'kx k-trl', LX + 6, ly, LW - 6, lh, '<i style="background:' + tone + '"></i><div><b>' + h.md(l.title || '') + '</b>' + (l.text ? '<span>' + h.md(l.text) + '</span>' : '') + '</div>' + (l.value ? '<em>' + h.md(l.value) + '</em>' : ''),
         { 'data-at': tl + 180, 'data-fx': 'rise', 'data-ms': 320 });
-      grp[i].push(lp, dt, lb); ly += lh + lg; li++ }) });
+      grp[i].push(lp, lb); ly += lh + lg; li++ }) });
   grp.forEach(function (g) { g.forEach(function (e) { e.classList.add('k-dimx') }) });
   root._beat = function (k) { var b = k > 0 && s.beats && s.beats[k - 1], sp = b ? b.spot : null; grp.forEach(function (g, i) { g.forEach(function (e) { e.classList.toggle('k-dim', sp != null && i !== sp) }) }) } }
 /* ───────── 배치(layout) — 같은 칸(root · branches · beats)으로 다른 그림 ─────────
@@ -34,7 +34,7 @@ var LAY = {};
 function inj() { if (document.getElementById('p3a2-css')) return; var st = document.createElement('style'); st.id = 'p3a2-css'; st.textContent = '.kx.p3 b,.kx.p3 span b,.kx.p3 div b{color:inherit}'; (document.head || document.documentElement).appendChild(st) }
 function D(bd, x, y, w, hh, html, css, at) { inj(); var d = K.D(bd, 'kx p3', x, y, w, hh, html, at); if (css) d.style.cssText += ';' + css; return d }
 function mix(a, b, t) { function p(c) { c = c.replace('#', ''); return [0, 2, 4].map(function (i) { return parseInt(c.substr(i, 2), 16) }) } var A = p(a), B = p(b); return '#' + A.map(function (v, i) { var r = Math.round(v + (B[i] - v) * t); return (r < 16 ? '0' : '') + r.toString(16) }).join('') }
-function tone(P, b, i) { var n = b.tone || ['main', 'dark', 'g65', 'cmp'][i] || 'main'; return P[n] || (/^#/.test(n) ? n : P.main) }
+function tone(P, b, i) { var n = b.tone || 'main'; return P[n] || (/^#/.test(n) ? n : P.main) }
 function numOf(v) { var m = String(v == null ? '' : v).replace(/[−–]/g, '-').match(/-?\d[\d,]*\.?\d*/); return m ? parseFloat(m[0].replace(/,/g, '')) : null }
 function setup(ctx) { var P = ctx.P, dk = ctx.dark; return { P: P, ON: dk ? ECOM.Cd.bg : '#fff', CARD: dk ? P.g08 : P.paper, BD: dk ? P.line : '#DDE3E0' } }
 function beat(root, grp, s) { grp.forEach(function (g) { g.forEach(function (e) { e.classList.add('k-dimx') }) });
@@ -51,7 +51,7 @@ LAY.topdown = function (bd, s, ctx) {
   if (B > 1) E('path', { d: 'M' + cxs[0] + ' ' + bus + ' H' + cxs[B - 1], fill: 'none', stroke: P.g65, 'stroke-width': 2.4, 'data-at': 420, 'data-fx': 'draw', 'data-ms': 420 }, svg);
   br.forEach(function (b, i) { var x = i * (cw + gap), tc = tone(P, b, i), ta = 520 + i * 160, ls = b.leaves || [];
     var p0 = E('path', { d: 'M' + cxs[i] + ' ' + bus + ' V' + (by0 - 8), fill: 'none', stroke: P.g65, 'stroke-width': 2.4, 'data-at': ta - 60, 'data-fx': 'draw', 'data-ms': 200 }, svg), hd = K.head(svg, cxs[i], by0 - 1, Math.PI / 2, P.g65, 9, { 'data-at': ta + 120, 'data-fx': 'fade', 'data-ms': 100 });
-    var bx = D(bd, x, by0, cw, bh, '<b style="font-size:18px;line-height:1.3">' + h.md(b.title || '') + '</b>' + (b.sub ? '<span style="font-size:13px;opacity:.92;margin-top:2px">' + h.md(b.sub) + '</span>' : ''),
+    var bx = D(bd, x, by0, cw, bh, (b.icon ? '<div style="display:flex;align-items:center;gap:10px">' + ECOM.u.tfHTML(b.icon, 30, ctx) + '<b style="font-size:18px;line-height:1.3">' + h.md(b.title || '') + '</b></div>' : '<b style="font-size:18px;line-height:1.3">' + h.md(b.title || '') + '</b>') + (b.sub ? '<span style="font-size:13px;opacity:.92;margin-top:2px">' + h.md(b.sub) + '</span>' : ''),
       'display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:6px;background:' + tc + ';color:' + ON, { 'data-at': ta, 'data-fx': 'rise', 'data-ms': 320, 'data-key': b.title || '' });
     grp[i].push(p0, hd, bx);
     if (!ls.length) return;

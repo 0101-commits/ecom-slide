@@ -100,12 +100,14 @@ NEW.hier = function (bd, s, ctx) {
   var rk = Object.keys(rows).map(Number).sort(function (a, b) { return a - b }), LV = rk.length, NC = gridm ? Math.max.apply(null, A.map(function (a) { return a.n.col || 0 })) + 1 : 0;
   rk.forEach(function (r, l) { var arr = rows[r], n = arr.length, y = LV > 1 ? 14 + l * (390 / (LV - 1)) : 200, cwd = Wd / (gridm ? NC : n);
     arr.forEach(function (a, i) { M[a.id] = { o: a, lv: l, cx: ((gridm ? a.n.col || 0 : i) + .5) * cwd, top: y, bot: y + NH, w: Math.min(250, cwd - 24), t: [], b: [] } }) });
-  var ids = Object.keys(M); ids.forEach(function (id, i) { var o = M[id]; drawBox(svg, o.o, o.cx, o.top + NH / 2, o.w, NH, id === 'center' ? 0 : 200 + i * 100, ctx) });
+  var ids = Object.keys(M).sort(function (a, b) { return M[a].lv - M[b].lv }); ids.forEach(function (id, i) { var o = M[id]; drawBox(svg, o.o, o.cx, o.top + NH / 2, o.w, NH, i ? 200 + i * 100 : 0, ctx) });   /* 위 줄 칸부터 차례로 */
   var T0 = 240 + ids.length * 100, E2 = [], gap = {}, same = {};
   links.forEach(function (l, i) { var A0 = M[l.from], B0 = M[l.to]; if (!A0 || !B0) return; used[l.kind in K2 ? l.kind : 'work'] = 1;
     var e = { l: l, i: i, A: A0, B: B0, kd: K2[l.kind] || K2.work, ty: A0.lv < B0.lv ? 'down' : A0.lv > B0.lv ? 'up' : 'same' }; E2.push(e);
     var sa = e.ty === 'down' || e.ty === 'same' ? 'b' : 't', sb = e.ty === 'down' ? 't' : 'b'; A0[sa].push({ e: e, o: B0.cx, k: 'oa' }); B0[sb].push({ e: e, o: A0.cx, k: 'ob' });
     if (e.ty === 'same') (same[A0.lv] = same[A0.lv] || []).push(e); else { var gk = Math.min(A0.lv, B0.lv); (gap[gk] = gap[gk] || []).push(e) } });
+  /* 움직임 순서: 맨 위 줄에서 내려오는 선부터 → 아래 줄로, 같은 줄 선은 마지막 */
+  E2.sort(function (p, q) { var r = function (e) { return e.ty === 'same' ? 1000 + e.A.lv : Math.min(e.A.lv, e.B.lv) * 2 + (e.ty === 'up' ? 1 : 0) }; return r(p) - r(q) || p.i - q.i });
   ids.forEach(function (id) { var o = M[id]; ['t', 'b'].forEach(function (sd) { var lst = o[sd]; lst.sort(function (a, b) { return a.o - b.o }); var m = lst.length, pt = Math.min(24, (o.w - 28) / Math.max(1, m - 1));
     lst.forEach(function (q, i) { q.e[q.k] = m > 1 ? (i - (m - 1) / 2) * pt : 0 }) }) });
   E2.forEach(function (e, n) { var A0 = e.A, B0 = e.B, kd = e.kd, te = T0 + n * 320, g = E('g', { 'data-key': e.l.text || '' }, svg), up = e.ty === 'up', sx = A0.cx + e.oa, ex = B0.cx + e.ob, sy, ey, ym, d, tx, ty2, an = 'middle';

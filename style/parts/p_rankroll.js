@@ -1,8 +1,8 @@
-/* p_rankroll.js — 순위표(영상 장면 문법). 한 줄씩 채워지는 막대 순위 · 길게 올라가다 멈추는 순위표 · 두 열 순위표. 짚은 행에 노랑 띠.
+/* p_rankroll.js — 순위표(영상 장면 문법). 한 줄씩 채워지는 막대 순위 · 길게 올라가다 멈추는 순위표 · 두 열 순위표. 강조 행에 노랑 띠.
    기본 DOM = 끝 모습(막대 · 띠 · 멈춘 자리), 자라기 · 올라가기 · 띠 긋기는 _hook 안에서만.
    공통 칸 rows[{name,v,x?,hi?}] (값 큰 순으로 쓸 것 · 순위는 자동) · unit · dec · max · legend
-   배치 bars   : 막대 순위 + 오른쪽 풀이 칸(짚은 행 순위 · 값 · 평균과 차이) · 칸 title · cols[이름 열 · 값 열] · side{label,avg}
-   배치 scroll : 긴 순위표가 올라가다 짚은 행에서 멈춤 + 오른쪽 전체 위치 그림 · 칸 title · cols[순위,이름,값,덧붙임] · rows[{…,x}]
+   배치 bars   : (hiName = 노랑 띠 이름, 예 '중동 5개국') 막대 순위 + 오른쪽 풀이 칸(강조 행 순위 · 값 · 평균과 차이) · 칸 title · cols[이름 열 · 값 열] · side{label,avg}
+   배치 scroll : 긴 순위표가 올라가다 강조 행에서 멈춤 + 오른쪽 전체 위치 그림 · 칸 title · cols[순위,이름,값,덧붙임] · rows[{…,x}]
    배치 two    : 두 열 순위표 · 칸 panels[{title,unit,dec,start,rows[{name,v,hi}]}×2] */
 (function () {
 'use strict';
@@ -50,13 +50,13 @@ function bars(bd, s, ctx) { var P = ctx.P, rows = s.rows || [], n = rows.length,
     items.push({ el: e.querySelector('.rr-v'), at: 150 + i * 110 + 350, ms: 400, kf: FADE });
     if (hi) items.push({ el: e.querySelector('.rr-band'), at: 150 + n * 110 + 250, ms: 700, kf: GROW }) });
   var k = hiOf(rows), r = rows[k] || rows[0], avg = rows.reduce(function (a, q) { return a + q.v }, 0) / Math.max(1, n), sd = s.side || {};
-  var pn = H('div', 'rr-pn', '<small style="color:' + P.mute + '">' + esc(sd.label || '짚은 행') + '</small><div class="nm" style="color:' + P.ink + '">' + esc(r.name) + '</div>'
+  var pn = H('div', 'rr-pn', '<small style="color:' + P.mute + '">' + esc(sd.label || s.hiName || '강조 행') + '</small><div class="nm" style="color:' + P.ink + '">' + esc(r.name) + '</div>'
     + '<div class="big" style="color:' + P.main + '"><span data-count="' + r.v + '" data-dec="' + (s.dec || 0) + '" data-at="' + (150 + n * 110 + 250) + '" data-fx="count" data-ms="900">' + h.nf(r.v, s.dec || 0) + '</span><u>' + esc(s.unit || '') + '</u></div>'
     + '<p style="color:' + P.sub + '"><b style="color:' + P.ink + '">' + n + '개 중 ' + (k + 1) + '위</b>' + (sd.note ? ' · ' + esc(sd.note) : '') + '</p>'
     + '<div style="margin-top:20px;display:flex;flex-direction:column;gap:16px"><div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(r.name) + '</span><span>' + fmt(r.v, s) + '</span></div><u style="display:block;height:16px;border-radius:6px;background:' + P.main + ';width:' + Math.min(100, Math.abs(r.v) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div>'
     + '<div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.ink + ';margin-bottom:5px"><span>' + esc(sd.avg || '전체 평균') + '</span><span>' + fmt(avg, s) + '</span></div><u style="display:block;height:16px;border-radius:6px;background:' + P.g40 + ';width:' + Math.min(100, Math.abs(avg) / mx * 100).toFixed(1) + '%;text-decoration:none"></u></div></div>'
     + '<div style="margin-top:20px"><div style="display:flex;gap:4px">' + rows.map(function (q, i) { return '<i style="flex:1;height:24px;border-radius:6px;background:' + (i === k ? YEL : P.g40) + (i === k ? ';outline:1px solid ' + P.ink : '') + '"></i>' }).join('') + '</div><div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:' + P.sub + ';margin-top:5px"><span>1위</span><span>' + n + '위</span></div></div>'
-    + legendBox([[YEL, '노랑 띠 = 짚은 행'], [P.main, '진한 막대 = 짚은 행 값'], [P.g40, '옅은 막대 = 나머지']], P), bd, 'left:' + (LW + 24) + 'px;top:0;width:' + (1168 - LW - 24) + 'px;height:512px;background:' + P.paper + ';border:1px solid ' + P.line);
+    + legendBox([[YEL, '노랑 띠 = ' + (s.hiName || '강조 행')], [P.main, '진한 막대 = ' + (s.hiName || '강조 행') + ' 값'], [P.g40, '옅은 막대 = 나머지']], P), bd, 'left:' + (LW + 24) + 'px;top:0;width:' + (1168 - LW - 24) + 'px;height:512px;background:' + P.paper + ';border:1px solid ' + P.line);
   pn.setAttribute('data-key', '풀이'); pn.setAttribute('data-at', 150 + n * 110); pn.setAttribute('data-fx', 'fade'); pn.setAttribute('data-ms', 500);
   hook(ctx, items) }
 
@@ -81,7 +81,7 @@ function scroll(bd, s, ctx) { var P = ctx.P, rows = s.rows || [], n = rows.lengt
     H('div', null, '<span style="flex:0 0 40px;font-size:13px;font-weight:700;color:' + (hi ? P.ink : P.mute) + '">' + lab + '</span><i style="display:block;height:' + Math.max(6, p - 5) + 'px;border-radius:2px;width:' + (Math.abs(r.v) / mx * (pw - 52 - 50)).toFixed(1) + 'px;background:' + (hi ? YEL : P.g40) + (hi ? ';outline:1px solid ' + P.ink : '') + '"></i>', mini, 'height:' + p + 'px;display:flex;align-items:center') });
   var fr = H('div', null, null, mini, 'position:absolute;left:-6px;right:-6px;top:' + (start * p - 2) + 'px;height:' + (VIS * p + 4) + 'px;border:2px solid ' + P.main + ';border-radius:6px;box-sizing:border-box;pointer-events:none');
   if (start > 0) items.push({ el: fr, at: 300, ms: 2200, ease: 'cubic-bezier(.45,0,.25,1)', kf: [{ transform: 'translateY(' + (-start * p) + 'px)' }, { transform: 'translateY(0px)' }] });
-  pn.insertAdjacentHTML('beforeend', legendBox([['transparent', '테두리 = 지금 화면에 보이는 구간', P.main], [YEL, '노랑 = 짚은 행'], [P.g40, '막대 길이 = 값 크기']], P));
+  pn.insertAdjacentHTML('beforeend', legendBox([['transparent', '테두리 = 지금 화면에 보이는 구간', P.main], [YEL, '노랑 = ' + (s.hiName || '강조 행')], [P.g40, '막대 길이 = 값 크기']], P));
   pn.setAttribute('data-key', '위치'); pn.setAttribute('data-at', 0); pn.setAttribute('data-fx', 'fade'); pn.setAttribute('data-ms', 500);
   hook(ctx, items); var h0 = ctx.root._hook;
   ctx.root._hook = function (root) { if (!h.RM()) for (var i = 0; i < start; i++) extra.push(rowEl(i, (i - start) * rh)); return h0(root) };
@@ -99,7 +99,7 @@ function two(bd, s, ctx) { var P = ctx.P, ps = (s.panels || []).slice(0, 2), ite
       e.setAttribute('data-key', (q.title || '') + ' ' + r.name);
       items.push({ el: e.querySelector('.rr-bar'), at: t0 + 300 + i * 90, ms: 650, kf: [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%' }] });
       if (hi) items.push({ el: e.querySelector('.rr-band'), at: t0 + 300 + rows.length * 90 + 150, ms: 700, kf: GROW }) }) });
-  var lg = H('div', null, legendBox([[YEL, '노랑 띠 = 짚은 행'], [P.main, '진한 막대 = 짚은 행 값'], [P.g40, '옅은 막대 = 나머지']], P, 1), bd, 'position:absolute;left:0;top:' + (52 + nn * rh + 12) + 'px;width:1168px');
+  var lg = H('div', null, legendBox([[YEL, '노랑 띠 = ' + (s.hiName || '강조 행')], [P.main, '진한 막대 = ' + (s.hiName || '강조 행') + ' 값'], [P.g40, '옅은 막대 = 나머지']], P, 1), bd, 'position:absolute;left:0;top:' + (52 + nn * rh + 12) + 'px;width:1168px');
   lg.setAttribute('data-at', 1800); lg.setAttribute('data-fx', 'fade');
   hook(ctx, items) }
 

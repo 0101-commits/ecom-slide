@@ -1,7 +1,7 @@
 /* zoom — 전체 기간을 먼저 그린 뒤 최근 구간 틀이 나타나고, 가로만 좁혀 그 구간을 크게 봄(세로 눈금은 그대로) + 작은 전체 그림
    labels · data(값 목록 또는 [이름,값], series[0].data 도 됨) · name · type('line' 기본 | 'bar') · zoom{from,to}(이름 또는 번호, 기본 마지막 12칸)
-   unit · dec · y{min,max,step,dec,unit} · marks('auto' = 구간 최고 · 최저 · 마지막 | [{at,text,pos}]) · full('auto' = 전체 최고 · 최저, false 면 없음)
-   avg(true = 구간 평균선) · avgText('최근 12개월 평균 {v}') · frameText(틀 이름표) · beats([{}] 이면 좁히기가 바뀜 단계 1 — 없으면 쌓기 안에서 저절로) */
+   unit · dec · y{min,max,step,dec,unit} · marks('auto' = 구간 최고 · 최저 · 마지막 | [{at,text,pos}]) · full('auto' = 전체 최고 · 최저 | [{at,text,pos:'above|below',anchor:'start|end',dx,dy}] 전체 보기 사건 표시 | false 면 없음)
+   views(['전체','2014~2017 확대']) + beats([{}]) = 처음 전체, 바뀜 1 확대, 단추·되감기(←)로 전체로 돌아감(양방향) · avg(true = 구간 평균선) · avgText('최근 12개월 평균 {v}') · frameText(틀 이름표) · beats([{}] 이면 좁히기가 바뀜 단계 1 — 없으면 쌓기 안에서 저절로) */
 (function () {
 'use strict';
 var h = ECOM.h, C = ECOM.C, E = h.E, T = h.T;
@@ -66,8 +66,9 @@ ECOM.parts.zoom = function (bd, s, ctx) {
   var fl = E('g', {}, svg); dom = [-.5, n - .5];
   if (s.full !== false) { var fa = 0, fb = 0; V.forEach(function (v, i) { if (v == null) return; if (V[fa] == null || v > V[fa]) fa = i; if (V[fb] == null || v < V[fb]) fb = i });
     var polyF = [V.map(function (v, i) { return [XD(i), Y(v)] }).filter(function (p, i) { return V[i] != null })], fPl = [];
-    [[fa, -1, '최고'], [fb, 1, '최저']].forEach(function (m) { if (bar && m[1] > 0) return; var x = XD(m[0]), y = Y(V[m[0]]), t1 = m[2] + ' ' + short(labels[m[0]]) + ' ' + F(V[m[0]]), w = h.textW(t1, 13, 1), an = x + w / 2 > x1 ? 'end' : x - w / 2 < ml + 4 ? 'start' : 'middle', lx = an === 'end' ? x + 4 - w : an === 'start' ? x - 4 : x - w / 2, yy = bar ? Math.min(y, Y(0)) - 8 : m[1] < 0 ? y - 11 : y + 22;
-      if (!bar) E('circle', { cx: x, cy: y, r: 4.5, fill: '#fff', stroke: C.cmp, 'stroke-width': 2 }, fl); T(fl, an === 'end' ? x + 4 : an === 'start' ? x - 4 : x, yy, t1, { 'text-anchor': an, 'font-size': 13, 'font-weight': 700, fill: C.cmp }) }) }
+    var FL = Array.isArray(s.full) ? s.full.map(function (m) { var i = typeof m.at === 'number' ? m.at : labels.indexOf(String(m.at)); return [i, m.pos === 'below' ? 1 : -1, m.text, true, m.anchor, m.dx || 0, m.dy || 0] }).filter(function (m) { return m[0] >= 0 && V[m[0]] != null }) : [[fa, -1, '최고'], [fb, 1, '최저']];   /* 7판 : full 에 [{at,text,pos}] 를 주면 전체 보기에 그 사건 표시 */
+    FL.forEach(function (m) { if (bar && m[1] > 0) return; var x = XD(m[0]), y = Y(V[m[0]]), t1 = m[3] ? m[2] : m[2] + ' ' + short(labels[m[0]]) + ' ' + F(V[m[0]]), w = h.textW(t1, 13, 1), an = m[4] || (x + w / 2 > x1 ? 'end' : x - w / 2 < ml + 4 ? 'start' : 'middle'), lx = an === 'end' ? x + 4 - w : an === 'start' ? x - 4 : x - w / 2, yy = (bar ? Math.min(y, Y(0)) - 8 : m[1] < 0 ? y - 11 : y + 22) + (m[6] || 0);
+      if (!bar) E('circle', { cx: x, cy: y, r: 4.5, fill: '#fff', stroke: C.cmp, 'stroke-width': 2 }, fl); T(fl, (an === 'end' ? x + 4 : an === 'start' ? x - 4 : x) + (m[5] || 0), yy, t1, { 'text-anchor': an, 'font-size': 13, 'font-weight': 700, fill: C.cmp }) }) }
   /* 작은 전체 그림 — 확대 상태에서 비어 있는 모서리에 */
   dom = [ia - .5, ib + .5]; var IW = 236, IH = 86, corners = [[ml + 12, top + 4], [x1 - IW - 8, top + 4], [ml + 12, bot - IH - 8], [x1 - IW - 8, bot - IH - 8]], best2 = corners[0], bs2 = 1e9;
   corners.forEach(function (c, k) { var bx = { l: c[0], r: c[0] + IW, t: c[1], b: c[1] + IH }, sc4 = hitN(bx, polyZ) * 10 + k; placed.concat(zBox).forEach(function (b) { if (ovl(bx, b)) sc4 += 200 }); if (sc4 < bs2) { bs2 = sc4; best2 = c } });
@@ -90,7 +91,7 @@ ECOM.parts.zoom = function (bd, s, ctx) {
     frame.style.opacity = 1; h.A(frame, [{ opacity: 0 }, { opacity: 1 }], 320, 'linear', T0 + D + 60); fl.style.opacity = 1; h.A(fl, [{ opacity: 0 }, { opacity: 1 }], 320, 'linear', T0 + D + 60);
     if (beatMode) return T0 + D + 400; return zoomAnim(r, T0 + D + 1000) };
   root._reset = function () { state(beatMode && !root._bk ? 0 : 1) };
-  root._beat = function (k) { if (!beatMode) { root._bk = k; state(1); return } var go = k >= 1 && !root._bk && !h.RM(); root._bk = k;
+  root._beat = function (k) { if (!beatMode) { root._bk = k; state(1); return } (root._raf || []).forEach(cancelAnimationFrame); root._raf = []; [zl, ins, frame, fl].forEach(function (e5) { e5.getAnimations().forEach(function (a) { a.cancel() }) }); var go = k >= 1 && !root._bk && !h.RM(); root._bk = k;
     if (go) { (root._tm || []).forEach(clearTimeout); state(0); zoomAnim(root, 0) } else state(k >= 1 ? 1 : 0) };
   root.setAttribute('data-gap', 300);
 };
